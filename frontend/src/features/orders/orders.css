@@ -1,0 +1,37 @@
+/* Pedidos (lista) — prefijo ord-. */
+.ord { max-width: 920px; margin: 0 auto; padding: 34px 32px 72px; }
+.ord-head { margin-bottom: 22px; }
+.ord-head h1 { font-family: var(--font-display); font-weight: 800; font-size: 30px; letter-spacing: -0.02em; color: var(--text-strong); margin: 0; }
+.ord-status { padding: 70px 0; text-align: center; color: var(--text-muted); font-size: 15px; }
+
+.ord-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.ord-card { display: grid; grid-template-columns: minmax(0,1fr) auto auto auto 18px; align-items: center; gap: 18px; padding: 18px 20px; background: #fff; border: 1px solid var(--border-subtle); border-radius: 14px; text-decoration: none; transition: border-color 140ms ease, box-shadow 200ms ease, transform 140ms ease; }
+.ord-card:hover { border-color: var(--kr-navy-800); box-shadow: 0 10px 26px -16px rgba(0,0,0,0.3); transform: translateY(-1px); }
+.ord-card__main { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ord-card__id { font-size: 15px; font-weight: 800; color: var(--text-strong); }
+.ord-card__date { font-size: 12.5px; color: var(--text-faint); }
+.ord-card__doc { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+.ord-card__total { font-size: 16px; font-weight: 800; color: var(--text-strong); }
+.ord-card__chev { color: var(--text-faint); }
+
+/* badge de estado */
+.ord-badge { font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+.ord-badge--pendiente { background: #fff4e5; color: #b25e02; }
+.ord-badge--confirmada { background: var(--kr-success-bg, #e7f7ee); color: var(--kr-success, #1f9d57); }
+.ord-badge--enviado { background: #e8f1ff; color: #1d5fd0; }
+.ord-badge--entregado { background: var(--kr-success, #1f9d57); color: #fff; }
+.ord-badge--cancelada { background: var(--kr-gray-100); color: var(--text-muted); }
+
+/* estados vacío / gate */
+.ord-empty, .ord-gate { text-align: center; padding: 80px 24px; display: flex; flex-direction: column; align-items: center; }
+.ord-empty__ic, .ord-gate__ic { display: inline-flex; align-items: center; justify-content: center; width: 76px; height: 76px; border-radius: 50%; background: var(--kr-gray-100); color: var(--kr-gray-400); margin-bottom: 22px; }
+.ord-empty h1, .ord-gate h1 { font-family: var(--font-display); font-weight: 800; font-size: 25px; color: var(--text-strong); margin: 0 0 10px; }
+.ord-empty p, .ord-gate p { font-size: 14.5px; color: var(--text-muted); margin: 0 0 24px; }
+.ord-empty__cta, .ord-gate__cta { display: inline-flex; align-items: center; height: 50px; padding: 0 28px; border-radius: 999px; background: var(--kr-orange-500); color: #fff; font-weight: 700; font-size: 14.5px; text-decoration: none; box-shadow: 0 12px 26px -10px rgba(243, 116, 2, 0.6); }
+
+@media (max-width: 620px) {
+  .ord-card { grid-template-columns: 1fr auto; grid-template-areas: 'main total' 'badge doc'; gap: 8px 14px; }
+  .ord-card__main { grid-area: main; } .ord-card__total { grid-area: total; text-align: right; }
+  .ord-badge { grid-area: badge; justify-self: start; } .ord-card__doc { grid-area: doc; text-align: right; }
+  .ord-card__chev { display: none; }
+}

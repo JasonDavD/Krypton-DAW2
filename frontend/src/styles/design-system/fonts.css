@@ -1,0 +1,12 @@
+/* Krypton webfont — Kanit (Google Fonts, OFL).
+   Las fuentes se sirven desde /public/fonts (Vite expone public/ en la raíz). */
+
+@font-face { font-family: "Kanit"; src: url("/fonts/Kanit-Light.ttf") format("truetype"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Kanit"; src: url("/fonts/Kanit-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Kanit"; src: url("/fonts/Kanit-Medium.ttf") format("truetype"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Kanit"; src: url("/fonts/Kanit-SemiBold.ttf") format("truetype"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Kanit"; src: url("/fonts/Kanit-Bold.ttf") format("truetype"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Kanit"; src: url("/fonts/Kanit-ExtraBold.ttf") format("truetype"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Kanit"; src: url("/fonts/Kanit-ExtraBoldItalic.ttf") format("truetype"); font-weight: 800; font-style: italic; font-display: swap; }
+@font-face { font-family: "Kanit"; src: url("/fonts/Kanit-Black.ttf") format("truetype"); font-weight: 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Kanit"; src: url("/fonts/Kanit-BlackItalic.ttf") format("truetype"); font-weight: 900; font-style: italic; font-display: swap; }

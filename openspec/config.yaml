@@ -1,0 +1,74 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Spring Boot 3 + Java, Maven. PostgreSQL (Docker local + Supabase/Neon prod), Flyway.
+  Architecture: Capas con interfaces. Base package pe.com.krypton.
+    controller -> service(+impl) -> repository -> model(@Entity). DTOs en la frontera, mapper Entity<->DTO.
+  Data model: 8 tablas (users, categories, products, cart, cart_item, orders, order_items, stock_movement).
+    Carrito persistido, SKU, kardex (stock_movement) + products.stock cacheado, checkout transaccional.
+  Testing: JUnit 5 + Mockito (unit), Spring Boot Test + Testcontainers PostgreSQL (integration). Cmd: mvn test.
+  Security: Spring Security + JWT, roles CLIENTE/ADMIN.
+  Scope: backend + frontend. Backend: Spring Boot REST API (frontend-agnostica). Frontend: Angular SPA
+    (standalone components), greenfield (aun no scaffoldeada; ng new ocurre en la fase APPLY), consume
+    la API REST existente. Frontend resuelto en DESIGN: Angular 18, Jest (npm test), strict_tdd scoped.
+
+strict_tdd: true
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected modules/packages
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, testing)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+  apply:
+    - Follow existing code patterns and conventions
+    tdd: true
+    test_command: "cd backend && ./mvnw test"
+  verify:
+    test_command: "cd backend && ./mvnw test"
+    build_command: "cd backend && ./mvnw -q -DskipTests package"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas (large removals)
+
+testing:
+  strict_tdd: true
+  test_runner:
+    framework: "JUnit 5 (Maven Surefire)"
+    command: "cd backend && ./mvnw test"
+  layers:
+    unit: "JUnit 5 + Mockito"
+    integration: "Spring Boot Test + Testcontainers (PostgreSQL)"
+    e2e: "—"
+  coverage:
+    available: false
+    command: "—  (recomendado: JaCoCo al scaffoldear)"
+  quality:
+    linter: "—"
+    type_checker: "javac (mvn compile)"
+    formatter: "—"
+  note: >
+    Greenfield: stack DECIDIDO, todavia no scaffoldeado. Las capacidades quedan
+    activas (mvn test ejecutable) recien cuando el primer cambio cree el proyecto Maven.
+
+frontend:
+  stack: "Angular 18 + TypeScript (standalone components)"
+  state: "greenfield — aun no scaffoldeado; `ng new` ocurre en la Phase 1 de APPLY de frontend-foundation"
+  consumes: "API REST Spring Boot existente (frontend-agnostica)"
+  location: "frontend/"
+  strict_tdd: "scoped — RED-GREEN estricto en services/guards/interceptors (logica pura, HttpClient mockeable); render-tests pragmaticos en componentes solo en caminos criticos"
+  test_runner: "Jest (jest-preset-angular)"
+  test_command: "cd frontend && npm test"   # CI: cd frontend && npm test -- --ci
+  note: >
+    Decidido en DESIGN de frontend-foundation y confirmado por el usuario (2026-06-15). El
+    test_command frontend se forwardea a sdd-apply/sdd-verify de cambios FRONTEND (distinto del
+    backend `cd backend && ./mvnw test`). Jest corre recien despues del `ng new` + setup
+    jest-preset-angular (Phase 1 de tasks). Ver engram frontend/testing-config.

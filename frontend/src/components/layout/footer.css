@@ -1,0 +1,26 @@
+/* Footer Krypton (clases con prefijo ft- para evitar colisiones globales). */
+.ft { background: #03275a; color: #fff; font-family: var(--font-sans); }
+.ft-top { max-width: 1200px; margin: 0 auto; padding: 60px 32px 32px; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; }
+.ft-logo { height: 32px; width: auto; display: block; margin-bottom: 18px; }
+.ft-blurb { font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.6); margin: 0 0 20px; max-width: 300px; }
+.ft-social { display: flex; gap: 10px; }
+.ft-social button {
+  display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 11px;
+  background: rgba(255, 255, 255, 0.08); color: #fff; border: none; cursor: pointer; transition: background 140ms ease;
+}
+.ft-social button:hover { background: rgba(255, 255, 255, 0.15); }
+.ft-col-title { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); margin-bottom: 16px; }
+.ft-col-links { display: flex; flex-direction: column; gap: 11px; align-items: flex-start; }
+.ft-col-links a, .ft-col-links button {
+  font-size: 14px; color: rgba(255, 255, 255, 0.74); text-decoration: none; transition: color 140ms ease;
+  background: none; border: none; padding: 0; cursor: pointer; font-family: var(--font-sans); text-align: left;
+}
+.ft-col-links a:hover, .ft-col-links button:hover { color: #fff; }
+.ft-bottom { border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.ft-bottom-inner { max-width: 1200px; margin: 0 auto; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ft-copy { font-size: 13px; color: rgba(255, 255, 255, 0.55); }
+.ft-legal { display: inline-flex; gap: 18px; }
+.ft-legal a { font-size: 13px; color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 140ms ease; }
+.ft-legal a:hover { color: #fff; }
+.ft-secure { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255, 255, 255, 0.55); }
+@media (max-width: 780px) { .ft-top { grid-template-columns: 1fr 1fr; } }

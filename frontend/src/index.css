@@ -1,0 +1,7 @@
+/* Entrada global de estilos — Krypton Design System.
+   Orden: fuentes → tokens (color, tipografía, espaciado) → base (resets + elementos). */
+@import "./styles/design-system/fonts.css";
+@import "./styles/design-system/colors.css";
+@import "./styles/design-system/typography.css";
+@import "./styles/design-system/spacing.css";
+@import "./styles/design-system/base.css";

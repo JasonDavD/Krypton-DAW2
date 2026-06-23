@@ -1,0 +1,9 @@
+change: frontend-foundation
+status: archived
+created: 2026-06-15
+archived: 2026-06-16
+phases_done: [explore, proposal, spec, design, tasks, apply, verify, archive]
+phases_pending: []
+artifact_store: hybrid
+branch: feat/frontend-foundation
+commit: e0e205b

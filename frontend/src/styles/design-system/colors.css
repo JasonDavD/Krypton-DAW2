@@ -1,0 +1,101 @@
+/* ============================================================
+   KRYPTON — COLOR TOKENS
+   Corporate palette from brand guidelines:
+   Navy #03275A · Blue #1A7DD7 · Yellow #F2B809 · Orange #F37402 · Red-Orange #F34605
+   A fresh, youthful, technological identity on light surfaces.
+   ============================================================ */
+
+:root {
+  /* ---- Brand core ramps ---- */
+  /* Navy (deep brand / ink) */
+  --kr-navy-900: #021a3d;
+  --kr-navy-800: #03275a;   /* corporate navy */
+  --kr-navy-700: #0a3a7a;
+  --kr-navy-600: #114c9c;
+
+  /* Blue (primary action) */
+  --kr-blue-700: #1560b0;
+  --kr-blue-600: #1a7dd7;   /* corporate blue */
+  --kr-blue-500: #3a92e3;
+  --kr-blue-100: #d7ebfb;
+  --kr-blue-50:  #eef6fe;
+
+  /* Yellow (accent / highlight) */
+  --kr-yellow-600: #d9a406;
+  --kr-yellow-500: #f2b809;  /* corporate yellow */
+  --kr-yellow-100: #fdf0c4;
+
+  /* Orange (energy / CTA) */
+  --kr-orange-600: #d96402;
+  --kr-orange-500: #f37402;  /* corporate orange */
+  --kr-orange-100: #fde3cc;
+
+  /* Red-orange (alerts / hot) */
+  --kr-redorange-600: #d83a04;
+  --kr-redorange-500: #f34605;  /* corporate red-orange */
+  --kr-redorange-100: #fdd9cc;
+
+  /* ---- Neutrals (cool-tinted toward navy) ---- */
+  --kr-white:    #ffffff;
+  --kr-gray-50:  #f5f7fa;
+  --kr-gray-100: #eceff4;
+  --kr-gray-200: #dde3ec;
+  --kr-gray-300: #c3ccd9;
+  --kr-gray-400: #97a3b6;
+  --kr-gray-500: #6b7890;
+  --kr-gray-600: #4c5871;
+  --kr-gray-700: #313c54;
+  --kr-gray-900: #11192b;
+
+  /* ---- Semantic feedback ---- */
+  --kr-success: #1f9d57;
+  --kr-success-bg: #e3f6ec;
+  --kr-warning: #f2b809;
+  --kr-warning-bg: #fdf0c4;
+  --kr-danger:  #e23a2e;
+  --kr-danger-bg: #fde0de;
+  --kr-info:    #1a7dd7;
+  --kr-info-bg: #eef6fe;
+
+  /* ============================================================
+     SEMANTIC ALIASES — use these in product code
+     ============================================================ */
+
+  /* Brand */
+  --color-brand:         var(--kr-blue-600);
+  --color-brand-strong:  var(--kr-navy-800);
+  --color-accent:        var(--kr-orange-500);
+  --color-accent-warm:   var(--kr-yellow-500);
+
+  /* Surfaces */
+  --surface-page:    var(--kr-gray-50);
+  --surface-card:    var(--kr-white);
+  --surface-sunken:  var(--kr-gray-100);
+  --surface-inverse: var(--kr-navy-800);
+  --surface-inverse-2: var(--kr-navy-900);
+
+  /* Text */
+  --text-strong:  var(--kr-navy-900);
+  --text-body:    var(--kr-gray-700);
+  --text-muted:   var(--kr-gray-500);
+  --text-faint:   var(--kr-gray-400);
+  --text-on-brand: var(--kr-white);
+  --text-on-inverse: var(--kr-gray-100);
+  --text-link:    var(--kr-blue-600);
+
+  /* Borders */
+  --border-subtle: var(--kr-gray-200);
+  --border-default: var(--kr-gray-300);
+  --border-strong: var(--kr-gray-400);
+  --border-focus:  var(--kr-blue-600);
+
+  /* Action: primary (blue) */
+  --action-primary:       var(--kr-blue-600);
+  --action-primary-hover: var(--kr-blue-700);
+  --action-primary-press: var(--kr-navy-700);
+
+  /* Action: CTA (orange) */
+  --action-cta:        var(--kr-orange-500);
+  --action-cta-hover:  var(--kr-orange-600);
+  --action-cta-press:  var(--kr-redorange-600);
+}

@@ -1,0 +1,59 @@
+/* ============================================================
+   KRYPTON — base element defaults (opt-in via .kr-scope or global)
+   Lightweight resets + element styling using the tokens.
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  color: var(--text-body);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--text-strong);
+  line-height: var(--lh-snug);
+  margin: 0 0 var(--space-4);
+  text-wrap: balance;
+}
+
+h1 { font-size: var(--fs-h1); font-weight: var(--fw-extrabold); letter-spacing: var(--ls-tight); }
+h2 { font-size: var(--fs-h2); font-weight: var(--fw-bold); letter-spacing: var(--ls-tight); }
+h3 { font-size: var(--fs-h3); font-weight: var(--fw-bold); }
+h4 { font-size: var(--fs-h4); font-weight: var(--fw-semibold); }
+
+p { margin: 0 0 var(--space-4); text-wrap: pretty; }
+
+a { color: var(--text-link); text-decoration: none; }
+/* Sin subrayado global en hover: los links de la app (cards, CTAs, navbar)
+   usan color o efectos propios, no text-decoration. */
+
+/* Eyebrow / overline helper */
+.kr-eyebrow {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--color-brand);
+}
+
+/* Brand wordmark style (for live text logos) */
+.kr-wordmark {
+  font-family: var(--font-display);
+  font-weight: var(--fw-black);
+  font-style: italic;
+  letter-spacing: var(--ls-tight);
+  color: var(--color-brand-strong);
+}

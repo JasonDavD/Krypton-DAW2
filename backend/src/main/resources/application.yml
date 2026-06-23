@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: krypton-backend
+  profiles:
+    active: local
+  jpa:
+    hibernate:
+      ddl-auto: validate          # Flyway es dueño del schema; Hibernate solo valida
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          # MySQL DATETIME no guarda zona horaria. Forzamos UTC para que los
+          # Instant se persistan/lean siempre en UTC (paridad con el TIMESTAMPTZ
+          # de Postgres) y el CONVERT_TZ de los reportes parta de '+00:00'.
+          time_zone: UTC
+  flyway:
+    enabled: true                 # aplica las migraciones pendientes al arrancar
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+# Configuración de la app (JWT). El secreto real va por env JWT_SECRET en prod.
+# El default es SOLO para desarrollo (≥32 bytes que exige HS256). NO usar en prod.
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-change-me-krypton-secret-key-1234567890}
+    expiration: 86400000          # 24h en milisegundos
+  uploads:
+    dir: ${APP_UPLOADS_DIR:./uploads}
+    base-url: ${APP_UPLOADS_BASE_URL:http://localhost:8080}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:mysql://localhost:3307/krypton
+    username: krypton
+    password: krypton

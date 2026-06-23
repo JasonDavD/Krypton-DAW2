@@ -1,0 +1,363 @@
+{
+  "info": {
+    "name": "Krypton E-commerce — Reportes / Exportables",
+    "description": "Reportes administrativos exportables a Excel (.xlsx) y PDF de Krypton.\n\nTodos los endpoints son SOLO ADMIN (/api/admin/reports) y devuelven un archivo binario como descarga (Content-Disposition: attachment). En Postman usá el botón 'Send and Download' (la flechita al lado de Send) para guardar el archivo y abrirlo.\n\nFlujo sugerido:\n1. Corré 'Login (admin)' → guarda {{adminToken}}.\n2. (Opcional, para el caso 403) Registrá/logueá un cliente → guarda {{clientToken}}.\n3. Ajustá {{desde}} / {{hasta}} (formato ISO yyyy-MM-dd) y {{productId}} a datos que existan.\n4. Disparás cualquiera de los 8 reportes (4 reportes x Excel/PDF).\n\nBase URL por defecto: http://localhost:8080\nAdmin sembrado: admin@krypton.pe / Admin123!\n\n4 reportes:\n- R1 Ventas por período: total facturado (solo órdenes CONFIRMADA), agrupado por día o mes en timezone America/Lima. desde/hasta OBLIGATORIOS, granularidad = dia|mes (default dia).\n- R2 Productos más vendidos: ranking top-N por unidades e ingresos. limit default 10, máx 100. Rango de fechas opcional (ambos o ninguno).\n- R3 Kardex por producto: stock actual + historial de movimientos (ENTRADA/SALIDA). productId OBLIGATORIO (404 si no existe). Rango de fechas opcional.\n- R4 Listado de órdenes: exporta órdenes con filtros opcionales (status, desde, hasta, userId).\n\nNotas de comportamiento:\n- Feature 100% read-only: ninguna escritura, sin migración nueva.\n- Resultado vacío → 200 con un archivo válido (planilla/PDF sin filas de datos), nunca 204.\n- Validación de params → 400 (fecha mal formateada, param requerido ausente, status inválido).\n- Sin token → 401. Token de CLIENTE en endpoint admin → 403.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",        "value": "http://localhost:8080" },
+    { "key": "adminToken",     "value": "" },
+    { "key": "clientToken",    "value": "" },
+    { "key": "adminEmail",     "value": "admin@krypton.pe" },
+    { "key": "adminPassword",  "value": "Admin123!" },
+    { "key": "clientEmail",    "value": "cliente@test.pe" },
+    { "key": "clientPassword", "value": "Cliente123!" },
+    { "key": "productId",      "value": "1" },
+    { "key": "desde",          "value": "2026-01-01" },
+    { "key": "hasta",          "value": "2026-12-31" }
+  ],
+  "item": [
+    {
+      "name": "Setup — Tokens",
+      "description": "Login de admin (obligatorio para los reportes) y de cliente (solo para el caso 403).",
+      "item": [
+        {
+          "name": "1. Login (admin) → guarda adminToken",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('adminToken', res.token);",
+                  "  console.log('adminToken guardado');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "2. Register (cliente) — para el caso 403",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cliente Tester\",\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"{{clientPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "201 si es nuevo, 409 si ya existe (saltá este paso en ese caso)."
+          }
+        },
+        {
+          "name": "3. Login (cliente) → guarda clientToken",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('clientToken', res.token);",
+                  "  console.log('clientToken guardado');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"{{clientPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "R1 — Ventas por período",
+      "description": "Total facturado de órdenes CONFIRMADA en el rango, agrupado por día/mes (timezone America/Lima). desde y hasta son OBLIGATORIOS. granularidad = dia | mes (default dia).",
+      "item": [
+        {
+          "name": "GET /ventas/excel",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/ventas/excel?desde={{desde}}&hasta={{hasta}}&granularidad=dia",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "ventas", "excel"],
+              "query": [
+                { "key": "desde", "value": "{{desde}}" },
+                { "key": "hasta", "value": "{{hasta}}" },
+                { "key": "granularidad", "value": "dia", "description": "dia | mes" }
+              ]
+            },
+            "description": "Descarga el .xlsx de ventas por período. Usá 'Send and Download'. Cambiá granularidad a 'mes' para el desglose mensual."
+          }
+        },
+        {
+          "name": "GET /ventas/pdf",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/ventas/pdf?desde={{desde}}&hasta={{hasta}}&granularidad=mes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "ventas", "pdf"],
+              "query": [
+                { "key": "desde", "value": "{{desde}}" },
+                { "key": "hasta", "value": "{{hasta}}" },
+                { "key": "granularidad", "value": "mes", "description": "dia | mes" }
+              ]
+            },
+            "description": "Descarga el .pdf de ventas por período (acá con granularidad mensual). Usá 'Send and Download'."
+          }
+        }
+      ]
+    },
+    {
+      "name": "R2 — Productos más vendidos",
+      "description": "Ranking top-N por unidades vendidas e ingresos, sobre órdenes CONFIRMADA. limit default 10 (máx 100). Rango de fechas opcional: o pasás desde Y hasta, o ninguno.",
+      "item": [
+        {
+          "name": "GET /productos-vendidos/excel",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/productos-vendidos/excel?desde={{desde}}&hasta={{hasta}}&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "productos-vendidos", "excel"],
+              "query": [
+                { "key": "desde", "value": "{{desde}}", "description": "opcional (ambos o ninguno)" },
+                { "key": "hasta", "value": "{{hasta}}", "description": "opcional (ambos o ninguno)" },
+                { "key": "limit", "value": "10", "description": "default 10, máx 100" }
+              ]
+            },
+            "description": "Top-N productos a .xlsx. Para el ranking histórico completo, borrá desde y hasta de los query params."
+          }
+        },
+        {
+          "name": "GET /productos-vendidos/pdf",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/productos-vendidos/pdf?limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "productos-vendidos", "pdf"],
+              "query": [
+                { "key": "limit", "value": "5", "description": "default 10, máx 100" }
+              ]
+            },
+            "description": "Top-5 productos a .pdf, sin filtro de fechas (ranking histórico)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "R3 — Kardex por producto",
+      "description": "Stock actual + historial de movimientos (ENTRADA/SALIDA) de UN producto. productId OBLIGATORIO (404 si no existe). Rango de fechas opcional sobre los movimientos.",
+      "item": [
+        {
+          "name": "GET /kardex/excel",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/kardex/excel?productId={{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "kardex", "excel"],
+              "query": [
+                { "key": "productId", "value": "{{productId}}", "description": "obligatorio" },
+                { "key": "desde", "value": "{{desde}}", "description": "opcional", "disabled": true },
+                { "key": "hasta", "value": "{{hasta}}", "description": "opcional", "disabled": true }
+              ]
+            },
+            "description": "Kardex del producto {{productId}} a .xlsx. Habilitá desde/hasta para acotar los movimientos por fecha."
+          }
+        },
+        {
+          "name": "GET /kardex/pdf",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/kardex/pdf?productId={{productId}}&desde={{desde}}&hasta={{hasta}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "kardex", "pdf"],
+              "query": [
+                { "key": "productId", "value": "{{productId}}", "description": "obligatorio" },
+                { "key": "desde", "value": "{{desde}}", "description": "opcional" },
+                { "key": "hasta", "value": "{{hasta}}", "description": "opcional" }
+              ]
+            },
+            "description": "Kardex del producto {{productId}} a .pdf, acotado por rango de fechas."
+          }
+        }
+      ]
+    },
+    {
+      "name": "R4 — Listado de órdenes",
+      "description": "Exporta órdenes con filtros OPCIONALES: status (PENDIENTE|CONFIRMADA|CANCELADA), desde, hasta, userId. Sin filtros = todas.",
+      "item": [
+        {
+          "name": "GET /ordenes/excel",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/ordenes/excel?status=CONFIRMADA&desde={{desde}}&hasta={{hasta}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "ordenes", "excel"],
+              "query": [
+                { "key": "status", "value": "CONFIRMADA", "description": "opcional: PENDIENTE|CONFIRMADA|CANCELADA" },
+                { "key": "desde", "value": "{{desde}}", "description": "opcional" },
+                { "key": "hasta", "value": "{{hasta}}", "description": "opcional" },
+                { "key": "userId", "value": "", "description": "opcional", "disabled": true }
+              ]
+            },
+            "description": "Órdenes CONFIRMADA del rango a .xlsx. Borrá los query params para exportar todas."
+          }
+        },
+        {
+          "name": "GET /ordenes/pdf",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/ordenes/pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "ordenes", "pdf"],
+              "query": [
+                { "key": "status", "value": "", "description": "opcional", "disabled": true },
+                { "key": "desde", "value": "", "description": "opcional", "disabled": true },
+                { "key": "hasta", "value": "", "description": "opcional", "disabled": true },
+                { "key": "userId", "value": "", "description": "opcional", "disabled": true }
+              ]
+            },
+            "description": "Todas las órdenes a .pdf, sin filtros. Habilitá los query params para acotar."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Casos de error",
+      "description": "Validación de params y guards de autorización.",
+      "item": [
+        {
+          "name": "400 — ventas sin 'desde' (param requerido ausente)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/ventas/excel?hasta={{hasta}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "ventas", "excel"],
+              "query": [{ "key": "hasta", "value": "{{hasta}}" }]
+            },
+            "description": "Falta el param obligatorio 'desde'. Debe responder 400 (MissingServletRequestParameterException)."
+          }
+        },
+        {
+          "name": "400 — fecha mal formateada",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/ventas/excel?desde=01-01-2026&hasta={{hasta}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "ventas", "excel"],
+              "query": [
+                { "key": "desde", "value": "01-01-2026", "description": "formato inválido (debe ser yyyy-MM-dd)" },
+                { "key": "hasta", "value": "{{hasta}}" }
+              ]
+            },
+            "description": "'desde' no está en ISO yyyy-MM-dd. Debe responder 400 (MethodArgumentTypeMismatchException)."
+          }
+        },
+        {
+          "name": "400 — kardex sin 'productId'",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/kardex/excel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "kardex", "excel"]
+            },
+            "description": "Falta el param obligatorio 'productId'. Debe responder 400."
+          }
+        },
+        {
+          "name": "404 — kardex con productId inexistente",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/kardex/pdf?productId=999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "kardex", "pdf"],
+              "query": [{ "key": "productId", "value": "999999" }]
+            },
+            "description": "El producto 999999 no existe. Debe responder 404."
+          }
+        },
+        {
+          "name": "401 — sin token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/ventas/excel?desde={{desde}}&hasta={{hasta}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "ventas", "excel"],
+              "query": [
+                { "key": "desde", "value": "{{desde}}" },
+                { "key": "hasta", "value": "{{hasta}}" }
+              ]
+            },
+            "description": "Sin Authorization header. Debe responder 401."
+          }
+        },
+        {
+          "name": "403 — cliente accede a reporte admin",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{clientToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/ventas/excel?desde={{desde}}&hasta={{hasta}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "ventas", "excel"],
+              "query": [
+                { "key": "desde", "value": "{{desde}}" },
+                { "key": "hasta", "value": "{{hasta}}" }
+              ]
+            },
+            "description": "Token de CLIENTE en endpoint de ADMIN. Debe responder 403 Forbidden."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+// Krypton E-commerce — Modelo de datos (DBML)
+// Pegá este contenido en https://dbdiagram.io para un diagrama ER ordenado.
+// Permite arrastrar tablas, exportar PNG/PDF/SVG y generar el SQL de MySQL.
+
+Table users {
+  id         bigint    [pk, increment]
+  name       varchar
+  email      varchar   [unique, not null]
+  password   varchar   [note: 'hasheada (BCrypt)']
+  role       varchar   [note: 'CLIENTE | ADMIN']
+  created_at timestamp
+}
+
+Table categories {
+  id          bigint  [pk, increment]
+  name        varchar [unique, not null]
+  description varchar
+}
+
+Table products {
+  id          bigint  [pk, increment]
+  sku         varchar [unique, not null, note: 'clave de negocio']
+  name        varchar
+  description varchar
+  price       decimal
+  stock       int     [note: 'valor cacheado / denormalizado']
+  image_url   varchar
+  active      boolean
+  category_id bigint  [ref: > categories.id]
+}
+
+Table cart {
+  id         bigint    [pk, increment]
+  user_id    bigint    [unique, ref: - users.id, note: '1 carrito activo por usuario']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table cart_item {
+  id         bigint [pk, increment]
+  cart_id    bigint [ref: > cart.id]
+  product_id bigint [ref: > products.id]
+  quantity   int    [note: 'precio VIVO (no se guarda)']
+}
+
+Table orders {
+  id         bigint    [pk, increment]
+  user_id    bigint    [ref: > users.id]
+  order_date timestamp
+  status     varchar   [note: 'PENDIENTE | CONFIRMADA | CANCELADA']
+  total      decimal
+}
+
+Table order_items {
+  id         bigint  [pk, increment]
+  order_id   bigint  [ref: > orders.id]
+  product_id bigint  [ref: > products.id]
+  quantity   int
+  unit_price decimal [note: 'SNAPSHOT: precio congelado']
+}
+
+Table stock_movement {
+  id         bigint    [pk, increment]
+  product_id bigint    [ref: > products.id]
+  type       varchar   [note: 'ENTRADA | SALIDA']
+  quantity   int
+  reason     varchar   [note: 'compra, venta, ajuste, devolucion']
+  reference  varchar   [note: 'ej: order_id']
+  created_at timestamp
+  created_by bigint    [ref: > users.id, note: 'admin']
+}

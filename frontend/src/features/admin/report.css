@@ -1,0 +1,25 @@
+/* Dashboard de reportes — prefijo rep-. */
+.rep-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.rep-kpi { background: #fff; border: 1px solid var(--border-subtle); border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+.rep-kpi__label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.rep-kpi__value { font-family: var(--font-display); font-weight: 800; font-size: 24px; color: var(--text-strong); letter-spacing: -0.01em; }
+
+.rep-card { background: #fff; border: 1px solid var(--border-subtle); border-radius: 16px; padding: 20px 22px; margin-bottom: 18px; }
+.rep-card__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.rep-card__head h2 { font-family: var(--font-display); font-weight: 800; font-size: 17px; color: var(--text-strong); margin: 0; }
+.rep-dl { display: flex; gap: 8px; }
+.rep-dl button { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid var(--border-subtle); border-radius: 9px; background: #fff; font-family: var(--font-sans); font-weight: 600; font-size: 12.5px; color: var(--text-body); cursor: pointer; transition: background 140ms ease, color 140ms ease; }
+.rep-dl button:hover { background: var(--kr-gray-100); color: var(--kr-navy-800); }
+
+/* kardex */
+.rep-kx-sel { margin-bottom: 16px; min-width: 260px; }
+.rep-stock { font-size: 14px; color: var(--text-body); margin: 0 0 14px; }
+.rep-stock strong { color: var(--text-strong); font-weight: 800; }
+.rep-mov { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+.rep-mov--entrada { background: var(--kr-success-bg, #e7f7ee); color: var(--kr-success, #1f9d57); }
+.rep-mov--salida { background: #fff4e5; color: #b25e02; }
+
+@media (max-width: 720px) {
+  .rep-kpis { grid-template-columns: 1fr; }
+  .rep-card__head { flex-direction: column; align-items: flex-start; }
+}

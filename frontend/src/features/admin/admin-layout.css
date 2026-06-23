@@ -1,0 +1,23 @@
+/* Shell del panel de administración — prefijo adl-. */
+.adl { display: grid; grid-template-columns: 232px minmax(0, 1fr); max-width: 1320px; margin: 0 auto; align-items: start; }
+
+/* sidebar */
+.adl-side { position: sticky; top: 84px; padding: 26px 16px; border-right: 1px solid var(--border-subtle); min-height: calc(100vh - 84px); }
+.adl-side__title { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--text-faint); padding: 0 12px 12px; }
+.adl-nav { display: flex; flex-direction: column; gap: 3px; }
+.adl-link { display: flex; align-items: center; gap: 11px; padding: 11px 12px; border-radius: 10px; font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: background 130ms ease, color 130ms ease; }
+.adl-link:hover { background: var(--kr-gray-100); color: var(--kr-navy-800); }
+.adl-link--on { background: var(--kr-navy-800); color: #fff; }
+.adl-link--on:hover { background: var(--kr-navy-800); color: #fff; }
+
+/* contenido — da el padding de TODAS las secciones (productos, futuras placeholders) */
+.adl-content { padding: 30px 34px 72px; min-width: 0; }
+
+@media (max-width: 860px) {
+  .adl { grid-template-columns: 1fr; }
+  .adl-side { position: static; min-height: 0; padding: 12px 16px; border-right: none; border-bottom: 1px solid var(--border-subtle); }
+  .adl-side__title { display: none; }
+  .adl-nav { flex-direction: row; overflow-x: auto; gap: 6px; }
+  .adl-link { white-space: nowrap; padding: 9px 14px; }
+  .adl-content { padding: 22px 18px 60px; }
+}

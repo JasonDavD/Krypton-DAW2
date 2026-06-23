@@ -1,0 +1,240 @@
+{
+  "info": {
+    "name": "Krypton E-commerce — Catálogo",
+    "description": "Catálogo de productos y categorías de Krypton.\n\nFlujo sugerido:\n1. Corré 'Login (admin)' una vez → guarda el JWT en {{token}} (lo usan los endpoints /api/admin/**).\n2. La lectura del catálogo (GET /api/products, /api/categories) es PÚBLICA: no necesita token.\n3. 'Create category' y 'Create product' guardan el id devuelto en {{categoryId}} / {{productId}} para encadenar update/delete.\n\nBase URL por defecto: http://localhost:8080\nAdmin sembrado: admin@krypton.pe / Admin123!\n\nNotas de comportamiento:\n- GET público solo devuelve productos active=true; un producto soft-deleted no aparece y su GET /{id} da 404.\n- DELETE de producto es baja lógica (active=false), responde 204.\n- DELETE de categoría con productos asociados (incluidos soft-deleted) responde 409.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "adminEmail", "value": "admin@krypton.pe" },
+    { "key": "adminPassword", "value": "Admin123!" },
+    { "key": "categoryId", "value": "1" },
+    { "key": "productId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Auth (obtener token ADMIN)",
+      "item": [
+        {
+          "name": "Login (admin) → guarda token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('token', res.token);",
+                  "  console.log('Token ADMIN guardado en {{token}}');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Login del admin sembrado (V3). El test script guarda el JWT en {{token}} para los endpoints /api/admin/**."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catálogo (público — sin token)",
+      "item": [
+        {
+          "name": "List products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api", "products"] },
+            "description": "Listado público paginado. Solo productos active=true. No requiere token. Devuelve PageResponse: { content, page, size, totalElements, totalPages }."
+          }
+        },
+        {
+          "name": "Search products (filtros + paginación)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?name=&categoryId=&priceMin=&priceMax=&page=0&size=20&sort=name,asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"],
+              "query": [
+                { "key": "name", "value": "", "description": "substring del nombre (LIKE)", "disabled": true },
+                { "key": "categoryId", "value": "", "description": "id de categoría", "disabled": true },
+                { "key": "priceMin", "value": "", "description": "precio mínimo", "disabled": true },
+                { "key": "priceMax", "value": "", "description": "precio máximo", "disabled": true },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "name,asc", "description": "campo,dir (Pageable)" }
+              ]
+            },
+            "description": "Misma ruta con filtros opcionales (JPA Specifications). Habilitá los query params que quieras combinar. Todos son opcionales; se componen entre sí."
+          }
+        },
+        {
+          "name": "Get product by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "products", "{{productId}}"] },
+            "description": "Producto activo por id. 404 si no existe o está inactivo (soft-deleted)."
+          }
+        },
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/categories", "host": ["{{baseUrl}}"], "path": ["api", "categories"] },
+            "description": "Listado público de categorías. No requiere token."
+          }
+        },
+        {
+          "name": "Get category by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "categories", "{{categoryId}}"] },
+            "description": "Categoría por id. 404 si no existe."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Categorías (requiere token ADMIN)",
+      "item": [
+        {
+          "name": "Create category → guarda categoryId",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('categoryId', res.id);",
+                  "  console.log('categoryId =', res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/admin/categories", "host": ["{{baseUrl}}"], "path": ["api", "admin", "categories"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Laptops\",\n  \"description\": \"Notebooks y ultrabooks\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Crea una categoría. name único (≤80), description opcional (≤255). 201 OK, 409 si el nombre ya existe, 403 con CLIENTE, 401 sin token."
+          }
+        },
+        {
+          "name": "Update category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/admin/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "categories", "{{categoryId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Laptops Gamer\",\n  \"description\": \"Notebooks de alto rendimiento\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Actualiza la categoría {{categoryId}}. La unicidad de nombre excluye su propio id. 404 si no existe, 409 si el nombre choca con otra."
+          }
+        },
+        {
+          "name": "Delete category",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/categories/{{categoryId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "categories", "{{categoryId}}"] },
+            "description": "Borra la categoría {{categoryId}}. 204 si está vacía. 409 si tiene productos asociados (incluidos soft-deleted) — guard referencial."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Productos (requiere token ADMIN)",
+      "item": [
+        {
+          "name": "Create product → guarda productId",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('productId', res.id);",
+                  "  console.log('productId =', res.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/admin/products", "host": ["{{baseUrl}}"], "path": ["api", "admin", "products"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"LAP-001\",\n  \"name\": \"Notebook Krypton 14\",\n  \"description\": \"Core i5, 16GB RAM, 512GB SSD\",\n  \"price\": 2999.90,\n  \"stock\": 25,\n  \"imageUrl\": \"https://example.com/lap-001.jpg\",\n  \"categoryId\": {{categoryId}}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Crea un producto. sku único (≤60), price ≥0 (12,2), stock ≥0 (bootstrap inicial), categoryId debe existir. 201 OK, 409 si el sku existe, 400 si falta un campo requerido o la categoría no existe (404)."
+          }
+        },
+        {
+          "name": "Update product (stock se ignora)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/admin/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "products", "{{productId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"LAP-001\",\n  \"name\": \"Notebook Krypton 14 (2026)\",\n  \"description\": \"Core i7, 16GB RAM, 1TB SSD\",\n  \"price\": 3199.90,\n  \"stock\": 999,\n  \"imageUrl\": \"https://example.com/lap-001.jpg\",\n  \"categoryId\": {{categoryId}}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Actualiza el producto {{productId}}. OJO: el campo stock es READ-ONLY en catálogo — se ignora silenciosamente (lo manejará inventario/checkout). sku único excluyendo su propio id."
+          }
+        },
+        {
+          "name": "Delete product (baja lógica)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "products", "{{productId}}"] },
+            "description": "Soft-delete del producto {{productId}} (active=false). Responde 204. Tras esto desaparece de la lectura pública y su GET /{id} da 404, pero la fila persiste."
+          }
+        }
+      ]
+    }
+  ]
+}

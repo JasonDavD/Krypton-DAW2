@@ -1,0 +1,88 @@
+/* Detalle de pedido — prefijo od-. */
+.od-crumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+.od-crumb a { color: var(--kr-blue-600); text-decoration: none; }
+.od-crumb strong { color: var(--text-strong); }
+
+.od-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.od-head h1 { font-family: var(--font-display); font-weight: 800; font-size: 28px; letter-spacing: -0.02em; color: var(--text-strong); margin: 0; }
+.od-date { font-size: 13px; color: var(--text-faint); }
+
+.od-grid { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 24px; align-items: start; }
+.od-main { display: flex; flex-direction: column; gap: 18px; }
+.od-side { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 100px; }
+
+.od-card { background: #fff; border: 1px solid var(--border-subtle); border-radius: 16px; padding: 22px; }
+.od-card h2 { font-family: var(--font-display); font-weight: 800; font-size: 16px; color: var(--text-strong); margin: 0 0 16px; }
+
+/* timeline de estado del pedido */
+.otl { display: flex; list-style: none; margin: 0 0 24px; padding: 22px 18px 18px; background: #fff; border: 1px solid var(--border-subtle); border-radius: 16px; }
+.otl__step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 9px; position: relative; text-align: center; }
+.otl__step:not(:first-child)::before { content: ''; position: absolute; top: 15px; left: -50%; width: 100%; height: 2px; background: var(--border-subtle); }
+.otl__step--done:not(:first-child)::before,
+.otl__step--current:not(:first-child)::before { background: var(--kr-success, #1f9d57); }
+.otl__dot { position: relative; z-index: 1; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--kr-gray-50); border: 2px solid var(--border-subtle); color: var(--text-faint); }
+.otl__step--done .otl__dot { background: var(--kr-success, #1f9d57); border-color: var(--kr-success, #1f9d57); color: #fff; }
+.otl__step--current .otl__dot { background: #fff; border-color: var(--kr-navy-800); color: var(--kr-navy-800); box-shadow: 0 0 0 4px rgba(31, 58, 95, 0.12); }
+.otl__label { font-size: 12px; color: var(--text-faint); max-width: 92px; }
+.otl__step--done .otl__label { color: var(--text-body); }
+.otl__step--current .otl__label { color: var(--text-strong); font-weight: 700; }
+
+.otl--cancelled { display: flex; align-items: center; gap: 12px; }
+.otl__cancel-ic { display: flex; color: var(--kr-danger); }
+.otl__cancel-txt { display: flex; flex-direction: column; }
+.otl__cancel-txt strong { color: var(--text-strong); font-size: 14px; }
+.otl__cancel-txt span { color: var(--text-muted); font-size: 12.5px; }
+
+@media (max-width: 560px) { .otl__label { font-size: 10.5px; } }
+
+/* comprobante */
+.od-doc__row { display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; margin-bottom: 9px; }
+.od-doc__row span { color: var(--text-muted); }
+.od-doc__row strong { color: var(--text-strong); font-weight: 700; }
+
+/* líneas */
+.od-items { list-style: none; margin: 0; padding: 0; }
+.od-item { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 14px; padding: 12px 0; }
+.od-item + .od-item { border-top: 1px solid var(--border-subtle); }
+.od-item__name { font-size: 14px; font-weight: 700; color: var(--text-strong); text-decoration: none; }
+.od-item__name:hover { color: var(--kr-navy-800); }
+.od-item__qty { font-size: 12.5px; color: var(--text-muted); }
+.od-item__sub { font-size: 14px; font-weight: 800; color: var(--text-strong); min-width: 88px; text-align: right; }
+
+/* resumen */
+.od-row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--text-body); margin-bottom: 11px; }
+.od-row--muted { color: var(--text-muted); font-size: 13px; }
+.od-total { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; margin-top: 3px; border-top: 1px solid var(--border-subtle); font-family: var(--font-display); font-weight: 800; font-size: 19px; color: var(--text-strong); }
+
+/* pago */
+.od-pay__err { padding: 0 0 10px; color: var(--kr-danger); }
+.od-methods { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.od-method { height: 44px; border: 1.5px solid var(--border-subtle); border-radius: 11px; background: #fff; font-family: var(--font-sans); font-weight: 600; font-size: 14px; color: var(--text-body); cursor: pointer; transition: border-color 140ms ease, background 140ms ease; }
+.od-method--on { border-color: var(--kr-navy-800); background: var(--kr-gray-50); color: var(--kr-navy-800); font-weight: 700; }
+.od-pay__btn { width: 100%; height: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: none; border-radius: 12px; background: var(--kr-orange-500); color: #fff; font-family: var(--font-sans); font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 12px 26px -10px rgba(243, 116, 2, 0.6); transition: filter 120ms ease; }
+.od-pay__btn:hover:not(:disabled) { filter: brightness(0.96); }
+.od-pay__btn:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+
+.od-paid { display: flex; align-items: center; justify-content: center; gap: 9px; color: var(--kr-success, #1f9d57); font-weight: 700; font-size: 15px; }
+.od-paid-card { display: flex; flex-direction: column; gap: 14px; }
+
+/* formulario de pago simulado */
+.od-payform { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+.od-payform__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.od-payform__field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.od-payform__field span { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+.od-payform__field input { width: 100%; box-sizing: border-box; height: 42px; padding: 0 12px; border: 1.5px solid var(--border-subtle); border-radius: 10px; font-family: var(--font-sans); font-size: 14px; color: var(--text-strong); background: #fff; transition: border-color 140ms ease; }
+.od-payform__field input:focus { outline: none; border-color: var(--kr-navy-800); }
+.od-payform__err { font-size: 11.5px; color: var(--kr-danger); }
+.od-pay__sim { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-faint); margin: 0 0 14px; }
+.od-pay__hint { font-size: 12px; color: var(--text-faint); text-align: center; margin: 8px 0 0; }
+
+/* descarga del comprobante */
+.od-dl { width: 100%; height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 1.5px solid var(--kr-navy-800); border-radius: 12px; background: #fff; color: var(--kr-navy-800); font-family: var(--font-sans); font-weight: 700; font-size: 14px; cursor: pointer; transition: background 120ms ease; }
+.od-dl:hover:not(:disabled) { background: var(--kr-gray-50); }
+.od-dl:disabled { opacity: 0.55; cursor: not-allowed; }
+
+@media (max-width: 860px) {
+  .od-grid { grid-template-columns: 1fr; }
+  .od-side { position: static; }
+}

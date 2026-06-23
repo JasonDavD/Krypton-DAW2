@@ -1,0 +1,17 @@
+/* Páginas legales — prefijo legal-. */
+.legal { max-width: 800px; margin: 0 auto; padding: 34px 32px 80px; }
+
+.legal-crumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+.legal-crumb a { color: var(--kr-blue-600); text-decoration: none; }
+.legal-crumb strong { color: var(--text-strong); }
+
+.legal-title { font-family: var(--font-display); font-weight: 800; font-size: 34px; letter-spacing: -0.02em; color: var(--text-strong); margin: 0 0 6px; }
+.legal-updated { font-size: 13.5px; color: var(--text-faint); margin: 0 0 32px; }
+
+.legal-body section { margin-bottom: 28px; }
+.legal-body h2 { font-family: var(--font-display); font-weight: 800; font-size: 19px; color: var(--text-strong); margin: 0 0 12px; }
+.legal-body p { font-size: 15px; line-height: 1.7; color: var(--text-body); margin: 0 0 12px; }
+.legal-body ul { margin: 0 0 12px; padding-left: 22px; }
+.legal-body li { font-size: 15px; line-height: 1.7; color: var(--text-body); margin-bottom: 6px; }
+.legal-body a { color: var(--kr-blue-600); text-decoration: none; font-weight: 600; }
+.legal-body strong { color: var(--text-strong); font-weight: 700; }

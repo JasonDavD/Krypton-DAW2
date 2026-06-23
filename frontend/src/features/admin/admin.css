@@ -1,0 +1,126 @@
+/* Sección de productos del panel — prefijo adm-. El padding lo da .adl-content del shell. */
+.adm-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.adm-head h1 { font-family: var(--font-display); font-weight: 800; font-size: 30px; letter-spacing: -0.02em; color: var(--text-strong); margin: 0; }
+.adm-sub { font-size: 14px; color: var(--text-muted); margin: 4px 0 0; }
+.adm-new { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 20px; border: none; border-radius: 11px; background: var(--kr-orange-500); color: #fff; font-family: var(--font-sans); font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 10px 22px -10px rgba(243, 116, 2, 0.6); transition: filter 120ms ease; }
+.adm-new:hover { filter: brightness(0.96); }
+
+.adm-alert { margin: 0 0 16px; padding: 12px 16px; border-radius: 12px; background: var(--kr-danger-bg); color: var(--kr-danger); font-size: 13.5px; font-weight: 600; }
+
+/* barra de filtros (buscador + selects) */
+.adm-filters { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+.adm-search { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; max-width: 380px; height: 42px; padding: 0 14px; background: #fff; border: 1.5px solid var(--border-subtle); border-radius: 11px; color: var(--text-faint); transition: border-color 140ms ease; }
+.adm-search:focus-within { border-color: var(--kr-blue-600); }
+.adm-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-family: var(--font-sans); font-size: 14px; color: var(--text-strong); }
+.adm-filter-sel { height: 42px; padding: 0 13px; border: 1.5px solid var(--border-subtle); border-radius: 11px; background: #fff; font-family: var(--font-sans); font-size: 14px; color: var(--text-body); cursor: pointer; }
+.adm-filter-sel:focus { outline: none; border-color: var(--kr-blue-600); }
+.adm-date { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.adm-date input { height: 42px; padding: 0 12px; border: 1.5px solid var(--border-subtle); border-radius: 11px; font-family: var(--font-sans); font-size: 14px; color: var(--text-strong); }
+.adm-date input:focus { outline: none; border-color: var(--kr-blue-600); }
+
+/* tabla */
+.adm-tablewrap { background: #fff; border: 1px solid var(--border-subtle); border-radius: 16px; overflow: hidden; }
+.adm-table { width: 100%; border-collapse: collapse; }
+.adm-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-faint); font-weight: 700; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); background: var(--kr-gray-50); }
+.adm-table td { padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); font-size: 14px; color: var(--text-body); vertical-align: middle; }
+.adm-table tr:last-child td { border-bottom: none; }
+.adm-thumb { width: 44px; height: 44px; object-fit: contain; border-radius: 9px; background: var(--kr-gray-50); border: 1px solid var(--border-subtle); padding: 4px; box-sizing: border-box; }
+.adm-sku { font-family: monospace; font-size: 12.5px; color: var(--text-muted); }
+.adm-name { font-weight: 700; color: var(--text-strong); }
+.adm-muted { color: var(--text-faint); }
+
+/* controles de usuarios (rol inline, badge de estado, toggle activar/desactivar) */
+.adm-role { height: 36px; padding: 0 10px; border: 1.5px solid var(--border-subtle); border-radius: 9px; background: #fff; font-family: var(--font-sans); font-size: 13px; color: var(--text-body); cursor: pointer; }
+.adm-role:disabled { opacity: 0.6; cursor: not-allowed; }
+.adm-ubadge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+.adm-ubadge--on { background: var(--kr-success-bg, #e7f7ee); color: var(--kr-success, #1f9d57); }
+.adm-ubadge--off { background: var(--kr-gray-100); color: var(--text-muted); }
+.adm-toggle { height: 34px; padding: 0 14px; border: 1px solid var(--border-subtle); border-radius: 9px; background: #fff; font-family: var(--font-sans); font-weight: 600; font-size: 13px; color: var(--text-body); cursor: pointer; transition: background 140ms ease; }
+.adm-toggle:hover:not(:disabled) { background: var(--kr-gray-100); }
+.adm-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+.adm-stock { font-weight: 700; }
+.adm-stock--out { color: var(--kr-danger); }
+
+.adm-actions { white-space: nowrap; text-align: right; }
+.adm-actions button { width: 34px; height: 34px; border: 1px solid var(--border-subtle); border-radius: 9px; background: #fff; color: var(--text-muted); cursor: pointer; margin-left: 6px; transition: background 140ms ease, color 140ms ease, border-color 140ms ease; vertical-align: middle; }
+.adm-actions button:hover:not(:disabled) { background: var(--kr-gray-100); color: var(--kr-navy-800); }
+.adm-actions .adm-del:hover:not(:disabled) { background: var(--kr-danger-bg); color: var(--kr-danger); border-color: var(--kr-danger); }
+.adm-confirm { font-size: 13px; font-weight: 600; color: var(--text-body); }
+.adm-confirm__yes, .adm-confirm__no { width: auto !important; padding: 0 12px; height: 30px !important; font-weight: 700; }
+.adm-confirm__yes { color: #fff !important; background: var(--kr-danger) !important; border-color: var(--kr-danger) !important; }
+
+.adm-empty { padding: 40px; text-align: center; color: var(--text-muted); font-size: 14px; }
+
+.adm-pages { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 22px; font-size: 13.5px; color: var(--text-muted); }
+.adm-pages button { height: 38px; padding: 0 16px; border: 1px solid var(--border-subtle); border-radius: 10px; background: #fff; font-family: var(--font-sans); font-weight: 600; font-size: 13.5px; color: var(--text-body); cursor: pointer; }
+.adm-pages button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* modal */
+.adm-modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(2px); }
+.adm-modal__panel { width: 100%; max-width: 620px; max-height: 90vh; overflow-y: auto; background: #fff; border-radius: 18px; box-shadow: 0 30px 80px -20px rgba(0,0,0,0.5); }
+.adm-modal__head { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; background: #fff; }
+.adm-modal__head h2 { font-family: var(--font-display); font-weight: 800; font-size: 19px; color: var(--text-strong); margin: 0; }
+.adm-modal__head button { border: none; background: transparent; color: var(--text-muted); cursor: pointer; padding: 4px; }
+.adm-modal__foot { display: flex; justify-content: flex-end; gap: 12px; padding: 18px 24px; border-top: 1px solid var(--border-subtle); }
+
+.adm-btn { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 22px; border: none; border-radius: 11px; background: var(--kr-orange-500); color: #fff; font-family: var(--font-sans); font-weight: 700; font-size: 14px; cursor: pointer; transition: filter 120ms ease; }
+.adm-btn:hover:not(:disabled) { filter: brightness(0.96); }
+.adm-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.adm-btn-ghost { height: 44px; padding: 0 20px; border: 1px solid var(--border-subtle); border-radius: 11px; background: #fff; font-family: var(--font-sans); font-weight: 600; font-size: 14px; color: var(--text-body); cursor: pointer; }
+
+/* formulario */
+.adm-form { padding: 22px 24px; }
+.adm-form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.adm-field { display: flex; flex-direction: column; gap: 6px; }
+.adm-field--full { grid-column: 1 / -1; }
+.adm-field span { font-size: 13px; font-weight: 600; color: var(--text-body); }
+.adm-field input, .adm-field select, .adm-field textarea { height: 44px; padding: 0 13px; border: 1.5px solid var(--border-subtle); border-radius: 10px; font-family: var(--font-sans); font-size: 14px; color: var(--text-strong); background: #fff; }
+.adm-field textarea { height: auto; padding: 10px 13px; resize: vertical; }
+.adm-field input:focus, .adm-field select:focus, .adm-field textarea:focus { outline: none; border-color: var(--kr-blue-600); }
+
+/* galería de imágenes */
+.adm-up { display: flex; align-items: center; gap: 14px; padding: 20px 24px 8px; }
+.adm-up__hint { font-size: 12.5px; color: var(--text-faint); }
+.adm-gallery { list-style: none; margin: 0; padding: 16px 24px 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+.adm-img { position: relative; border: 1.5px solid var(--border-subtle); border-radius: 12px; overflow: hidden; background: var(--kr-gray-50); }
+.adm-img--cover { border-color: var(--kr-orange-500); box-shadow: 0 0 0 1px var(--kr-orange-500); }
+.adm-img img { display: block; width: 100%; height: 120px; object-fit: contain; padding: 10px; box-sizing: border-box; }
+.adm-img__badge { position: absolute; top: 8px; left: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; background: var(--kr-orange-500); color: #fff; font-size: 11px; font-weight: 700; }
+.adm-img__bar { display: flex; border-top: 1px solid var(--border-subtle); background: #fff; }
+.adm-img__bar button { flex: 1; height: 36px; border: none; border-right: 1px solid var(--border-subtle); background: #fff; color: var(--text-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 140ms ease, color 140ms ease; }
+.adm-img__bar button:last-child { border-right: none; }
+.adm-img__bar button:hover:not(:disabled) { background: var(--kr-gray-100); color: var(--kr-navy-800); }
+.adm-img__bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+.adm-img__bar .adm-del:hover:not(:disabled) { background: var(--kr-danger-bg); color: var(--kr-danger); }
+
+/* badge de estado de pedido */
+.adm-ostatus { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.adm-ostatus--pendiente { background: #fff4e5; color: #b25e02; }
+.adm-ostatus--confirmada { background: var(--kr-success-bg, #e7f7ee); color: var(--kr-success, #1f9d57); }
+.adm-ostatus--enviado { background: #e8f1ff; color: #1d5fd0; }
+.adm-ostatus--entregado { background: var(--kr-success, #1f9d57); color: #fff; }
+.adm-ostatus--cancelada { background: var(--kr-gray-100); color: var(--text-muted); }
+
+/* detalle de pedido (dentro del modal) */
+.adm-od { padding: 20px 24px 24px; }
+.adm-od__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.adm-od__date { font-size: 13px; color: var(--text-faint); }
+.adm-od__sec { margin-bottom: 20px; }
+.adm-od__sec h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 700; margin: 0 0 8px; }
+.adm-od__line { display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: 13.5px; padding: 7px 0; color: var(--text-body); }
+.adm-od__line + .adm-od__line { border-top: 1px solid var(--border-subtle); }
+.adm-od__line strong { color: var(--text-strong); font-weight: 700; }
+.adm-od__total { display: flex; justify-content: space-between; padding-top: 13px; margin-top: 6px; border-top: 1px solid var(--border-subtle); font-family: var(--font-display); font-weight: 800; font-size: 17px; color: var(--text-strong); }
+.adm-od__actions { display: flex; gap: 10px; padding-top: 6px; }
+.adm-od__dl { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 44px; border: 1px solid var(--kr-navy-800); border-radius: 11px; background: #fff; color: var(--kr-navy-800); font-family: var(--font-sans); font-weight: 700; font-size: 14px; cursor: pointer; transition: background 120ms ease; }
+.adm-od__dl:hover:not(:disabled) { background: var(--kr-gray-50); }
+.adm-od__dl:disabled { opacity: 0.55; cursor: not-allowed; }
+.adm-od__final { font-size: 13.5px; color: var(--text-muted); padding-top: 6px; margin: 0; }
+.adm-btn-danger { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 20px; border: 1px solid var(--kr-danger); border-radius: 11px; background: #fff; color: var(--kr-danger); font-family: var(--font-sans); font-weight: 700; font-size: 14px; cursor: pointer; transition: background 130ms ease; }
+.adm-btn-danger:hover:not(:disabled) { background: var(--kr-danger-bg); }
+.adm-btn-danger:disabled { opacity: 0.55; cursor: not-allowed; }
+
+@media (max-width: 720px) {
+  .adm-form__grid { grid-template-columns: 1fr; }
+  .adm-table th:nth-child(2), .adm-table td:nth-child(2) { display: none; } /* oculta SKU/fecha en móvil */
+}

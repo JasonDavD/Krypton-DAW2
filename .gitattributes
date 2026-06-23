@@ -1,0 +1,18 @@
+# Normalizar saltos de línea: LF en el repo por defecto (consistente entre Win/Mac/Linux)
+* text=auto eol=lf
+
+# Scripts que DEBEN conservar su EOL nativo de Windows
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+
+# El wrapper de Maven es bash: SIEMPRE LF (con CRLF se rompe en Mac/Linux)
+mvnw   text eol=lf
+*.sh   text eol=lf
+
+# Binarios: sin conversión de EOL ni diff de texto
+*.docx binary
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary

@@ -1,0 +1,51 @@
+/* Checkout — prefijo ck-. Reusa el lenguaje visual del carrito. */
+.ck { max-width: 1000px; margin: 0 auto; padding: 34px 32px 72px; }
+.ck-head { margin-bottom: 24px; }
+.ck-head h1 { font-family: var(--font-display); font-weight: 800; font-size: 30px; letter-spacing: -0.02em; color: var(--text-strong); margin: 0; }
+.ck-alert { margin: 0 0 18px; padding: 12px 16px; border-radius: 12px; background: var(--kr-danger-bg); color: var(--kr-danger); font-size: 13.5px; font-weight: 600; }
+
+.ck-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; align-items: start; }
+
+/* formulario */
+.ck-form { background: #fff; border: 1px solid var(--border-subtle); border-radius: 16px; padding: 26px; }
+.ck-form h2 { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--text-strong); margin: 0 0 18px; }
+
+.ck-toggle { display: inline-flex; background: var(--kr-gray-100); border-radius: 12px; padding: 4px; gap: 4px; margin-bottom: 22px; }
+.ck-toggle__opt { border: none; background: transparent; padding: 9px 26px; border-radius: 9px; font-family: var(--font-sans); font-weight: 700; font-size: 14px; color: var(--text-muted); cursor: pointer; transition: background 140ms ease, color 140ms ease; }
+.ck-toggle__opt--on { background: #fff; color: var(--kr-navy-800); box-shadow: 0 2px 8px -2px rgba(0,0,0,0.12); }
+
+.ck-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.ck-field span { font-size: 13px; font-weight: 600; color: var(--text-body); }
+.ck-field input { height: 46px; padding: 0 14px; border: 1.5px solid var(--border-subtle); border-radius: 11px; font-family: var(--font-sans); font-size: 14.5px; color: var(--text-strong); transition: border-color 140ms ease; }
+.ck-field input:focus { outline: none; border-color: var(--kr-blue-600); }
+.ck-field__err { color: var(--kr-danger); font-size: 12px; font-weight: 600; }
+
+.ck-note { display: flex; align-items: center; gap: 7px; margin: 4px 0 0; font-size: 12.5px; color: var(--text-muted); }
+
+/* resumen (igual lógica que el del carrito) */
+.ck-summary { position: sticky; top: 100px; background: #fff; border: 1px solid var(--border-subtle); border-radius: 16px; padding: 24px; }
+.ck-summary h2 { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--text-strong); margin: 0 0 18px; }
+.ck-summary__row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--text-body); margin-bottom: 12px; }
+.ck-summary__row--muted { color: var(--text-muted); font-size: 13px; }
+.ck-summary__total { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; margin-top: 4px; border-top: 1px solid var(--border-subtle); font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--text-strong); }
+.ck-summary__pay {
+  width: 100%; height: 52px; margin-top: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  border: none; border-radius: 12px; background: var(--kr-orange-500); color: #fff; font-family: var(--font-sans);
+  font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 12px 26px -10px rgba(243, 116, 2, 0.6);
+  transition: filter 120ms ease, box-shadow 200ms ease;
+}
+.ck-summary__pay:hover:not(:disabled) { filter: brightness(0.96); box-shadow: 0 18px 40px -10px rgba(243, 116, 2, 0.72); }
+.ck-summary__pay:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+.ck-summary__back { display: block; text-align: center; margin-top: 14px; font-size: 13.5px; font-weight: 600; color: var(--kr-blue-600); text-decoration: none; }
+
+/* gate / vacío */
+.ck-gate { text-align: center; padding: 80px 24px; display: flex; flex-direction: column; align-items: center; }
+.ck-gate__ic { display: inline-flex; align-items: center; justify-content: center; width: 76px; height: 76px; border-radius: 50%; background: var(--kr-gray-100); color: var(--kr-gray-400); margin-bottom: 22px; }
+.ck-gate h1 { font-family: var(--font-display); font-weight: 800; font-size: 26px; color: var(--text-strong); margin: 0 0 10px; }
+.ck-gate p { font-size: 14.5px; color: var(--text-muted); margin: 0 0 24px; }
+.ck-gate__cta { display: inline-flex; align-items: center; height: 50px; padding: 0 28px; border-radius: 999px; background: var(--kr-orange-500); color: #fff; font-weight: 700; font-size: 14.5px; text-decoration: none; box-shadow: 0 12px 26px -10px rgba(243, 116, 2, 0.6); }
+
+@media (max-width: 880px) {
+  .ck-layout { grid-template-columns: 1fr; }
+  .ck-summary { position: static; }
+}

@@ -1,0 +1,22 @@
+services:
+  db:
+    image: mysql:8
+    container_name: krypton-db
+    environment:
+      MYSQL_DATABASE: krypton
+      MYSQL_USER: krypton
+      MYSQL_PASSWORD: krypton
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      # Host 3307 → 3306 del contenedor. 3307 para no chocar con un MySQL nativo en 3306.
+      - "3307:3306"
+    volumes:
+      - krypton_mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u krypton -pkrypton --silent || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  krypton_mysqldata:
