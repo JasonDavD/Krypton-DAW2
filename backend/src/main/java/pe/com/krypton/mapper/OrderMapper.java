@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 import pe.com.krypton.dto.response.OrderItemResponse;
 import pe.com.krypton.dto.response.OrderResponse;
-import pe.com.krypton.model.Order;
-import pe.com.krypton.model.OrderItem;
+import pe.com.krypton.entity.Order;
+import pe.com.krypton.entity.OrderItem;
 
 /** Manual mapper — mirrors CartMapper. Items are passed in explicitly (no @OneToMany on Order). */
 @Component

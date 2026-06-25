@@ -1,4 +1,4 @@
-package pe.com.krypton.model.enums;
+package pe.com.krypton.entity.enums;
 
 /**
  * Tipo de comprobante de pago. BOLETA para consumidor final (DNI); FACTURA para

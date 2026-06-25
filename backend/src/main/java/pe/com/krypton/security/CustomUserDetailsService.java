@@ -5,7 +5,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import pe.com.krypton.model.User;
+import pe.com.krypton.entity.User;
 import pe.com.krypton.repository.UserRepository;
 
 /**

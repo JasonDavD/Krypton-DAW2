@@ -22,7 +22,7 @@ import pe.com.krypton.dto.response.AuthResponse;
 import pe.com.krypton.dto.response.UserResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.InvalidCredentialsException;
-import pe.com.krypton.model.enums.Role;
+import pe.com.krypton.entity.enums.Role;
 import pe.com.krypton.security.JwtAuthenticationFilter;
 import pe.com.krypton.service.AuthService;
 

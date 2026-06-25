@@ -3,9 +3,9 @@ package pe.com.krypton.repository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import pe.com.krypton.model.Cart;
-import pe.com.krypton.model.CartItem;
-import pe.com.krypton.model.Product;
+import pe.com.krypton.entity.Cart;
+import pe.com.krypton.entity.CartItem;
+import pe.com.krypton.entity.Product;
 
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 

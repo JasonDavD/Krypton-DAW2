@@ -2,8 +2,8 @@ package pe.com.krypton.spec;
 
 import java.time.Instant;
 import org.springframework.data.jpa.domain.Specification;
-import pe.com.krypton.model.Order;
-import pe.com.krypton.model.enums.OrderStatus;
+import pe.com.krypton.entity.Order;
+import pe.com.krypton.entity.enums.OrderStatus;
 
 /**
  * Fábricas de predicados JPA para filtrado de órdenes.

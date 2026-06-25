@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import pe.com.krypton.model.enums.DocumentType;
+import pe.com.krypton.entity.enums.DocumentType;
 
 /**
  * Datos del comprobante para el checkout. El total NO viene del cliente: lo calcula

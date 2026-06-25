@@ -20,7 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
-import pe.com.krypton.model.Product;
+import pe.com.krypton.entity.Product;
 
 /**
  * Unit test para ProductSpecification.

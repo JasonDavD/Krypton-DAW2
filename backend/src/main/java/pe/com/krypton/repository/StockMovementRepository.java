@@ -3,7 +3,7 @@ package pe.com.krypton.repository;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
-import pe.com.krypton.model.StockMovement;
+import pe.com.krypton.entity.StockMovement;
 
 public interface StockMovementRepository extends JpaRepository<StockMovement, Long> {
 

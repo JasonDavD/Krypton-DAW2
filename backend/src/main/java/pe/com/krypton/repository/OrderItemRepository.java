@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import pe.com.krypton.dto.response.report.TopProductoRow;
-import pe.com.krypton.model.Order;
-import pe.com.krypton.model.OrderItem;
+import pe.com.krypton.entity.Order;
+import pe.com.krypton.entity.OrderItem;
 
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
@@ -36,7 +36,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                        SUM(oi.quantity * oi.unitPrice))
             FROM OrderItem oi
             JOIN oi.order o
-            WHERE o.status = pe.com.krypton.model.enums.OrderStatus.CONFIRMADA
+            WHERE o.status = pe.com.krypton.entity.enums.OrderStatus.CONFIRMADA
               AND o.orderDate >= :start
               AND o.orderDate < :end
             GROUP BY oi.product.id, oi.product.sku, oi.product.name
@@ -59,7 +59,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                        SUM(oi.quantity * oi.unitPrice))
             FROM OrderItem oi
             JOIN oi.order o
-            WHERE o.status = pe.com.krypton.model.enums.OrderStatus.CONFIRMADA
+            WHERE o.status = pe.com.krypton.entity.enums.OrderStatus.CONFIRMADA
             GROUP BY oi.product.id, oi.product.sku, oi.product.name
             ORDER BY SUM(oi.quantity) DESC
             """)

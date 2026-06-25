@@ -18,10 +18,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
-import pe.com.krypton.model.Order;
-import pe.com.krypton.model.OrderItem;
-import pe.com.krypton.model.enums.DocumentType;
-import pe.com.krypton.model.enums.PaymentMethod;
+import pe.com.krypton.entity.Order;
+import pe.com.krypton.entity.OrderItem;
+import pe.com.krypton.entity.enums.DocumentType;
+import pe.com.krypton.entity.enums.PaymentMethod;
 
 /**
  * Genera el PDF del comprobante (boleta/factura) de un pedido, usando OpenPDF.

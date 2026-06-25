@@ -11,8 +11,8 @@ import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.LastAdminException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.mapper.UserMapper;
-import pe.com.krypton.model.User;
-import pe.com.krypton.model.enums.Role;
+import pe.com.krypton.entity.User;
+import pe.com.krypton.entity.enums.Role;
 import pe.com.krypton.repository.UserRepository;
 import pe.com.krypton.service.UserService;
 

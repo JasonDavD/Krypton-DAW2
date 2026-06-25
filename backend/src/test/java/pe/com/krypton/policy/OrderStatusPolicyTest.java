@@ -2,11 +2,11 @@ package pe.com.krypton.policy;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static pe.com.krypton.model.enums.OrderStatus.CANCELADA;
-import static pe.com.krypton.model.enums.OrderStatus.CONFIRMADA;
-import static pe.com.krypton.model.enums.OrderStatus.ENTREGADO;
-import static pe.com.krypton.model.enums.OrderStatus.ENVIADO;
-import static pe.com.krypton.model.enums.OrderStatus.PENDIENTE;
+import static pe.com.krypton.entity.enums.OrderStatus.CANCELADA;
+import static pe.com.krypton.entity.enums.OrderStatus.CONFIRMADA;
+import static pe.com.krypton.entity.enums.OrderStatus.ENTREGADO;
+import static pe.com.krypton.entity.enums.OrderStatus.ENVIADO;
+import static pe.com.krypton.entity.enums.OrderStatus.PENDIENTE;
 
 import org.junit.jupiter.api.Test;
 import pe.com.krypton.exception.OrderStatusTransitionException;

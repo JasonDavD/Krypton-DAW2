@@ -2,7 +2,7 @@ package pe.com.krypton.spec;
 
 import java.math.BigDecimal;
 import org.springframework.data.jpa.domain.Specification;
-import pe.com.krypton.model.Product;
+import pe.com.krypton.entity.Product;
 
 /**
  * Fábricas de predicados JPA para búsqueda de productos.

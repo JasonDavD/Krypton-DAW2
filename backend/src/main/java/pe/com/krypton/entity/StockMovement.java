@@ -1,11 +1,11 @@
-package pe.com.krypton.model;
+package pe.com.krypton.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import pe.com.krypton.model.enums.MovementType;
+import pe.com.krypton.entity.enums.MovementType;
 
 @Entity
 @Table(name = "stock_movement")

@@ -25,7 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import pe.com.krypton.dto.response.UserResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.LastAdminException;
-import pe.com.krypton.model.enums.Role;
+import pe.com.krypton.entity.enums.Role;
 import pe.com.krypton.security.JwtAuthenticationFilter;
 import pe.com.krypton.service.UserService;
 

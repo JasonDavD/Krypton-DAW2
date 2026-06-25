@@ -1,4 +1,4 @@
-package pe.com.krypton.model;
+package pe.com.krypton.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;

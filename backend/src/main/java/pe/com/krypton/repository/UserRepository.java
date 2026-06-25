@@ -2,8 +2,8 @@ package pe.com.krypton.repository;
 
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import pe.com.krypton.model.User;
-import pe.com.krypton.model.enums.Role;
+import pe.com.krypton.entity.User;
+import pe.com.krypton.entity.enums.Role;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 

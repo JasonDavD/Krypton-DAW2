@@ -9,12 +9,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pe.com.krypton.dto.response.OrderItemResponse;
 import pe.com.krypton.dto.response.OrderResponse;
-import pe.com.krypton.model.Order;
-import pe.com.krypton.model.OrderItem;
-import pe.com.krypton.model.Product;
-import pe.com.krypton.model.User;
-import pe.com.krypton.model.enums.DocumentType;
-import pe.com.krypton.model.enums.OrderStatus;
+import pe.com.krypton.entity.Order;
+import pe.com.krypton.entity.OrderItem;
+import pe.com.krypton.entity.Product;
+import pe.com.krypton.entity.User;
+import pe.com.krypton.entity.enums.DocumentType;
+import pe.com.krypton.entity.enums.OrderStatus;
 
 /**
  * Unit test for OrderMapper. No Spring context, no DB (pure Java).

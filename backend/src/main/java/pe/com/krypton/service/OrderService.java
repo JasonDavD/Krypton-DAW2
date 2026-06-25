@@ -7,7 +7,7 @@ import pe.com.krypton.dto.request.CheckoutRequest;
 import pe.com.krypton.dto.request.PaymentRequest;
 import pe.com.krypton.dto.response.OrderResponse;
 import pe.com.krypton.dto.response.PageResponse;
-import pe.com.krypton.model.enums.OrderStatus;
+import pe.com.krypton.entity.enums.OrderStatus;
 
 public interface OrderService {
 

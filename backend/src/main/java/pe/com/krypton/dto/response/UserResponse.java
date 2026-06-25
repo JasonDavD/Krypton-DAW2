@@ -1,7 +1,7 @@
 package pe.com.krypton.dto.response;
 
 import java.time.Instant;
-import pe.com.krypton.model.enums.Role;
+import pe.com.krypton.entity.enums.Role;
 
 /** Vista pública de un usuario. NUNCA incluye el password. */
 public record UserResponse(

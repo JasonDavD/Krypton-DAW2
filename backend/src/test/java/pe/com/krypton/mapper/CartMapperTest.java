@@ -9,10 +9,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pe.com.krypton.dto.response.CartItemResponse;
 import pe.com.krypton.dto.response.CartResponse;
-import pe.com.krypton.model.Cart;
-import pe.com.krypton.model.CartItem;
-import pe.com.krypton.model.Product;
-import pe.com.krypton.model.User;
+import pe.com.krypton.entity.Cart;
+import pe.com.krypton.entity.CartItem;
+import pe.com.krypton.entity.Product;
+import pe.com.krypton.entity.User;
 
 /**
  * Unit test de CartMapper. Sin Spring context, sin DB.

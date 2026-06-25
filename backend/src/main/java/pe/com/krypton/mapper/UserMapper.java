@@ -2,7 +2,7 @@ package pe.com.krypton.mapper;
 
 import org.springframework.stereotype.Component;
 import pe.com.krypton.dto.response.UserResponse;
-import pe.com.krypton.model.User;
+import pe.com.krypton.entity.User;
 
 /** Traduce la entidad User a su DTO de salida (sin exponer el password). */
 @Component

@@ -3,7 +3,7 @@ package pe.com.krypton.repository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import pe.com.krypton.model.ProductImage;
+import pe.com.krypton.entity.ProductImage;
 
 public interface ProductImageRepository extends JpaRepository<ProductImage, Long> {
 

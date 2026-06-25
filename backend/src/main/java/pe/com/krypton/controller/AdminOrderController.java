@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pe.com.krypton.dto.request.OrderStatusUpdateRequest;
 import pe.com.krypton.dto.response.OrderResponse;
 import pe.com.krypton.dto.response.PageResponse;
-import pe.com.krypton.model.enums.OrderStatus;
+import pe.com.krypton.entity.enums.OrderStatus;
 import pe.com.krypton.service.OrderService;
 
 /**

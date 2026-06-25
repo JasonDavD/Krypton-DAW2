@@ -1,11 +1,11 @@
-package pe.com.krypton.model;
+package pe.com.krypton.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import pe.com.krypton.model.enums.Role;
+import pe.com.krypton.entity.enums.Role;
 
 @Entity
 @Table(name = "users")

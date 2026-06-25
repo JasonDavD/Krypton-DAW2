@@ -3,8 +3,8 @@ package pe.com.krypton.security;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
-import pe.com.krypton.model.User;
-import pe.com.krypton.model.enums.Role;
+import pe.com.krypton.entity.User;
+import pe.com.krypton.entity.enums.Role;
 
 /**
  * Unit test puro: JwtService no tiene dependencias mockeables (firma simétrica),

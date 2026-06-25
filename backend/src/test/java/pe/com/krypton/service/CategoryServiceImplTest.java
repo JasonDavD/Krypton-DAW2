@@ -20,7 +20,7 @@ import pe.com.krypton.exception.CategoryInUseException;
 import pe.com.krypton.exception.DuplicateCategoryNameException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.mapper.CategoryMapper;
-import pe.com.krypton.model.Category;
+import pe.com.krypton.entity.Category;
 import pe.com.krypton.repository.CategoryRepository;
 import pe.com.krypton.repository.ProductRepository;
 import pe.com.krypton.service.impl.CategoryServiceImpl;

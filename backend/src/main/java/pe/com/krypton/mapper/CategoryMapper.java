@@ -2,7 +2,7 @@ package pe.com.krypton.mapper;
 
 import org.springframework.stereotype.Component;
 import pe.com.krypton.dto.response.CategoryResponse;
-import pe.com.krypton.model.Category;
+import pe.com.krypton.entity.Category;
 
 /** Traduce la entidad Category a su DTO de salida. */
 @Component

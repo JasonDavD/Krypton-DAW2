@@ -3,7 +3,7 @@ package pe.com.krypton.service;
 import java.util.List;
 import pe.com.krypton.dto.request.CreateUserRequest;
 import pe.com.krypton.dto.response.UserResponse;
-import pe.com.krypton.model.enums.Role;
+import pe.com.krypton.entity.enums.Role;
 
 /** Gestión de usuarios por un ADMIN. */
 public interface UserService {

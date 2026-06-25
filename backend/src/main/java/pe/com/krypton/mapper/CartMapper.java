@@ -5,9 +5,9 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 import pe.com.krypton.dto.response.CartItemResponse;
 import pe.com.krypton.dto.response.CartResponse;
-import pe.com.krypton.model.Cart;
-import pe.com.krypton.model.CartItem;
-import pe.com.krypton.model.Product;
+import pe.com.krypton.entity.Cart;
+import pe.com.krypton.entity.CartItem;
+import pe.com.krypton.entity.Product;
 
 /** Manual mapper — no MapStruct, no @OneToMany on Cart. Items are passed in explicitly. */
 @Component

@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import pe.com.krypton.dto.response.ProductImageResponse;
 import pe.com.krypton.dto.response.ProductResponse;
-import pe.com.krypton.model.Product;
-import pe.com.krypton.model.ProductImage;
+import pe.com.krypton.entity.Product;
+import pe.com.krypton.entity.ProductImage;
 
 /**
  * Translates the Product entity to its output DTO. Never exposes the entity outside the service.

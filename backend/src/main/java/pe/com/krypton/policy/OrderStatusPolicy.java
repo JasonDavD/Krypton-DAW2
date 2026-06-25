@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Component;
 import pe.com.krypton.exception.OrderStatusTransitionException;
-import pe.com.krypton.model.enums.OrderStatus;
+import pe.com.krypton.entity.enums.OrderStatus;
 
 /**
  * Única fuente de verdad de las transiciones de estado de una orden.
