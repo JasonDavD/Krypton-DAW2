@@ -1,5 +1,6 @@
 package pe.com.krypton;
 
+import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.testcontainers.containers.MySQLContainer;
@@ -16,6 +17,7 @@ import org.testcontainers.containers.MySQLContainer;
  * @ServiceConnection cablea el datasource al contenedor automáticamente.
  */
 @SpringBootTest
+@Tag("integration")   // heredado por todas las subclases (JUnit 5) → se excluyen con -Pfast
 abstract class AbstractIntegrationTest {
 
     @ServiceConnection

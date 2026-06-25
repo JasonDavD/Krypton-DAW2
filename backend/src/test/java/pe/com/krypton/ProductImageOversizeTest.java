@@ -3,6 +3,7 @@ package pe.com.krypton;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import org.testcontainers.containers.MySQLContainer;
  * to isolate the RANDOM_PORT context from the MOCK context used by the singleton.
  */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@Tag("integration")   // no hereda de AbstractIntegrationTest: levanta su propio MySQLContainer
 class ProductImageOversizeTest {
 
     // Own container for RANDOM_PORT context (cannot share the AbstractIntegrationTest singleton

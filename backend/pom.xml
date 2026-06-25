@@ -143,4 +143,25 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Perfil "fast": loop de desarrollo. Omite los tests @Tag("integration")
+             (los ~99 de Testcontainers MySQL, que arrancan Docker + contexto Spring).
+             Uso: ./mvnw test -Pfast  → corre solo unit + web slice (rápido, sin Docker).
+             El `mvn test` por defecto sigue corriendo la suite COMPLETA (CI / pre-commit). -->
+        <profile>
+            <id>fast</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludedGroups>integration</excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

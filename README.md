@@ -96,8 +96,12 @@ Desde `/admin` gestionás productos, categorías, pedidos, usuarios y reportes.
 
 ```bash
 cd backend
-./mvnw test
+./mvnw test            # suite completa (incluye los de integración con Docker)
+./mvnw test -Pfast     # loop de desarrollo: omite los de integración (sin Docker, mucho más rápido)
 ```
+
+> El perfil `fast` saltea los tests marcados `@Tag("integration")` (Testcontainers MySQL).
+> Usalo mientras desarrollás; corré la suite completa antes de commitear.
 
 Los tests de integración usan **Testcontainers** (levanta un MySQL real en Docker).
 La **primera vez en cada máquina** configurá Docker para Testcontainers:
