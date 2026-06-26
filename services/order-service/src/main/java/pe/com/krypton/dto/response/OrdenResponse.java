@@ -14,6 +14,7 @@ public record OrdenResponse(
         String customerName,
         String customerDoc,
         BigDecimal subtotal,
+        BigDecimal discount,
         BigDecimal shippingCost,
         BigDecimal igv,
         BigDecimal total,

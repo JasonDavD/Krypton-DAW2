@@ -49,6 +49,9 @@ public class Orden {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal subtotal;
 
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal discount;
+
     @Column(name = "shipping_cost", nullable = false, precision = 12, scale = 2)
     private BigDecimal shippingCost;
 

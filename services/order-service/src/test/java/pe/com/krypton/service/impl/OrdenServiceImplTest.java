@@ -21,7 +21,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pe.com.krypton.client.CatalogClient;
 import pe.com.krypton.client.PaymentClient;
+import pe.com.krypton.client.PromoClient;
+import pe.com.krypton.client.dto.ApplyPromoRequest;
 import pe.com.krypton.client.dto.ChargeRequest;
+import pe.com.krypton.client.dto.DiscountResponse;
 import pe.com.krypton.client.dto.PaymentResponse;
 import pe.com.krypton.client.dto.ProductoResponse;
 import pe.com.krypton.client.dto.StockMovementRequest;
@@ -60,6 +63,7 @@ class OrdenServiceImplTest {
     @Mock private OrdenMapper ordenMapper;
     @Mock private CatalogClient catalogClient;
     @Mock private PaymentClient paymentClient;
+    @Mock private PromoClient promoClient;
     @Mock private EstadoOrdenPolicy estadoOrdenPolicy;
 
     @InjectMocks private OrdenServiceImpl ordenService;
@@ -83,7 +87,7 @@ class OrdenServiceImplTest {
     }
 
     private static CheckoutRequest boletaRequest() {
-        return new CheckoutRequest(TipoDocumento.BOLETA, "Juan Perez", "12345678");
+        return new CheckoutRequest(TipoDocumento.BOLETA, "Juan Perez", "12345678", null);
     }
 
     @Test
@@ -219,5 +223,37 @@ class OrdenServiceImplTest {
                 .isInstanceOf(OrderStatusTransitionException.class);
 
         verify(paymentClient, never()).charge(any()); // ni se intentó cobrar
+    }
+
+    // ---------------------------------------------------------------------
+    // F11: cupón de descuento (Feign a promo-service en el checkout)
+    // ---------------------------------------------------------------------
+
+    @Test
+    void should_apply_coupon_discount_to_total_when_coupon_present() {
+        cartConUnItem(); // subtotal = 100 × 2 = 200
+        when(ordenRepository.save(any(Orden.class))).thenAnswer(inv -> {
+            Orden o = inv.getArgument(0);
+            o.setId(60L);
+            return o;
+        });
+        when(promoClient.applyPromo(any()))
+                .thenReturn(new DiscountResponse("KR20", new BigDecimal("20.00"), new BigDecimal("180.00")));
+
+        CheckoutRequest req = new CheckoutRequest(TipoDocumento.BOLETA, "Juan Perez", "12345678", "KR20");
+        ordenService.confirmarCompra(EMAIL, req);
+
+        ArgumentCaptor<Orden> orderCap = ArgumentCaptor.forClass(Orden.class);
+        verify(ordenRepository).save(orderCap.capture());
+        Orden saved = orderCap.getValue();
+        assertThat(saved.getDiscount()).isEqualByComparingTo("20.00");
+        // total = subtotal(200) − descuento(20) + envío(20, porque 200 < S/300) = 200
+        assertThat(saved.getTotal()).isEqualByComparingTo("200.00");
+
+        // a promo se le pasó el código y el subtotal
+        ArgumentCaptor<ApplyPromoRequest> promoCap = ArgumentCaptor.forClass(ApplyPromoRequest.class);
+        verify(promoClient).applyPromo(promoCap.capture());
+        assertThat(promoCap.getValue().code()).isEqualTo("KR20");
+        assertThat(promoCap.getValue().amount()).isEqualByComparingTo("200.00");
     }
 }

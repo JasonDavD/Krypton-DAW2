@@ -10,7 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.com.krypton.client.CatalogClient;
 import pe.com.krypton.client.PaymentClient;
+import pe.com.krypton.client.PromoClient;
+import pe.com.krypton.client.dto.ApplyPromoRequest;
 import pe.com.krypton.client.dto.ChargeRequest;
+import pe.com.krypton.client.dto.DiscountResponse;
 import pe.com.krypton.client.dto.PaymentResponse;
 import pe.com.krypton.client.dto.ProductoResponse;
 import pe.com.krypton.client.dto.StockItemRequest;
@@ -26,6 +29,7 @@ import pe.com.krypton.entity.enums.EstadoOrden;
 import pe.com.krypton.entity.enums.TipoDocumento;
 import pe.com.krypton.exception.EmptyCartException;
 import pe.com.krypton.exception.InsufficientStockException;
+import pe.com.krypton.exception.InvalidCouponException;
 import pe.com.krypton.exception.InvalidDocumentException;
 import pe.com.krypton.exception.PaymentDeclinedException;
 import pe.com.krypton.exception.ResourceNotFoundException;
@@ -61,6 +65,7 @@ public class OrdenServiceImpl implements OrdenService {
     private final OrdenMapper ordenMapper;
     private final CatalogClient catalogClient;
     private final PaymentClient paymentClient;
+    private final PromoClient promoClient;
     private final EstadoOrdenPolicy estadoOrdenPolicy;
 
     public OrdenServiceImpl(OrdenRepository ordenRepository,
@@ -70,6 +75,7 @@ public class OrdenServiceImpl implements OrdenService {
                             OrdenMapper ordenMapper,
                             CatalogClient catalogClient,
                             PaymentClient paymentClient,
+                            PromoClient promoClient,
                             EstadoOrdenPolicy estadoOrdenPolicy) {
         this.ordenRepository = ordenRepository;
         this.itemOrdenRepository = itemOrdenRepository;
@@ -78,6 +84,7 @@ public class OrdenServiceImpl implements OrdenService {
         this.ordenMapper = ordenMapper;
         this.catalogClient = catalogClient;
         this.paymentClient = paymentClient;
+        this.promoClient = promoClient;
         this.estadoOrdenPolicy = estadoOrdenPolicy;
     }
 
@@ -113,10 +120,12 @@ public class OrdenServiceImpl implements OrdenService {
             stockItems.add(new StockItemRequest(ci.getProductId(), ci.getQuantity()));
         }
 
-        // 2) Envío (gratis si subtotal ≥ S/300), total e IGV desglosado hacia adentro.
+        // 2) Cupón (Feign a promo-service; 0 si no hay), envío (gratis si subtotal ≥ S/300),
+        //    total (= subtotal − descuento + envío) e IGV desglosado hacia adentro.
+        BigDecimal discount = aplicarCupon(request.couponCode(), subtotal);
         BigDecimal shipping = subtotal.compareTo(FREE_SHIPPING_THRESHOLD) >= 0
                 ? BigDecimal.ZERO : SHIPPING_COST;
-        BigDecimal total = subtotal.add(shipping);
+        BigDecimal total = subtotal.subtract(discount).add(shipping);
         BigDecimal base = total.divide(IGV_DIVISOR, 2, RoundingMode.HALF_UP);
         BigDecimal igv = total.subtract(base);
 
@@ -129,6 +138,7 @@ public class OrdenServiceImpl implements OrdenService {
         orden.setCustomerName(request.customerName());
         orden.setCustomerDoc(request.customerDoc());
         orden.setSubtotal(subtotal);
+        orden.setDiscount(discount);
         orden.setShippingCost(shipping);
         orden.setIgv(igv);
         orden.setTotal(total);
@@ -203,6 +213,22 @@ public class OrdenServiceImpl implements OrdenService {
         orden.setPaymentMethod(request.method());
         ordenRepository.save(orden);
         return ordenMapper.toResponse(orden, itemOrdenRepository.findByOrder(orden));
+    }
+
+    /** Aplica el cupón vía promo-service (Feign). 0 si no hay; 422 (InvalidCoupon) si es inválido. */
+    private BigDecimal aplicarCupon(String couponCode, BigDecimal subtotal) {
+        if (couponCode == null || couponCode.isBlank()) {
+            return BigDecimal.ZERO;
+        }
+        try {
+            DiscountResponse desc = promoClient.applyPromo(new ApplyPromoRequest(couponCode, subtotal));
+            return desc.discount();
+        } catch (FeignException ex) {
+            if (ex.status() == 422 || ex.status() == 404) {
+                throw new InvalidCouponException("Cupón inválido: " + couponCode);
+            }
+            throw ex; // 5xx u otro → lo mapea el GlobalExceptionHandler
+        }
     }
 
     /** FACTURA exige RUC (11 dígitos); BOLETA exige DNI (8). 422 si no corresponde. */

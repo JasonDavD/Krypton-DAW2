@@ -43,6 +43,7 @@ public class OrdenMapper {
                 order.getCustomerName(),
                 order.getCustomerDoc(),
                 order.getSubtotal(),
+                order.getDiscount(),
                 order.getShippingCost(),
                 order.getIgv(),
                 order.getTotal(),
