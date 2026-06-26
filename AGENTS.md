@@ -16,7 +16,7 @@ Modelo de datos y arquitectura: ver [`docs/`](docs/).
 ## Convenciones
 
 - Conventional commits únicamente. Sin atribución a IA.
-- **Comentarios en español.** Identificadores (variables, métodos, campos, clases) en inglés — interoperabilidad con Spring/JPA y el contrato JSON/BD.
+- **Comentarios en español.** Tipos del dominio en **spanglish** (`UsuarioRepository`) y métodos de service/controller en **español**. Quedan en inglés (lo exige el framework): métodos de repositories (derived queries) y heredados de Spring, y los campos/columnas del contrato JSON/BD. Detalle en `CLAUDE.md` → sección Nomenclatura.
 - Migraciones Flyway desde `V1`. `ddl-auto: validate`.
 - Tests: `mvn test`. RED → GREEN → REFACTOR.
 - DB local: `docker compose up -d` antes de correr la app.

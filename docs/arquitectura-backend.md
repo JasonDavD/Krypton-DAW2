@@ -1,7 +1,15 @@
 # Krypton — Arquitectura Backend (Capas con Interfaces)
 
+> **Nota (post-refactor de nomenclatura):** el **diseño por capas** de este documento sigue
+> vigente, pero los nombres concretos cambiaron. Base package real: **`pe.com.krypton`**. El
+> paquete de entidades es **`entity`** (no `model`). Los tipos del dominio están en **spanglish**
+> (`Usuario`, `Producto`, `Categoria`, `Orden`, `Carrito`, `ItemOrden`, `MovimientoStock`…) y los
+> métodos de service/controller en **español** (`registrar`, `listar`, `buscarPorId`,
+> `confirmarCompra`…). Los controllers se separan en **`controller/store`** y **`controller/admin`**.
+> Hay una base CRUD genérica **`ICRUD`/`ICRUDImpl`**. Nomenclatura vigente: ver `CLAUDE.md`.
+
 **Estilo:** Arquitectura por capas con desacople vía interfaces.
-**Base package:** `com.krypton` (a confirmar al generar el proyecto).
+**Base package:** `pe.com.krypton`.
 **Regla de oro de dependencias:** las dependencias van **hacia abajo**.
 `controller → service → repository → base de datos`. Una capa NUNCA salta a otra
 (el controller no toca el repository directo).

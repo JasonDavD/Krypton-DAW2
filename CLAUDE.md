@@ -41,8 +41,8 @@ cd frontend && npm install && npm run dev
 cd backend
 ./mvnw test                                                   # toda la suite (~411 tests, incluye Docker)
 ./mvnw test -Pfast                                            # loop de dev: SOLO unit + web slice (~313, sin Docker)
-./mvnw -Dtest=ProductServiceImplTest test                     # una clase
-./mvnw -Dtest=ProductServiceImplTest#should_persist_when_sku_unique test   # un solo test
+./mvnw -Dtest=ProductoServiceImplTest test                    # una clase
+./mvnw -Dtest=ProductoServiceImplTest#should_throw_when_sku_already_exists test   # un solo test
 ```
 
 Los ~99 tests de integración están marcados `@Tag("integration")` (heredado vía
@@ -69,7 +69,17 @@ Admin sembrado por Flyway: `admin@krypton.pe` / `Admin123!`.
 ## Arquitectura backend — capas con interfaces
 
 Base package `pe.com.krypton`. Las dependencias van **hacia abajo**:
-`controller → service (interfaz + impl) → repository → model (@Entity)`.
+`controller → service (interfaz + impl) → repository → entity (@Entity)`.
+
+**Nomenclatura (spanglish — decisión del proyecto):** los tipos del dominio van en español con
+sufijo técnico en inglés — `Usuario`, `Producto`, `Categoria`, `Orden`, `Carrito`, `ItemOrden`,
+`MovimientoStock` y sus `*Repository`/`*Service`/`*ServiceImpl`/`*Mapper`/`*Controller`. Los
+**métodos públicos** de services y controllers están en **español** (`registrar`, `actualizar`,
+`eliminar`, `listar`, `buscarPorId`, `buscar` + verbos de dominio: `confirmarCompra`,
+`agregarItem`…). Quedan en **inglés** (lo exige el framework, no tocar): métodos de repositories
+(derived queries `findBy.../existsBy...`), métodos heredados de Spring (`save`,
+`loadUserByUsername`), y los nombres de campos de entidades/DTOs y de columnas/tablas
+(`@Table`/`@Column`) que forman el contrato JSON/BD.
 
 Reglas de oro (no negociables — ver `docs/arquitectura-backend.md` y skill `krypton-backend`):
 
@@ -77,11 +87,17 @@ Reglas de oro (no negociables — ver `docs/arquitectura-backend.md` y skill `kr
 2. **NUNCA exponer `@Entity` en la API.** Entran/salen DTOs (`dto/request`, `dto/response`);
    la traducción Entity↔DTO vive en `mapper/`.
 3. **Cada service es interfaz + impl.** El controller depende de la interfaz (mockeable en tests).
-4. **Checkout = UNA transacción** (`@Transactional` en `OrderServiceImpl`): crea orden + items,
-   registra `SALIDA` en `stock_movement`, descuenta `products.stock`, vacía el carrito. Todo o nada.
+4. **Checkout = UNA transacción** (`@Transactional` en `OrdenServiceImpl.confirmarCompra`): crea
+   orden + items, registra `SALIDA` en `stock_movement`, descuenta `products.stock`, vacía el
+   carrito. Todo o nada.
 
-Paquetes más allá del CRUD básico: `security/` (JWT stateless), `policy/` (`OrderStatusPolicy`,
-transiciones de estado de pedido), `spec/` (JPA Specifications para filtros de catálogo/órdenes),
+Los controllers se separan en `controller/store/` (públicos / cliente) y `controller/admin/`
+(gestión, bajo `/api/admin/**`). Hay una base CRUD genérica `ICRUD`/`ICRUDImpl` (`guardar`,
+`borrar`, `listarTodos`, `obtenerPorId` — a nivel entidad) que los `*ServiceImpl` extienden y usan
+internamente; la API pública del service sigue recibiendo/devolviendo DTOs.
+
+Paquetes más allá del CRUD básico: `security/` (JWT stateless), `policy/` (`EstadoOrdenPolicy`,
+transiciones de estado de la orden), `spec/` (JPA Specifications para filtros de catálogo/órdenes),
 `report/` (exportadores PDF con OpenPDF y Excel con Apache POI), `exception/`
 (`GlobalExceptionHandler` con `@RestControllerAdvice` → respuestas `ApiError`).
 
@@ -89,7 +105,7 @@ transiciones de estado de pedido), `spec/` (JPA Specifications para filtros de c
 
 JWT stateless, sin sesión. `/api/auth/**` y Swagger: público. `GET /api/products/**`,
 `/api/categories/**`, `/api/uploads/**`: público. **`/api/admin/**`: solo `ROLE_ADMIN`** — toda
-la gestión (los `Admin*Controller`) cuelga de ahí. Todo lo demás: autenticado.
+la gestión (los controllers de `controller/admin/`) cuelga de ahí. Todo lo demás: autenticado.
 
 ### Modelo de datos (sutil — fácil de romper)
 
@@ -127,8 +143,10 @@ checkout, orders, auth, home, legal, admin). Dentro de cada feature se co-locali
 ## Convenciones
 
 - **Commits**: conventional commits ÚNICAMENTE. NUNCA agregar `Co-Authored-By` ni atribución a IA.
-- **Idioma**: **comentarios en español**; identificadores (variables, métodos, campos, clases)
-  **en inglés** — interoperabilidad con Spring/JPA y el contrato JSON/BD.
+- **Idioma / nomenclatura**: comentarios en español. **Tipos del dominio en spanglish**
+  (`UsuarioRepository`) y **métodos de service/controller en español**. Quedan en **inglés** por
+  exigencia del framework: métodos de repositories (derived queries), métodos heredados de Spring,
+  y los campos/columnas del contrato JSON/BD. Detalle en la sección "Nomenclatura" de arriba.
 - **TDD estricto** está activo: el test que falla va PRIMERO. Ver skill `krypton-tdd` por capa
   (unit con Mockito mockeando la interfaz del repository, web slice con `@WebMvcTest`, integración
   con Testcontainers MySQL real). Nombres: `should_<esperado>_when_<condición>()`.
