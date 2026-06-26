@@ -13,22 +13,22 @@ public interface ProductoService {
      * Búsqueda pública con filtros opcionales. Siempre filtra active=true
      * en la ruta pública; el admin puede omitir ese filtro si se expone otra firma.
      */
-    PageResponse<ProductoResponse> search(String name, Long categoryId,
+    PageResponse<ProductoResponse> buscar(String name, Long categoryId,
                                          BigDecimal priceMin, BigDecimal priceMax,
                                          Pageable pageable);
 
     /** Retorna el producto activo o lanza ResourceNotFoundException (404). */
-    ProductoResponse getById(Long id);
+    ProductoResponse buscarPorId(Long id);
 
     /** Crea un producto. SKU único; categoría debe existir; stock = bootstrap only. */
-    ProductoResponse create(ProductoRequest request);
+    ProductoResponse registrar(ProductoRequest request);
 
     /**
      * Actualiza un producto. SKU único excluyendo propio id.
      * IMPORTANTE: el campo stock del request es ignorado — stock es READ-ONLY post-creación.
      */
-    ProductoResponse update(Long id, ProductoRequest request);
+    ProductoResponse actualizar(Long id, ProductoRequest request);
 
     /** Soft-delete: establece active=false. NO elimina la fila. */
-    void delete(Long id);
+    void eliminar(Long id);
 }

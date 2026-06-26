@@ -23,17 +23,17 @@ public class ProductoController {
     }
 
     @GetMapping
-    public PageResponse<ProductoResponse> search(
+    public PageResponse<ProductoResponse> buscar(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) BigDecimal priceMin,
             @RequestParam(required = false) BigDecimal priceMax,
             Pageable pageable) {
-        return productService.search(name, categoryId, priceMin, priceMax, pageable);
+        return productService.buscar(name, categoryId, priceMin, priceMax, pageable);
     }
 
     @GetMapping("/{id}")
-    public ProductoResponse getById(@PathVariable Long id) {
-        return productService.getById(id);
+    public ProductoResponse buscarPorId(@PathVariable Long id) {
+        return productService.buscarPorId(id);
     }
 }

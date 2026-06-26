@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.com.krypton.dto.request.ProductoRequest;
@@ -20,7 +21,7 @@ import pe.com.krypton.service.ProductoService;
 import pe.com.krypton.spec.ProductoSpecification;
 
 @Service
-public class ProductoServiceImpl implements ProductoService {
+public class ProductoServiceImpl extends ICRUDImpl<Producto, Long> implements ProductoService {
 
     private final ProductoRepository productRepository;
     private final CategoriaRepository categoryRepository;
@@ -34,9 +35,15 @@ public class ProductoServiceImpl implements ProductoService {
         this.productMapper = productMapper;
     }
 
+    /** Repository que usa el CRUD genérico heredado (guardar/listarTodos/...). */
+    @Override
+    protected JpaRepository<Producto, Long> repo() {
+        return productRepository;
+    }
+
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ProductoResponse> search(String name, Long categoryId,
+    public PageResponse<ProductoResponse> buscar(String name, Long categoryId,
                                                  BigDecimal priceMin, BigDecimal priceMax,
                                                  Pageable pageable) {
         Specification<Producto> spec = Specification
@@ -54,7 +61,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProductoResponse getById(Long id) {
+    public ProductoResponse buscarPorId(Long id) {
         Producto product = findOrThrow(id);
         if (!product.isActive()) {
             throw new ResourceNotFoundException("Producto no encontrado: " + id);
@@ -65,7 +72,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public ProductoResponse create(ProductoRequest request) {
+    public ProductoResponse registrar(ProductoRequest request) {
         if (productRepository.existsBySku(request.sku())) {
             throw new DuplicateSkuException("El SKU ya está registrado: " + request.sku());
         }
@@ -82,12 +89,12 @@ public class ProductoServiceImpl implements ProductoService {
         product.setActive(true);
         product.setCategory(category);
 
-        return productMapper.toResponse(productRepository.save(product));
+        return productMapper.toResponse(guardar(product));   // ← heredado de ICRUDImpl
     }
 
     @Override
     @Transactional
-    public ProductoResponse update(Long id, ProductoRequest request) {
+    public ProductoResponse actualizar(Long id, ProductoRequest request) {
         Producto product = findOrThrow(id);
 
         if (productRepository.existsBySkuAndIdNot(request.sku(), id)) {
@@ -103,14 +110,15 @@ public class ProductoServiceImpl implements ProductoService {
         product.setImageUrl(request.imageUrl());
         product.setCategory(category);
 
-        return productMapper.toResponse(productRepository.save(product));
+        return productMapper.toResponse(guardar(product));   // ← heredado de ICRUDImpl
     }
 
     @Override
     @Transactional
-    public void delete(Long id) {
+    public void eliminar(Long id) {
         Producto product = findOrThrow(id);
-        // SOFT delete: marca como inactivo, no elimina la fila
+        // SOFT delete: marca como inactivo, no elimina la fila.
+        // No usamos el borrar() genérico (haría hard delete por id): la lógica es propia.
         product.setActive(false);
         productRepository.save(product);
     }

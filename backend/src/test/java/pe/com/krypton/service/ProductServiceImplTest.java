@@ -91,7 +91,7 @@ class ProductServiceImplTest {
         Page<Producto> page = new PageImpl<>(List.of(p), pageable, 1);
         when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
-        PageResponse<ProductoResponse> result = service.search(null, null, null, null, pageable);
+        PageResponse<ProductoResponse> result = service.buscar(null, null, null, null, pageable);
 
         assertThat(result.content()).hasSize(1);
         assertThat(result.totalElements()).isEqualTo(1);
@@ -105,7 +105,7 @@ class ProductServiceImplTest {
         Producto p = product(1L, "SKU-001", true);
         when(productRepository.findById(1L)).thenReturn(Optional.of(p));
 
-        ProductoResponse result = service.getById(1L);
+        ProductoResponse result = service.buscarPorId(1L);
 
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.sku()).isEqualTo("SKU-001");
@@ -134,7 +134,7 @@ class ProductServiceImplTest {
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(p));
 
-        ProductoResponse result = service.getById(1L);
+        ProductoResponse result = service.buscarPorId(1L);
 
         assertThat(result.images()).isNotNull();
         assertThat(result.images()).hasSize(2);
@@ -152,7 +152,7 @@ class ProductServiceImplTest {
         Page<Producto> page = new PageImpl<>(List.of(p), pageable, 1);
         when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
-        PageResponse<ProductoResponse> result = service.search(null, null, null, null, pageable);
+        PageResponse<ProductoResponse> result = service.buscar(null, null, null, null, pageable);
 
         assertThat(result.content()).hasSize(1);
         // images field must be null (lean mapping) so @JsonInclude(NON_NULL) omits it in JSON
@@ -163,7 +163,7 @@ class ProductServiceImplTest {
     void should_throw_not_found_when_product_does_not_exist() {
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getById(99L))
+        assertThatThrownBy(() -> service.buscarPorId(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -172,7 +172,7 @@ class ProductServiceImplTest {
         Producto p = product(2L, "SKU-002", false);
         when(productRepository.findById(2L)).thenReturn(Optional.of(p));
 
-        assertThatThrownBy(() -> service.getById(2L))
+        assertThatThrownBy(() -> service.buscarPorId(2L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -190,7 +190,7 @@ class ProductServiceImplTest {
             return p;
         });
 
-        ProductoResponse result = service.create(req);
+        ProductoResponse result = service.registrar(req);
 
         assertThat(result.id()).isEqualTo(10L);
         assertThat(result.sku()).isEqualTo("NEW-SKU");
@@ -201,7 +201,7 @@ class ProductServiceImplTest {
     void should_reject_create_when_sku_already_exists() {
         when(productRepository.existsBySku("DUP-SKU")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.create(request("DUP-SKU", 1L, 0)))
+        assertThatThrownBy(() -> service.registrar(request("DUP-SKU", 1L, 0)))
                 .isInstanceOf(DuplicateSkuException.class);
         verify(productRepository, never()).save(any());
     }
@@ -211,7 +211,7 @@ class ProductServiceImplTest {
         when(productRepository.existsBySku("SKU-X")).thenReturn(false);
         when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.create(request("SKU-X", 99L, 0)))
+        assertThatThrownBy(() -> service.registrar(request("SKU-X", 99L, 0)))
                 .isInstanceOf(ResourceNotFoundException.class);
         verify(productRepository, never()).save(any());
     }
@@ -232,7 +232,7 @@ class ProductServiceImplTest {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(cat));
         when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ProductoResponse result = service.update(1L, req);
+        ProductoResponse result = service.actualizar(1L, req);
 
         assertThat(result.name()).isEqualTo("New Name");
         assertThat(result.sku()).isEqualTo("NEW-SKU");
@@ -249,7 +249,7 @@ class ProductServiceImplTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(productRepository.existsBySkuAndIdNot("TAKEN-SKU", 1L)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.update(1L, request("TAKEN-SKU", 1L, 0)))
+        assertThatThrownBy(() -> service.actualizar(1L, request("TAKEN-SKU", 1L, 0)))
                 .isInstanceOf(DuplicateSkuException.class);
         verify(productRepository, never()).save(any());
     }
@@ -265,7 +265,7 @@ class ProductServiceImplTest {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(cat));
         when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ProductoResponse result = service.update(1L, req);
+        ProductoResponse result = service.actualizar(1L, req);
 
         assertThat(result.sku()).isEqualTo("SAME-SKU");
     }
@@ -278,7 +278,7 @@ class ProductServiceImplTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.delete(1L);
+        service.eliminar(1L);
 
         ArgumentCaptor<Producto> saved = ArgumentCaptor.forClass(Producto.class);
         verify(productRepository).save(saved.capture());
@@ -289,7 +289,7 @@ class ProductServiceImplTest {
     void should_throw_not_found_on_delete_when_product_missing() {
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.delete(99L))
+        assertThatThrownBy(() -> service.eliminar(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
         verify(productRepository, never()).save(any());
     }

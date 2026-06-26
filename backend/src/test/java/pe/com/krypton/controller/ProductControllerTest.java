@@ -58,7 +58,7 @@ class ProductControllerTest {
     void should_return_200_and_page_when_listing_products() throws Exception {
         var page = new PageImpl<>(List.of(sampleProduct(1L), sampleProduct(2L)),
                 PageRequest.of(0, 20), 2);
-        when(productService.search(isNull(), isNull(), isNull(), isNull(), any()))
+        when(productService.buscar(isNull(), isNull(), isNull(), isNull(), any()))
                 .thenReturn(PageResponse.of(page));
 
         mvc.perform(get("/api/products"))
@@ -71,7 +71,7 @@ class ProductControllerTest {
     @Test
     void should_return_200_with_filters_when_name_param_provided() throws Exception {
         var page = new PageImpl<>(List.of(sampleProduct(3L)), PageRequest.of(0, 20), 1);
-        when(productService.search(any(), isNull(), isNull(), isNull(), any()))
+        when(productService.buscar(any(), isNull(), isNull(), isNull(), any()))
                 .thenReturn(PageResponse.of(page));
 
         mvc.perform(get("/api/products").param("name", "Producto"))
@@ -81,7 +81,7 @@ class ProductControllerTest {
 
     @Test
     void should_return_200_when_get_product_by_id() throws Exception {
-        when(productService.getById(5L)).thenReturn(sampleProduct(5L));
+        when(productService.buscarPorId(5L)).thenReturn(sampleProduct(5L));
 
         mvc.perform(get("/api/products/5"))
                 .andExpect(status().isOk())
@@ -92,7 +92,7 @@ class ProductControllerTest {
 
     @Test
     void should_return_404_when_product_not_found_or_inactive() throws Exception {
-        when(productService.getById(99L))
+        when(productService.buscarPorId(99L))
                 .thenThrow(new ResourceNotFoundException("Producto no encontrado o inactivo"));
 
         mvc.perform(get("/api/products/99"))
@@ -104,7 +104,7 @@ class ProductControllerTest {
     @Test
     void should_not_include_images_field_in_list_response() throws Exception {
         var page = new PageImpl<>(List.of(sampleProduct(1L)), PageRequest.of(0, 20), 1);
-        when(productService.search(isNull(), isNull(), isNull(), isNull(), any()))
+        when(productService.buscar(isNull(), isNull(), isNull(), isNull(), any()))
                 .thenReturn(PageResponse.of(page));
 
         // images field must be absent (null → omitted via @JsonInclude(NON_NULL))
@@ -115,7 +115,7 @@ class ProductControllerTest {
 
     @Test
     void should_include_images_array_in_detail_response() throws Exception {
-        when(productService.getById(5L)).thenReturn(sampleProductWithImages(5L));
+        when(productService.buscarPorId(5L)).thenReturn(sampleProductWithImages(5L));
 
         mvc.perform(get("/api/products/5"))
                 .andExpect(status().isOk())

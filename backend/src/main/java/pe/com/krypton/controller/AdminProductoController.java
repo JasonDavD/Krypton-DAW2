@@ -27,18 +27,18 @@ public class AdminProductoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductoResponse create(@Valid @RequestBody ProductoRequest request) {
-        return productService.create(request);
+    public ProductoResponse registrar(@Valid @RequestBody ProductoRequest request) {
+        return productService.registrar(request);
     }
 
     @PutMapping("/{id}")
-    public ProductoResponse update(@PathVariable Long id, @Valid @RequestBody ProductoRequest request) {
-        return productService.update(id, request);
+    public ProductoResponse actualizar(@PathVariable Long id, @Valid @RequestBody ProductoRequest request) {
+        return productService.actualizar(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        productService.delete(id);
+    public void eliminar(@PathVariable Long id) {
+        productService.eliminar(id);
     }
 }

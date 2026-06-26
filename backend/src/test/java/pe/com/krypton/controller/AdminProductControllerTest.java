@@ -54,7 +54,7 @@ class AdminProductControllerTest {
 
     @Test
     void should_return_201_when_create_is_valid() throws Exception {
-        when(productService.create(any())).thenReturn(sampleProduct(10L));
+        when(productService.registrar(any())).thenReturn(sampleProduct(10L));
 
         mvc.perform(post("/api/admin/products")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -66,7 +66,7 @@ class AdminProductControllerTest {
 
     @Test
     void should_return_409_when_create_has_duplicate_sku() throws Exception {
-        when(productService.create(any())).thenThrow(new DuplicateSkuException("SKU ya registrado"));
+        when(productService.registrar(any())).thenThrow(new DuplicateSkuException("SKU ya registrado"));
 
         mvc.perform(post("/api/admin/products")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -82,12 +82,12 @@ class AdminProductControllerTest {
                         .content("{\"description\":\"only desc\"}"))
                 .andExpect(status().isBadRequest());
 
-        verify(productService, never()).create(any());
+        verify(productService, never()).registrar(any());
     }
 
     @Test
     void should_return_200_when_update_is_valid() throws Exception {
-        when(productService.update(eq(10L), any())).thenReturn(sampleProduct(10L));
+        when(productService.actualizar(eq(10L), any())).thenReturn(sampleProduct(10L));
 
         mvc.perform(put("/api/admin/products/10")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -98,7 +98,7 @@ class AdminProductControllerTest {
 
     @Test
     void should_return_404_when_update_product_not_found() throws Exception {
-        when(productService.update(eq(99L), any()))
+        when(productService.actualizar(eq(99L), any()))
                 .thenThrow(new ResourceNotFoundException("Producto no encontrado"));
 
         mvc.perform(put("/api/admin/products/99")
@@ -109,7 +109,7 @@ class AdminProductControllerTest {
 
     @Test
     void should_return_409_when_update_has_duplicate_sku() throws Exception {
-        when(productService.update(eq(10L), any()))
+        when(productService.actualizar(eq(10L), any()))
                 .thenThrow(new DuplicateSkuException("SKU ya usado por otro producto"));
 
         mvc.perform(put("/api/admin/products/10")
@@ -120,7 +120,7 @@ class AdminProductControllerTest {
 
     @Test
     void should_return_204_when_delete_succeeds() throws Exception {
-        doNothing().when(productService).delete(10L);
+        doNothing().when(productService).eliminar(10L);
 
         mvc.perform(delete("/api/admin/products/10"))
                 .andExpect(status().isNoContent());
@@ -129,7 +129,7 @@ class AdminProductControllerTest {
     @Test
     void should_return_404_when_delete_product_not_found() throws Exception {
         doThrow(new ResourceNotFoundException("Producto no encontrado"))
-                .when(productService).delete(99L);
+                .when(productService).eliminar(99L);
 
         mvc.perform(delete("/api/admin/products/99"))
                 .andExpect(status().isNotFound());
