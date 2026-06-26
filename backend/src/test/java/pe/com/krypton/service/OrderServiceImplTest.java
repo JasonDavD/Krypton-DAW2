@@ -185,7 +185,7 @@ class OrderServiceImplTest {
         OrdenResponse expectedResponse = sampleResponse();
         when(orderMapper.toResponse(eq(savedOrder), any())).thenReturn(expectedResponse);
 
-        OrdenResponse result = service.checkout(email, boletaRequest());
+        OrdenResponse result = service.confirmarCompra(email, boletaRequest());
 
         assertThat(result).isNotNull();
 
@@ -240,7 +240,7 @@ class OrderServiceImplTest {
         when(cartRepository.findByUser(u)).thenReturn(Optional.of(c));
         when(cartItemRepository.findByCart(c)).thenReturn(List.of()); // empty cart
 
-        assertThatThrownBy(() -> service.checkout(email, boletaRequest()))
+        assertThatThrownBy(() -> service.confirmarCompra(email, boletaRequest()))
                 .isInstanceOf(EmptyCartException.class);
 
         verify(orderRepository, never()).save(any());
@@ -256,7 +256,7 @@ class OrderServiceImplTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.empty()); // no cart at all
 
-        assertThatThrownBy(() -> service.checkout(email, boletaRequest()))
+        assertThatThrownBy(() -> service.confirmarCompra(email, boletaRequest()))
                 .isInstanceOf(EmptyCartException.class);
 
         verify(orderRepository, never()).save(any());
@@ -275,7 +275,7 @@ class OrderServiceImplTest {
         when(cartItemRepository.findByCart(c)).thenReturn(List.of(ci));
         when(productRepository.findByIdWithLock(10L)).thenReturn(Optional.of(p));
 
-        assertThatThrownBy(() -> service.checkout(email, boletaRequest()))
+        assertThatThrownBy(() -> service.confirmarCompra(email, boletaRequest()))
                 .isInstanceOf(InsufficientStockException.class);
 
         // No order, no stock movement persisted
@@ -297,7 +297,7 @@ class OrderServiceImplTest {
         when(cartItemRepository.findByCart(c)).thenReturn(List.of(ci));
         when(productRepository.findByIdWithLock(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.checkout(email, boletaRequest()))
+        assertThatThrownBy(() -> service.confirmarCompra(email, boletaRequest()))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(orderRepository, never()).save(any());
@@ -320,7 +320,7 @@ class OrderServiceImplTest {
         when(stockMovementRepository.save(any(MovimientoStock.class))).thenReturn(new MovimientoStock());
         when(orderMapper.toResponse(any(), any())).thenReturn(sampleResponse());
 
-        service.checkout(email, boletaRequest());
+        service.confirmarCompra(email, boletaRequest());
 
         ArgumentCaptor<Orden> captor = ArgumentCaptor.forClass(Orden.class);
         verify(orderRepository).save(captor.capture());
@@ -349,7 +349,7 @@ class OrderServiceImplTest {
         when(stockMovementRepository.save(any(MovimientoStock.class))).thenReturn(new MovimientoStock());
         when(orderMapper.toResponse(any(), any())).thenReturn(sampleResponse());
 
-        service.checkout(email, boletaRequest());
+        service.confirmarCompra(email, boletaRequest());
 
         ArgumentCaptor<Orden> captor = ArgumentCaptor.forClass(Orden.class);
         verify(orderRepository).save(captor.capture());
@@ -365,7 +365,7 @@ class OrderServiceImplTest {
         // FACTURA con documento de 8 díg (DNI) → rechazo antes de tocar nada
         CheckoutRequest req = new CheckoutRequest(TipoDocumento.FACTURA, "ACME SAC", "12345678");
 
-        assertThatThrownBy(() -> service.checkout("client@krypton.pe", req))
+        assertThatThrownBy(() -> service.confirmarCompra("client@krypton.pe", req))
                 .isInstanceOf(InvalidDocumentException.class);
 
         verify(userRepository, never()).findByEmail(any());
@@ -377,7 +377,7 @@ class OrderServiceImplTest {
         // BOLETA con documento de 11 díg (RUC) → rechazo
         CheckoutRequest req = new CheckoutRequest(TipoDocumento.BOLETA, "Juan", "20512345678");
 
-        assertThatThrownBy(() -> service.checkout("client@krypton.pe", req))
+        assertThatThrownBy(() -> service.confirmarCompra("client@krypton.pe", req))
                 .isInstanceOf(InvalidDocumentException.class);
 
         verify(orderRepository, never()).save(any());
@@ -400,7 +400,7 @@ class OrderServiceImplTest {
         when(stockMovementRepository.save(any(MovimientoStock.class))).thenReturn(new MovimientoStock());
         when(orderMapper.toResponse(any(), any())).thenReturn(sampleResponse());
 
-        service.checkout(email, new CheckoutRequest(TipoDocumento.FACTURA, "ACME SAC", "20512345678"));
+        service.confirmarCompra(email, new CheckoutRequest(TipoDocumento.FACTURA, "ACME SAC", "20512345678"));
 
         ArgumentCaptor<Orden> captor = ArgumentCaptor.forClass(Orden.class);
         verify(orderRepository).save(captor.capture());
@@ -430,7 +430,7 @@ class OrderServiceImplTest {
                     o.getTotal(), BigDecimal.ZERO, BigDecimal.ZERO, o.getTotal(), List.of());
         });
 
-        List<OrdenResponse> result = service.getMyOrders(email);
+        List<OrdenResponse> result = service.misOrdenes(email);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).id()).isEqualTo(2L); // newest first
@@ -449,7 +449,7 @@ class OrderServiceImplTest {
         when(orderItemRepository.findByOrder(o)).thenReturn(items);
         when(orderMapper.toResponse(o, items)).thenReturn(sampleResponse());
 
-        OrdenResponse result = service.getMyOrder(email, 5L);
+        OrdenResponse result = service.miOrden(email, 5L);
 
         assertThat(result).isNotNull();
     }
@@ -462,7 +462,7 @@ class OrderServiceImplTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(u));
         when(orderRepository.findByIdAndUser(9L, u)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getMyOrder(email, 9L))
+        assertThatThrownBy(() -> service.miOrden(email, 9L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -484,7 +484,7 @@ class OrderServiceImplTest {
                         "BOLETA", "Cliente", "00000000",
                         BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.TEN, List.of()));
 
-        OrdenResponse result = service.pay(email, 3L, new PaymentRequest(MetodoPago.YAPE));
+        OrdenResponse result = service.pagar(email, 3L, new PaymentRequest(MetodoPago.YAPE));
 
         assertThat(result.status()).isEqualTo("CONFIRMADA");
         assertThat(o.getStatus()).isEqualTo(EstadoOrden.CONFIRMADA);
@@ -501,7 +501,7 @@ class OrderServiceImplTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(u));
         when(orderRepository.findByIdAndUser(4L, u)).thenReturn(Optional.of(o));
 
-        assertThatThrownBy(() -> service.pay(email, 4L, new PaymentRequest(MetodoPago.YAPE)))
+        assertThatThrownBy(() -> service.pagar(email, 4L, new PaymentRequest(MetodoPago.YAPE)))
                 .isInstanceOf(OrderStatusTransitionException.class);
 
         verify(orderRepository, never()).save(any());
@@ -516,7 +516,7 @@ class OrderServiceImplTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(u));
         when(orderRepository.findByIdAndUser(7L, u)).thenReturn(Optional.of(o));
 
-        assertThatThrownBy(() -> service.pay(email, 7L, new PaymentRequest(MetodoPago.DEBIT_CARD)))
+        assertThatThrownBy(() -> service.pagar(email, 7L, new PaymentRequest(MetodoPago.DEBIT_CARD)))
                 .isInstanceOf(OrderStatusTransitionException.class);
     }
 
@@ -528,7 +528,7 @@ class OrderServiceImplTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(u));
         when(orderRepository.findByIdAndUser(8L, u)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.pay(email, 8L, new PaymentRequest(MetodoPago.CREDIT_CARD)))
+        assertThatThrownBy(() -> service.pagar(email, 8L, new PaymentRequest(MetodoPago.CREDIT_CARD)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -546,7 +546,7 @@ class OrderServiceImplTest {
         when(orderItemRepository.findByOrder(o)).thenReturn(List.of());
         when(comprobanteExporter.export(eq(o), any())).thenReturn(pdf);
 
-        byte[] result = service.getMyComprobantePdf(email, 5L);
+        byte[] result = service.miComprobantePdf(email, 5L);
 
         assertThat(result).isEqualTo(pdf);
     }
@@ -560,7 +560,7 @@ class OrderServiceImplTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(u));
         when(orderRepository.findByIdAndUser(6L, u)).thenReturn(Optional.of(o));
 
-        assertThatThrownBy(() -> service.getMyComprobantePdf(email, 6L))
+        assertThatThrownBy(() -> service.miComprobantePdf(email, 6L))
                 .isInstanceOf(ComprobanteNotAvailableException.class);
         verify(comprobanteExporter, never()).export(any(), any());
     }
@@ -573,7 +573,7 @@ class OrderServiceImplTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(u));
         when(orderRepository.findByIdAndUser(9L, u)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getMyComprobantePdf(email, 9L))
+        assertThatThrownBy(() -> service.miComprobantePdf(email, 9L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -586,7 +586,7 @@ class OrderServiceImplTest {
         when(orderItemRepository.findByOrder(o)).thenReturn(List.of());
         when(comprobanteExporter.export(eq(o), any())).thenReturn(pdf);
 
-        byte[] result = service.getComprobantePdf(7L);
+        byte[] result = service.comprobantePdf(7L);
 
         assertThat(result).isEqualTo(pdf);
     }
@@ -604,7 +604,7 @@ class OrderServiceImplTest {
         when(orderItemRepository.findByOrder(o)).thenReturn(List.of());
         when(orderMapper.toResponse(eq(o), any())).thenReturn(sampleResponse());
 
-        PageResponse<OrdenResponse> result = service.getAllOrders(null, null, null, pageable);
+        PageResponse<OrdenResponse> result = service.listarOrdenes(null, null, null, pageable);
 
         assertThat(result.content()).hasSize(1);
         assertThat(result.totalElements()).isEqualTo(1);
@@ -620,7 +620,7 @@ class OrderServiceImplTest {
         when(orderItemRepository.findByOrder(o)).thenReturn(items);
         when(orderMapper.toResponse(o, items)).thenReturn(sampleResponse());
 
-        OrdenResponse result = service.getOrder(10L);
+        OrdenResponse result = service.obtenerOrden(10L);
 
         assertThat(result).isNotNull();
     }
@@ -629,7 +629,7 @@ class OrderServiceImplTest {
     void getOrder_not_found_throws_ResourceNotFoundException() {
         when(orderRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getOrder(999L))
+        assertThatThrownBy(() -> service.obtenerOrden(999L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -651,7 +651,7 @@ class OrderServiceImplTest {
                         new BigDecimal("599.80"), BigDecimal.ZERO, BigDecimal.ZERO,
                         new BigDecimal("599.80"), List.of()));
 
-        OrdenResponse result = service.updateStatus(2L, EstadoOrden.CANCELADA);
+        OrdenResponse result = service.actualizarEstado(2L, EstadoOrden.CANCELADA);
 
         assertThat(o.getStatus()).isEqualTo(EstadoOrden.CANCELADA);
         assertThat(p.getStock()).isEqualTo(5); // 3 + 2 repuestas
@@ -687,7 +687,7 @@ class OrderServiceImplTest {
                         new BigDecimal("299.90"), BigDecimal.ZERO, BigDecimal.ZERO,
                         new BigDecimal("299.90"), List.of()));
 
-        service.updateStatus(2L, EstadoOrden.CANCELADA);
+        service.actualizarEstado(2L, EstadoOrden.CANCELADA);
 
         assertThat(o.getStatus()).isEqualTo(EstadoOrden.CANCELADA);
         assertThat(p.getStock()).isEqualTo(5); // 4 + 1
@@ -702,7 +702,7 @@ class OrderServiceImplTest {
 
         when(orderRepository.findById(2L)).thenReturn(Optional.of(o));
 
-        assertThatThrownBy(() -> service.updateStatus(2L, EstadoOrden.CONFIRMADA))
+        assertThatThrownBy(() -> service.actualizarEstado(2L, EstadoOrden.CONFIRMADA))
                 .isInstanceOf(OrderStatusTransitionException.class);
 
         verify(orderRepository, never()).save(any());
@@ -724,7 +724,7 @@ class OrderServiceImplTest {
                         "BOLETA", "Cliente", "00000000",
                         BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.TEN, List.of()));
 
-        OrdenResponse result = service.updateStatus(2L, EstadoOrden.CONFIRMADA);
+        OrdenResponse result = service.actualizarEstado(2L, EstadoOrden.CONFIRMADA);
 
         assertThat(o.getStatus()).isEqualTo(EstadoOrden.CONFIRMADA);
         verify(stockMovementRepository, never()).save(any());

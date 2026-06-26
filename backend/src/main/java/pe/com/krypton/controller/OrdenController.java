@@ -38,37 +38,37 @@ public class OrdenController {
     /** POST /api/orders/checkout → 201 OrdenResponse */
     @PostMapping("/checkout")
     @ResponseStatus(HttpStatus.CREATED)
-    public OrdenResponse checkout(@AuthenticationPrincipal UserDetails principal,
+    public OrdenResponse confirmarCompra(@AuthenticationPrincipal UserDetails principal,
                                   @Valid @RequestBody CheckoutRequest request) {
-        return orderService.checkout(principal.getUsername(), request);
+        return orderService.confirmarCompra(principal.getUsername(), request);
     }
 
     /** GET /api/orders → 200 List<OrdenResponse> (only the caller's orders, newest first) */
     @GetMapping
-    public List<OrdenResponse> getMyOrders(@AuthenticationPrincipal UserDetails principal) {
-        return orderService.getMyOrders(principal.getUsername());
+    public List<OrdenResponse> misOrdenes(@AuthenticationPrincipal UserDetails principal) {
+        return orderService.misOrdenes(principal.getUsername());
     }
 
     /** GET /api/orders/{id} → 200 OrdenResponse (404 if not owner or not found) */
     @GetMapping("/{id}")
-    public OrdenResponse getMyOrder(@AuthenticationPrincipal UserDetails principal,
+    public OrdenResponse miOrden(@AuthenticationPrincipal UserDetails principal,
                                     @PathVariable Long id) {
-        return orderService.getMyOrder(principal.getUsername(), id);
+        return orderService.miOrden(principal.getUsername(), id);
     }
 
     /** POST /api/orders/{id}/pay → 200 OrdenResponse (simulated payment: PENDIENTE → CONFIRMADA) */
     @PostMapping("/{id}/pay")
-    public OrdenResponse pay(@AuthenticationPrincipal UserDetails principal,
+    public OrdenResponse pagar(@AuthenticationPrincipal UserDetails principal,
                              @PathVariable Long id,
                              @Valid @RequestBody PaymentRequest request) {
-        return orderService.pay(principal.getUsername(), id, request);
+        return orderService.pagar(principal.getUsername(), id, request);
     }
 
     /** GET /api/orders/{id}/comprobante → 200 application/pdf (boleta/factura del propio pedido pagado). */
     @GetMapping(value = "/{id}/comprobante", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> comprobante(@AuthenticationPrincipal UserDetails principal,
                                               @PathVariable Long id) {
-        byte[] pdf = orderService.getMyComprobantePdf(principal.getUsername(), id);
+        byte[] pdf = orderService.miComprobantePdf(principal.getUsername(), id);
         return pdfAttachment(pdf, "comprobante_" + id + ".pdf");
     }
 

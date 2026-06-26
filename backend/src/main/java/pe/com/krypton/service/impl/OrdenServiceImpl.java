@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.com.krypton.dto.request.CheckoutRequest;
@@ -44,7 +45,7 @@ import pe.com.krypton.service.OrdenService;
 import pe.com.krypton.spec.OrdenSpecification;
 
 @Service
-public class OrdenServiceImpl implements OrdenService {
+public class OrdenServiceImpl extends ICRUDImpl<Orden, Long> implements OrdenService {
 
     // ── Reglas de negocio de facturación ──
     /** Envío gratis si el subtotal alcanza este umbral. */
@@ -90,6 +91,12 @@ public class OrdenServiceImpl implements OrdenService {
         this.comprobanteExporter = comprobanteExporter;
     }
 
+    /** Repository que usa el CRUD genérico heredado (guardar/listarTodos/...). */
+    @Override
+    protected JpaRepository<Orden, Long> repo() {
+        return orderRepository;
+    }
+
     // ─── CLIENT: checkout ────────────────────────────────────────────────────────
 
     /**
@@ -101,7 +108,7 @@ public class OrdenServiceImpl implements OrdenService {
      */
     @Override
     @Transactional
-    public OrdenResponse checkout(String email, CheckoutRequest request) {
+    public OrdenResponse confirmarCompra(String email, CheckoutRequest request) {
         validateDocument(request);
         Usuario user = resolveUser(email);
 
@@ -144,7 +151,7 @@ public class OrdenServiceImpl implements OrdenService {
 
         // ── Pass B: persist Orden then each line ─────────────────────────────────
         Orden order = buildOrder(user, request, subtotal, shippingCost, igv, total);
-        Orden savedOrder = orderRepository.save(order);
+        Orden savedOrder = guardar(order);   // ← heredado de ICRUDImpl
 
         List<ItemOrden> savedItems = new ArrayList<>();
         for (int i = 0; i < cartItems.size(); i++) {
@@ -186,7 +193,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OrdenResponse> getMyOrders(String email) {
+    public List<OrdenResponse> misOrdenes(String email) {
         Usuario user = resolveUser(email);
         List<Orden> orders = orderRepository.findByUserOrderByOrderDateDesc(user);
         return orders.stream()
@@ -196,7 +203,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional(readOnly = true)
-    public OrdenResponse getMyOrder(String email, Long orderId) {
+    public OrdenResponse miOrden(String email, Long orderId) {
         Usuario user = resolveUser(email);
         Orden order = orderRepository.findByIdAndUser(orderId, user)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -208,7 +215,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional
-    public OrdenResponse pay(String email, Long orderId, PaymentRequest request) {
+    public OrdenResponse pagar(String email, Long orderId, PaymentRequest request) {
         Usuario user = resolveUser(email);
         Orden order = orderRepository.findByIdAndUser(orderId, user)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -224,7 +231,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional(readOnly = true)
-    public byte[] getMyComprobantePdf(String email, Long orderId) {
+    public byte[] miComprobantePdf(String email, Long orderId) {
         Usuario user = resolveUser(email);
         Orden order = orderRepository.findByIdAndUser(orderId, user)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -234,7 +241,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional(readOnly = true)
-    public byte[] getComprobantePdf(Long orderId) {
+    public byte[] comprobantePdf(Long orderId) {
         Orden order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Orden no encontrada: " + orderId));
@@ -255,7 +262,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<OrdenResponse> getAllOrders(EstadoOrden status, Instant from, Instant to, Pageable pageable) {
+    public PageResponse<OrdenResponse> listarOrdenes(EstadoOrden status, Instant from, Instant to, Pageable pageable) {
         // Compone los filtros opcionales (null = ausente, gracias al contrato de OrdenSpecification).
         Specification<Orden> spec = Specification
                 .where(OrdenSpecification.hasStatus(status))
@@ -267,7 +274,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional(readOnly = true)
-    public OrdenResponse getOrder(Long orderId) {
+    public OrdenResponse obtenerOrden(Long orderId) {
         Orden order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Orden no encontrada: " + orderId));
@@ -276,7 +283,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional
-    public OrdenResponse updateStatus(Long orderId, EstadoOrden newStatus) {
+    public OrdenResponse actualizarEstado(Long orderId, EstadoOrden newStatus) {
         Orden order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Orden no encontrada: " + orderId));
@@ -298,7 +305,7 @@ public class OrdenServiceImpl implements OrdenService {
             revertStock(order);
         }
         order.setStatus(newStatus);
-        orderRepository.save(order);
+        guardar(order);   // ← heredado de ICRUDImpl
     }
 
     /**

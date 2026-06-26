@@ -69,7 +69,7 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void checkout_returns_201_with_order_response() throws Exception {
-        when(orderService.checkout(eq(USER_EMAIL), any())).thenReturn(sampleOrder(1L, "PENDIENTE"));
+        when(orderService.confirmarCompra(eq(USER_EMAIL), any())).thenReturn(sampleOrder(1L, "PENDIENTE"));
 
         mvc.perform(post("/api/orders/checkout").contentType(JSON).content(CHECKOUT_BODY))
                 .andExpect(status().isCreated())
@@ -83,7 +83,7 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void checkout_empty_cart_returns_400() throws Exception {
-        when(orderService.checkout(eq(USER_EMAIL), any()))
+        when(orderService.confirmarCompra(eq(USER_EMAIL), any()))
                 .thenThrow(new EmptyCartException("El carrito está vacío"));
 
         mvc.perform(post("/api/orders/checkout").contentType(JSON).content(CHECKOUT_BODY))
@@ -93,7 +93,7 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void checkout_insufficient_stock_returns_422() throws Exception {
-        when(orderService.checkout(eq(USER_EMAIL), any()))
+        when(orderService.confirmarCompra(eq(USER_EMAIL), any()))
                 .thenThrow(new InsufficientStockException("Stock insuficiente"));
 
         mvc.perform(post("/api/orders/checkout").contentType(JSON).content(CHECKOUT_BODY))
@@ -113,7 +113,7 @@ class OrderControllerTest {
     @WithMockUser(username = USER_EMAIL)
     void checkout_invalid_document_for_type_returns_422() throws Exception {
         // FACTURA con DNI (8 díg) pasa el @Pattern genérico pero el service la rechaza → 422
-        when(orderService.checkout(eq(USER_EMAIL), any()))
+        when(orderService.confirmarCompra(eq(USER_EMAIL), any()))
                 .thenThrow(new InvalidDocumentException("La factura requiere un RUC de 11 dígitos"));
 
         mvc.perform(post("/api/orders/checkout").contentType(JSON)
@@ -126,7 +126,7 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void get_my_orders_returns_200_with_list() throws Exception {
-        when(orderService.getMyOrders(USER_EMAIL))
+        when(orderService.misOrdenes(USER_EMAIL))
                 .thenReturn(List.of(sampleOrder(1L, "PENDIENTE"), sampleOrder(2L, "CONFIRMADA")));
 
         mvc.perform(get("/api/orders"))
@@ -139,7 +139,7 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void get_my_order_returns_200_with_detail() throws Exception {
-        when(orderService.getMyOrder(USER_EMAIL, 5L)).thenReturn(sampleOrder(5L, "PENDIENTE"));
+        when(orderService.miOrden(USER_EMAIL, 5L)).thenReturn(sampleOrder(5L, "PENDIENTE"));
 
         mvc.perform(get("/api/orders/5"))
                 .andExpect(status().isOk())
@@ -149,7 +149,7 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void get_my_order_IDOR_returns_404() throws Exception {
-        when(orderService.getMyOrder(USER_EMAIL, 9L))
+        when(orderService.miOrden(USER_EMAIL, 9L))
                 .thenThrow(new ResourceNotFoundException("Orden no encontrada: 9"));
 
         mvc.perform(get("/api/orders/9"))
@@ -161,7 +161,7 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void pay_returns_200_with_confirmada_order() throws Exception {
-        when(orderService.pay(eq(USER_EMAIL), eq(3L), any()))
+        when(orderService.pagar(eq(USER_EMAIL), eq(3L), any()))
                 .thenReturn(sampleOrder(3L, "CONFIRMADA"));
 
         mvc.perform(post("/api/orders/3/pay").contentType(JSON)
@@ -173,7 +173,7 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void pay_wrong_status_returns_422() throws Exception {
-        when(orderService.pay(eq(USER_EMAIL), eq(4L), any()))
+        when(orderService.pagar(eq(USER_EMAIL), eq(4L), any()))
                 .thenThrow(new OrderStatusTransitionException("Solo se puede pagar PENDIENTE"));
 
         mvc.perform(post("/api/orders/4/pay").contentType(JSON)
@@ -184,7 +184,7 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void pay_IDOR_returns_404() throws Exception {
-        when(orderService.pay(eq(USER_EMAIL), eq(8L), any()))
+        when(orderService.pagar(eq(USER_EMAIL), eq(8L), any()))
                 .thenThrow(new ResourceNotFoundException("Orden no encontrada: 8"));
 
         mvc.perform(post("/api/orders/8/pay").contentType(JSON)
@@ -205,7 +205,7 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void comprobante_returns_200_pdf() throws Exception {
-        when(orderService.getMyComprobantePdf(eq(USER_EMAIL), eq(5L)))
+        when(orderService.miComprobantePdf(eq(USER_EMAIL), eq(5L)))
                 .thenReturn(new byte[]{ 0x25, 0x50, 0x44, 0x46 });
 
         mvc.perform(get("/api/orders/5/comprobante"))
@@ -216,7 +216,7 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void comprobante_unpaid_returns_409() throws Exception {
-        when(orderService.getMyComprobantePdf(eq(USER_EMAIL), eq(6L)))
+        when(orderService.miComprobantePdf(eq(USER_EMAIL), eq(6L)))
                 .thenThrow(new ComprobanteNotAvailableException("El pedido no está pagado"));
 
         mvc.perform(get("/api/orders/6/comprobante"))

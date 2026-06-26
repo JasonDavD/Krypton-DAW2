@@ -64,7 +64,7 @@ class AdminOrderControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void get_all_orders_returns_200_page_response() throws Exception {
-        when(orderService.getAllOrders(any(), any(), any(), any()))
+        when(orderService.listarOrdenes(any(), any(), any(), any()))
                 .thenReturn(singlePage(sampleOrder(1L, "PENDIENTE")));
 
         mvc.perform(get("/api/admin/orders").param("page", "0").param("size", "10"))
@@ -80,7 +80,7 @@ class AdminOrderControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void get_admin_order_returns_200_with_detail() throws Exception {
-        when(orderService.getOrder(10L)).thenReturn(sampleOrder(10L, "PENDIENTE"));
+        when(orderService.obtenerOrden(10L)).thenReturn(sampleOrder(10L, "PENDIENTE"));
 
         mvc.perform(get("/api/admin/orders/10"))
                 .andExpect(status().isOk())
@@ -90,7 +90,7 @@ class AdminOrderControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void get_admin_order_not_found_returns_404() throws Exception {
-        when(orderService.getOrder(999L))
+        when(orderService.obtenerOrden(999L))
                 .thenThrow(new ResourceNotFoundException("Orden no encontrada: 999"));
 
         mvc.perform(get("/api/admin/orders/999"))
@@ -102,7 +102,7 @@ class AdminOrderControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void put_status_returns_200_with_updated_order() throws Exception {
-        when(orderService.updateStatus(eq(2L), any()))
+        when(orderService.actualizarEstado(eq(2L), any()))
                 .thenReturn(sampleOrder(2L, "CANCELADA"));
 
         mvc.perform(put("/api/admin/orders/2/status").contentType(JSON)
@@ -117,7 +117,7 @@ class AdminOrderControllerTest {
         // Contrato de capa web: una transición ilegal (CANCELADA → CONFIRMADA) que el
         // service rechaza con OrderStatusTransitionException debe salir como 422,
         // gracias al mapeo del GlobalExceptionHandler (@RestControllerAdvice).
-        when(orderService.updateStatus(eq(2L), any()))
+        when(orderService.actualizarEstado(eq(2L), any()))
                 .thenThrow(new OrderStatusTransitionException(
                         "Transición de estado inválida: CANCELADA → CONFIRMADA"));
 
@@ -139,7 +139,7 @@ class AdminOrderControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void comprobante_returns_200_pdf() throws Exception {
-        when(orderService.getComprobantePdf(eq(7L)))
+        when(orderService.comprobantePdf(eq(7L)))
                 .thenReturn(new byte[]{ 0x25, 0x50, 0x44, 0x46 });
 
         mvc.perform(get("/api/admin/orders/7/comprobante"))
