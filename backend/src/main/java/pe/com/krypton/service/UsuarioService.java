@@ -8,14 +8,14 @@ import pe.com.krypton.entity.enums.Rol;
 /** Gestión de usuarios por un ADMIN. */
 public interface UsuarioService {
 
-    List<UsuarioResponse> listAll();
+    List<UsuarioResponse> listar();
 
     /** Crea un usuario con rol elegible (CLIENTE o ADMIN). */
-    UsuarioResponse create(CreateUsuarioRequest request);
+    UsuarioResponse registrar(CreateUsuarioRequest request);
 
     /** Cambia el rol; bloquea si degrada al último ADMIN activo. */
-    UsuarioResponse changeRole(Long id, Rol newRole);
+    UsuarioResponse cambiarRol(Long id, Rol newRole);
 
     /** Activa/desactiva (baja lógica); bloquea si desactiva al último ADMIN activo. */
-    UsuarioResponse setStatus(Long id, boolean active);
+    UsuarioResponse cambiarEstado(Long id, boolean active);
 }

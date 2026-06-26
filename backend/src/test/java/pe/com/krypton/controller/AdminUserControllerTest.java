@@ -49,7 +49,7 @@ class AdminUserControllerTest {
 
     @Test
     void should_return_200_and_list_without_password() throws Exception {
-        when(userService.listAll()).thenReturn(List.of(sample(1L, Rol.ADMIN, true), sample(2L, Rol.CLIENTE, true)));
+        when(userService.listar()).thenReturn(List.of(sample(1L, Rol.ADMIN, true), sample(2L, Rol.CLIENTE, true)));
 
         mvc.perform(get("/api/admin/users"))
                 .andExpect(status().isOk())
@@ -59,7 +59,7 @@ class AdminUserControllerTest {
 
     @Test
     void should_return_201_when_admin_creates_user() throws Exception {
-        when(userService.create(any())).thenReturn(sample(9L, Rol.ADMIN, true));
+        when(userService.registrar(any())).thenReturn(sample(9L, Rol.ADMIN, true));
 
         mvc.perform(post("/api/admin/users").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Nuevo\",\"email\":\"nuevo@krypton.pe\",\"password\":\"Secret123\",\"role\":\"ADMIN\"}"))
@@ -69,7 +69,7 @@ class AdminUserControllerTest {
 
     @Test
     void should_return_409_when_create_email_duplicated() throws Exception {
-        when(userService.create(any())).thenThrow(new DuplicateEmailException("dup"));
+        when(userService.registrar(any())).thenThrow(new DuplicateEmailException("dup"));
 
         mvc.perform(post("/api/admin/users").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"X\",\"email\":\"dup@krypton.pe\",\"password\":\"Secret123\",\"role\":\"CLIENTE\"}"))
@@ -78,7 +78,7 @@ class AdminUserControllerTest {
 
     @Test
     void should_return_200_when_change_role() throws Exception {
-        when(userService.changeRole(eq(5L), eq(Rol.ADMIN))).thenReturn(sample(5L, Rol.ADMIN, true));
+        when(userService.cambiarRol(eq(5L), eq(Rol.ADMIN))).thenReturn(sample(5L, Rol.ADMIN, true));
 
         mvc.perform(patch("/api/admin/users/5/role").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"role\":\"ADMIN\"}"))
@@ -88,7 +88,7 @@ class AdminUserControllerTest {
 
     @Test
     void should_return_422_when_demoting_last_admin() throws Exception {
-        when(userService.changeRole(eq(1L), eq(Rol.CLIENTE)))
+        when(userService.cambiarRol(eq(1L), eq(Rol.CLIENTE)))
                 .thenThrow(new LastAdminException("No se puede degradar al último administrador activo"));
 
         mvc.perform(patch("/api/admin/users/1/role").contentType(MediaType.APPLICATION_JSON)
@@ -98,7 +98,7 @@ class AdminUserControllerTest {
 
     @Test
     void should_return_200_when_set_status() throws Exception {
-        when(userService.setStatus(eq(7L), eq(false))).thenReturn(sample(7L, Rol.CLIENTE, false));
+        when(userService.cambiarEstado(eq(7L), eq(false))).thenReturn(sample(7L, Rol.CLIENTE, false));
 
         mvc.perform(patch("/api/admin/users/7/status").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"active\":false}"))
@@ -112,6 +112,6 @@ class AdminUserControllerTest {
                         .content("{\"name\":\"X\",\"email\":\"x@krypton.pe\",\"password\":\"Secret123\"}")) // sin role
                 .andExpect(status().isBadRequest());
 
-        verify(userService, never()).create(any());
+        verify(userService, never()).registrar(any());
     }
 }

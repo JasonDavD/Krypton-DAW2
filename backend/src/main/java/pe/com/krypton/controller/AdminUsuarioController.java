@@ -30,22 +30,22 @@ public class AdminUsuarioController {
 
     @GetMapping
     public List<UsuarioResponse> list() {
-        return userService.listAll();
+        return userService.listar();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UsuarioResponse create(@Valid @RequestBody CreateUsuarioRequest request) {
-        return userService.create(request);
+    public UsuarioResponse registrar(@Valid @RequestBody CreateUsuarioRequest request) {
+        return userService.registrar(request);
     }
 
     @PatchMapping("/{id}/role")
-    public UsuarioResponse changeRole(@PathVariable Long id, @Valid @RequestBody UpdateRoleRequest request) {
-        return userService.changeRole(id, request.role());
+    public UsuarioResponse cambiarRol(@PathVariable Long id, @Valid @RequestBody UpdateRoleRequest request) {
+        return userService.cambiarRol(id, request.role());
     }
 
     @PatchMapping("/{id}/status")
-    public UsuarioResponse setStatus(@PathVariable Long id, @Valid @RequestBody UpdateStatusRequest request) {
-        return userService.setStatus(id, request.active());
+    public UsuarioResponse cambiarEstado(@PathVariable Long id, @Valid @RequestBody UpdateStatusRequest request) {
+        return userService.cambiarEstado(id, request.active());
     }
 }

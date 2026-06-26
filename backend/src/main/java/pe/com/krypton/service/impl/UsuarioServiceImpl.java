@@ -2,6 +2,7 @@ package pe.com.krypton.service.impl;
 
 import java.time.Instant;
 import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +18,7 @@ import pe.com.krypton.repository.UsuarioRepository;
 import pe.com.krypton.service.UsuarioService;
 
 @Service
-public class UsuarioServiceImpl implements UsuarioService {
+public class UsuarioServiceImpl extends ICRUDImpl<Usuario, Long> implements UsuarioService {
 
     private final UsuarioRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -29,15 +30,21 @@ public class UsuarioServiceImpl implements UsuarioService {
         this.userMapper = userMapper;
     }
 
+    /** Repository que usa el CRUD genérico heredado (guardar/listarTodos/...). */
+    @Override
+    protected JpaRepository<Usuario, Long> repo() {
+        return userRepository;
+    }
+
     @Override
     @Transactional(readOnly = true)
-    public List<UsuarioResponse> listAll() {
-        return userRepository.findAll().stream().map(userMapper::toResponse).toList();
+    public List<UsuarioResponse> listar() {
+        return listarTodos().stream().map(userMapper::toResponse).toList();   // ← heredado de ICRUDImpl
     }
 
     @Override
     @Transactional
-    public UsuarioResponse create(CreateUsuarioRequest request) {
+    public UsuarioResponse registrar(CreateUsuarioRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateEmailException("El email ya está registrado");
         }
@@ -48,29 +55,29 @@ public class UsuarioServiceImpl implements UsuarioService {
         user.setRole(request.role()); // rol elegible: el ADMIN puede crear otro ADMIN
         user.setActive(true);
         user.setCreatedAt(Instant.now());
-        return userMapper.toResponse(userRepository.save(user));
+        return userMapper.toResponse(guardar(user));   // ← heredado de ICRUDImpl
     }
 
     @Override
     @Transactional
-    public UsuarioResponse changeRole(Long id, Rol newRole) {
+    public UsuarioResponse cambiarRol(Long id, Rol newRole) {
         Usuario user = findOrThrow(id);
         if (newRole != Rol.ADMIN && isLastActiveAdmin(user)) {
             throw new LastAdminException("No se puede degradar al último administrador activo");
         }
         user.setRole(newRole);
-        return userMapper.toResponse(userRepository.save(user));
+        return userMapper.toResponse(guardar(user));   // ← heredado de ICRUDImpl
     }
 
     @Override
     @Transactional
-    public UsuarioResponse setStatus(Long id, boolean active) {
+    public UsuarioResponse cambiarEstado(Long id, boolean active) {
         Usuario user = findOrThrow(id);
         if (!active && isLastActiveAdmin(user)) {
             throw new LastAdminException("No se puede desactivar al último administrador activo");
         }
         user.setActive(active);
-        return userMapper.toResponse(userRepository.save(user));
+        return userMapper.toResponse(guardar(user));   // ← heredado de ICRUDImpl
     }
 
     /** ¿Este usuario es un ADMIN activo y, además, el único que queda? */

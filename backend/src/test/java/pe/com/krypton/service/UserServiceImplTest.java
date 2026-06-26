@@ -57,7 +57,7 @@ class UserServiceImplTest {
     void should_list_users() {
         when(userRepository.findAll()).thenReturn(List.of(user(1L, Rol.ADMIN, true), user(2L, Rol.CLIENTE, true)));
 
-        List<UsuarioResponse> res = service.listAll();
+        List<UsuarioResponse> res = service.listar();
 
         assertThat(res).hasSize(2);
         assertThat(res.get(0).email()).isEqualTo("u1@krypton.pe");
@@ -73,7 +73,7 @@ class UserServiceImplTest {
             return u;
         });
 
-        UsuarioResponse res = service.create(new CreateUsuarioRequest("Nuevo", "nuevo@krypton.pe", "Secret123", Rol.ADMIN));
+        UsuarioResponse res = service.registrar(new CreateUsuarioRequest("Nuevo", "nuevo@krypton.pe", "Secret123", Rol.ADMIN));
 
         assertThat(res.role()).isEqualTo(Rol.ADMIN);
         assertThat(res.active()).isTrue();
@@ -83,7 +83,7 @@ class UserServiceImplTest {
     void should_reject_create_when_email_exists() {
         when(userRepository.existsByEmail("dup@krypton.pe")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.create(new CreateUsuarioRequest("X", "dup@krypton.pe", "x", Rol.CLIENTE)))
+        assertThatThrownBy(() -> service.registrar(new CreateUsuarioRequest("X", "dup@krypton.pe", "x", Rol.CLIENTE)))
                 .isInstanceOf(DuplicateEmailException.class);
         verify(userRepository, never()).save(any());
     }
@@ -94,7 +94,7 @@ class UserServiceImplTest {
         when(userRepository.findById(5L)).thenReturn(Optional.of(u));
         when(userRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        UsuarioResponse res = service.changeRole(5L, Rol.ADMIN);
+        UsuarioResponse res = service.cambiarRol(5L, Rol.ADMIN);
 
         assertThat(res.role()).isEqualTo(Rol.ADMIN);
     }
@@ -104,7 +104,7 @@ class UserServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L, Rol.ADMIN, true)));
         when(userRepository.countByRoleAndActiveTrue(Rol.ADMIN)).thenReturn(1L);
 
-        assertThatThrownBy(() -> service.changeRole(1L, Rol.CLIENTE))
+        assertThatThrownBy(() -> service.cambiarRol(1L, Rol.CLIENTE))
                 .isInstanceOf(LastAdminException.class);
         verify(userRepository, never()).save(any());
     }
@@ -115,7 +115,7 @@ class UserServiceImplTest {
         when(userRepository.findById(7L)).thenReturn(Optional.of(u));
         when(userRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        UsuarioResponse res = service.setStatus(7L, false);
+        UsuarioResponse res = service.cambiarEstado(7L, false);
 
         assertThat(res.active()).isFalse();
     }
@@ -125,7 +125,7 @@ class UserServiceImplTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L, Rol.ADMIN, true)));
         when(userRepository.countByRoleAndActiveTrue(Rol.ADMIN)).thenReturn(1L);
 
-        assertThatThrownBy(() -> service.setStatus(1L, false))
+        assertThatThrownBy(() -> service.cambiarEstado(1L, false))
                 .isInstanceOf(LastAdminException.class);
         verify(userRepository, never()).save(any());
     }
@@ -134,7 +134,7 @@ class UserServiceImplTest {
     void should_throw_not_found_when_user_missing() {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.changeRole(99L, Rol.ADMIN))
+        assertThatThrownBy(() -> service.cambiarRol(99L, Rol.ADMIN))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 }
