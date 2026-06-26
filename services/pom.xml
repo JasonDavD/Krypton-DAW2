@@ -36,6 +36,7 @@
         <module>notification-service</module>
         <module>payment-service</module>
         <module>review-service</module>
+        <module>promo-service</module>
     </modules>
 
     <!-- El BOM de Spring Cloud: gestiona las versiones de TODOS los starters de cloud.
