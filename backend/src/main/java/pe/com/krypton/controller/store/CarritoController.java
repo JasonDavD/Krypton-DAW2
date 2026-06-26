@@ -1,4 +1,4 @@
-package pe.com.krypton.controller;
+package pe.com.krypton.controller.store;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

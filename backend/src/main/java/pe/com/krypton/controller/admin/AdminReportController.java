@@ -1,4 +1,4 @@
-package pe.com.krypton.controller;
+package pe.com.krypton.controller.admin;
 
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package pe.com.krypton.controller;
+package pe.com.krypton.controller.store;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;

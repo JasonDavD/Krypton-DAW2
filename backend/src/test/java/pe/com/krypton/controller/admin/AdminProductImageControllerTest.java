@@ -1,4 +1,4 @@
-package pe.com.krypton.controller;
+package pe.com.krypton.controller.admin;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

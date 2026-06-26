@@ -1,4 +1,4 @@
-package pe.com.krypton.controller;
+package pe.com.krypton.controller.admin;
 
 import java.util.List;
 import org.springframework.http.HttpStatus;

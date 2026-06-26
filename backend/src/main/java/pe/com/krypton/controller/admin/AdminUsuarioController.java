@@ -1,4 +1,4 @@
-package pe.com.krypton.controller;
+package pe.com.krypton.controller.admin;
 
 import jakarta.validation.Valid;
 import java.util.List;

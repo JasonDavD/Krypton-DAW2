@@ -1,4 +1,4 @@
-package pe.com.krypton.controller;
+package pe.com.krypton.controller.store;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;

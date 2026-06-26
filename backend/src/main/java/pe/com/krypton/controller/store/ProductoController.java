@@ -1,4 +1,4 @@
-package pe.com.krypton.controller;
+package pe.com.krypton.controller.store;
 
 import java.math.BigDecimal;
 import org.springframework.data.domain.Pageable;

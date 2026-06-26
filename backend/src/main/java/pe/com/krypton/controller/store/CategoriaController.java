@@ -1,4 +1,4 @@
-package pe.com.krypton.controller;
+package pe.com.krypton.controller.store;
 
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
