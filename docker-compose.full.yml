@@ -10,7 +10,7 @@ services:
   # --- Infra ---------------------------------------------------------------
   krypton-db:
     image: mysql:8
-    container_name: krypton-db-full
+    container_name: krypton-bd
     environment:
       MYSQL_DATABASE: krypton
       MYSQL_USER: krypton
@@ -30,7 +30,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: krypton-rabbit-full
+    container_name: krypton-mensajeria
     hostname: krypton-rabbit
     ports:
       - "15672:15672"   # consola web (http://localhost:15672, guest/guest)
@@ -65,7 +65,7 @@ services:
   # --- Servicios de negocio ------------------------------------------------
   users-service:
     build: ./services/users-service
-    container_name: krypton-users
+    container_name: krypton-usuarios
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
       EUREKA_PREFER_IP: "true"
@@ -79,7 +79,7 @@ services:
 
   catalog-service:
     build: ./services/catalog-service
-    container_name: krypton-catalog
+    container_name: krypton-catalogo
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
       EUREKA_PREFER_IP: "true"
@@ -93,7 +93,7 @@ services:
 
   order-service:
     build: ./services/order-service
-    container_name: krypton-order
+    container_name: krypton-pedidos
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
       EUREKA_PREFER_IP: "true"
@@ -110,7 +110,7 @@ services:
 
   notification-service:
     build: ./services/notification-service
-    container_name: krypton-notification
+    container_name: krypton-notificaciones
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
       EUREKA_PREFER_IP: "true"
@@ -123,7 +123,7 @@ services:
 
   payment-service:
     build: ./services/payment-service
-    container_name: krypton-payment
+    container_name: krypton-pagos
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
       EUREKA_PREFER_IP: "true"
@@ -137,7 +137,7 @@ services:
 
   review-service:
     build: ./services/review-service
-    container_name: krypton-review
+    container_name: krypton-resenas
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
       EUREKA_PREFER_IP: "true"
@@ -151,7 +151,7 @@ services:
 
   promo-service:
     build: ./services/promo-service
-    container_name: krypton-promo
+    container_name: krypton-promociones
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
       EUREKA_PREFER_IP: "true"

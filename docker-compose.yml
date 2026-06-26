@@ -1,7 +1,7 @@
 services:
   db:
     image: mysql:8
-    container_name: krypton-db
+    container_name: krypton-bd
     environment:
       MYSQL_DATABASE: krypton
       MYSQL_USER: krypton
@@ -21,7 +21,7 @@ services:
   # Broker de mensajería para eventos asíncronos (F6: order → notification).
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: krypton-rabbit
+    container_name: krypton-mensajeria
     ports:
       - "5672:5672"     # AMQP (lo usan los servicios)
       - "15672:15672"   # consola web de administración (http://localhost:15672, guest/guest)
