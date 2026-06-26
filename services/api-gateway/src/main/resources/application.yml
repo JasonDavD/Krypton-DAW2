@@ -59,6 +59,11 @@ spring:
           uri: lb://order-service
           predicates:
             - Path=/api/orders/**
+        # --- review-service (reseñas de productos) ---
+        - id: review-reviews
+          uri: lb://review-service
+          predicates:
+            - Path=/api/reviews/**
 
 eureka:
   client:
