@@ -21,7 +21,7 @@ import pe.com.krypton.entity.enums.EstadoOrden;
  * Verifies: subtotal computation, snapshot invariant, total source, status as String, userId.
  * Satisfies REQ-OM-04 / ADR-5.
  */
-class OrderMapperTest {
+class OrdenMapperTest {
 
     OrdenMapper mapper;
 

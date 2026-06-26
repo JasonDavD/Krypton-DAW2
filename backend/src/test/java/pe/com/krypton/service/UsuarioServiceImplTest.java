@@ -29,7 +29,7 @@ import pe.com.krypton.service.impl.UsuarioServiceImpl;
 
 /** Unit test de la gestión de usuarios. La estrella: el guard del último admin. */
 @ExtendWith(MockitoExtension.class)
-class UserServiceImplTest {
+class UsuarioServiceImplTest {
 
     @Mock UsuarioRepository userRepository;
     @Mock PasswordEncoder passwordEncoder;

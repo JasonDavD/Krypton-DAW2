@@ -35,7 +35,7 @@ import pe.com.krypton.service.ImagenProductoService;
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
 @AutoConfigureMockMvc(addFilters = false)
-class AdminProductImageControllerTest {
+class AdminImagenProductoControllerTest {
 
     @Autowired MockMvc mvc;
     @MockBean ImagenProductoService productImageService;

@@ -37,7 +37,7 @@ import pe.com.krypton.repository.UsuarioRepository;
  * Satisfies REQ-OM-01..REQ-OM-13.
  */
 @AutoConfigureMockMvc
-class OrderIntegrationTest extends AbstractIntegrationTest {
+class OrdenIntegrationTest extends AbstractIntegrationTest {
 
     private static final String JSON = MediaType.APPLICATION_JSON_VALUE;
     /** Comprobante por defecto para el checkout (ahora @RequestBody obligatorio). */

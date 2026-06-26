@@ -34,7 +34,7 @@ import pe.com.krypton.service.impl.ImagenProductoServiceImpl;
  * Strict TDD: RED → GREEN → REFACTOR.
  */
 @ExtendWith(MockitoExtension.class)
-class ProductImageServiceImplTest {
+class ImagenProductoServiceImplTest {
 
     @Mock
     StorageService storageService;

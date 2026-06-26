@@ -30,7 +30,7 @@ import pe.com.krypton.service.impl.CategoriaServiceImpl;
  * TDD: RED escrito antes de que exista CategoriaServiceImpl.
  */
 @ExtendWith(MockitoExtension.class)
-class CategoryServiceImplTest {
+class CategoriaServiceImplTest {
 
     @Mock CategoriaRepository categoryRepository;
     @Mock ProductoRepository productRepository;

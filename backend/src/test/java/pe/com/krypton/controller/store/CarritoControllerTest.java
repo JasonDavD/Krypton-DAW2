@@ -44,7 +44,7 @@ import pe.com.krypton.service.CarritoService;
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
 @AutoConfigureMockMvc(addFilters = false)
-class CartControllerTest {
+class CarritoControllerTest {
 
     @Autowired MockMvc mvc;
     @MockBean CarritoService cartService;

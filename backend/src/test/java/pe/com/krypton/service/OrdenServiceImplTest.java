@@ -63,7 +63,7 @@ import pe.com.krypton.service.impl.OrdenServiceImpl;
  * Satisfies REQ-OM-01..REQ-OM-12 / ADR-1..ADR-9 / ADR-10.
  */
 @ExtendWith(MockitoExtension.class)
-class OrderServiceImplTest {
+class OrdenServiceImplTest {
 
     @Mock OrdenRepository orderRepository;
     @Mock ItemOrdenRepository orderItemRepository;

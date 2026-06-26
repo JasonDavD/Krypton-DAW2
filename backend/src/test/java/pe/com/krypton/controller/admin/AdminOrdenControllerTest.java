@@ -41,7 +41,7 @@ import pe.com.krypton.service.OrdenService;
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
 @AutoConfigureMockMvc(addFilters = false)
-class AdminOrderControllerTest {
+class AdminOrdenControllerTest {
 
     @Autowired MockMvc mvc;
     @MockBean OrdenService orderService;

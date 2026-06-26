@@ -34,7 +34,7 @@ import pe.com.krypton.repository.UsuarioRepository;
  * Test data prefixed with "IT-CART-" (SKU) and "IT-Carrito-" (category name).
  */
 @AutoConfigureMockMvc
-class CartIntegrationTest extends AbstractIntegrationTest {
+class CarritoIntegrationTest extends AbstractIntegrationTest {
 
     private static final String JSON = MediaType.APPLICATION_JSON_VALUE;
     private static final String ADMIN_EMAIL    = "admin@krypton.pe";

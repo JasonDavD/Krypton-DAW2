@@ -16,7 +16,7 @@ import pe.com.krypton.exception.OrderStatusTransitionException;
  * Cubre la matriz 3×3 de transiciones de EstadoOrden.
  * Strict TDD: RED → GREEN → REFACTOR.
  */
-class OrderStatusPolicyTest {
+class EstadoOrdenPolicyTest {
 
     private final EstadoOrdenPolicy policy = new EstadoOrdenPolicy();
 

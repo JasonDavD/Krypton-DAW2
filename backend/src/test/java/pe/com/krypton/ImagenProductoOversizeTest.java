@@ -36,7 +36,7 @@ import org.testcontainers.containers.MySQLContainer;
  */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @Tag("integration")   // no hereda de AbstractIntegrationTest: levanta su propio MySQLContainer
-class ProductImageOversizeTest {
+class ImagenProductoOversizeTest {
 
     // Own container for RANDOM_PORT context (cannot share the AbstractIntegrationTest singleton
     // because webEnvironment RANDOM_PORT creates a separate Spring context)

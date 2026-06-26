@@ -26,7 +26,7 @@ import pe.com.krypton.entity.enums.EstadoOrden;
  * Mirrors ProductSpecificationTest — no Spring context needed.
  */
 @ExtendWith(MockitoExtension.class)
-class OrderSpecificationTest {
+class OrdenSpecificationTest {
 
     @Mock Root<Orden> root;
     @Mock CriteriaQuery<?> query;

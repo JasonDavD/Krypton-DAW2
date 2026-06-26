@@ -38,7 +38,7 @@ import pe.com.krypton.service.UsuarioService;
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
 @AutoConfigureMockMvc(addFilters = false)
-class AdminUserControllerTest {
+class AdminUsuarioControllerTest {
 
     @Autowired MockMvc mvc;
     @MockBean UsuarioService userService;

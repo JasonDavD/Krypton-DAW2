@@ -42,7 +42,7 @@ import pe.com.krypton.repository.CategoriaRepository;
  * - ADR-D6: 413 (payload too large) is only reproducible here, not in @WebMvcTest slices.
  */
 @AutoConfigureMockMvc
-class ProductImageIntegrationTest extends AbstractIntegrationTest {
+class ImagenProductoIntegrationTest extends AbstractIntegrationTest {
 
     // ─── Static @TempDir for @DynamicPropertySource ──────────────────────────────
     @TempDir

@@ -39,7 +39,7 @@ import pe.com.krypton.service.impl.CarritoServiceImpl;
  * Strict TDD: RED → GREEN → REFACTOR por sub-grupo.
  */
 @ExtendWith(MockitoExtension.class)
-class CartServiceImplTest {
+class CarritoServiceImplTest {
 
     @Mock CarritoRepository cartRepository;
     @Mock ItemCarritoRepository cartItemRepository;

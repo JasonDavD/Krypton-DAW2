@@ -18,7 +18,7 @@ import pe.com.krypton.entity.Usuario;
  * Unit test de CarritoMapper. Sin Spring context, sin DB.
  * TDD: RED — escrito antes de que exista CarritoMapper.
  */
-class CartMapperTest {
+class CarritoMapperTest {
 
     CarritoMapper mapper;
 

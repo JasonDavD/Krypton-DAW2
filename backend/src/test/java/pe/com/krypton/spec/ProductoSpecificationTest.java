@@ -28,7 +28,7 @@ import pe.com.krypton.entity.Producto;
  * (b) que el predicado correcto se construye cuando el filtro está presente.
  */
 @ExtendWith(MockitoExtension.class)
-class ProductSpecificationTest {
+class ProductoSpecificationTest {
 
     @Mock Root<Producto> root;
     @Mock CriteriaQuery<?> query;
