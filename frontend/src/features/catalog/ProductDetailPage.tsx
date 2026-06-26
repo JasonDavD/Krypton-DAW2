@@ -5,6 +5,7 @@ import {
   ShoppingCart, Truck,
 } from 'lucide-react';
 import { getById } from './products.api';
+import { ProductReviews } from './ProductReviews';
 import { useAuth } from '../../auth/AuthContext';
 import { useCart } from '../../cart/CartContext';
 import { PLACEHOLDER_IMAGE, type ProductResponse } from '../../models/product';
@@ -181,6 +182,8 @@ export function ProductDetailPage() {
           </dl>
         </section>
       </div>
+
+      <ProductReviews productId={product.id} />
     </div>
   );
 }
