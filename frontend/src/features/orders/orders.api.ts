@@ -6,7 +6,14 @@ import type {
 
 /** POST /api/orders/checkout — crea el pedido desde el carrito (201). */
 export async function checkout(body: CheckoutRequest): Promise<OrderResponse> {
-  const { data } = await api.post<OrderResponse>('/api/orders/checkout', body);
+  const payload: CheckoutRequest = {
+    documentType: body.documentType,
+    customerName: body.customerName,
+    customerDoc: body.customerDoc,
+  };
+  // Solo viaja el cupón si el usuario lo aplicó (evita mandar couponCode vacío).
+  if (body.couponCode) payload.couponCode = body.couponCode;
+  const { data } = await api.post<OrderResponse>('/api/orders/checkout', payload);
   return data;
 }
 

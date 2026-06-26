@@ -27,6 +27,21 @@
 .ck-summary h2 { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--text-strong); margin: 0 0 18px; }
 .ck-summary__row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--text-body); margin-bottom: 12px; }
 .ck-summary__row--muted { color: var(--text-muted); font-size: 13px; }
+.ck-summary__row--save { color: var(--kr-success, #1a8a4a); font-weight: 600; }
+
+/* cupón de descuento */
+.ck-coupon { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--border-subtle); }
+.ck-coupon__label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-body); margin-bottom: 8px; }
+.ck-coupon__row { display: flex; gap: 8px; }
+.ck-coupon__input { flex: 1; min-width: 0; height: 44px; padding: 0 13px; border: 1.5px solid var(--border-subtle); border-radius: 11px; font-family: var(--font-sans); font-size: 14px; color: var(--text-strong); text-transform: uppercase; transition: border-color 140ms ease; }
+.ck-coupon__input::placeholder { text-transform: none; }
+.ck-coupon__input:focus { outline: none; border-color: var(--kr-blue-600); }
+.ck-coupon__btn { flex: 0 0 auto; height: 44px; padding: 0 18px; border: none; border-radius: 11px; background: var(--kr-navy-800); color: #fff; font-family: var(--font-sans); font-weight: 700; font-size: 13.5px; cursor: pointer; transition: filter 120ms ease; }
+.ck-coupon__btn:hover:not(:disabled) { filter: brightness(1.12); }
+.ck-coupon__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ck-coupon__msg { display: block; margin-top: 8px; font-size: 12.5px; font-weight: 600; }
+.ck-coupon__msg--ok { color: var(--kr-success, #1a8a4a); }
+.ck-coupon__msg--err { color: var(--kr-danger); }
 .ck-summary__total { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; margin-top: 4px; border-top: 1px solid var(--border-subtle); font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--text-strong); }
 .ck-summary__pay {
   width: 100%; height: 52px; margin-top: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 9px;

@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Lock, ShieldCheck } from 'lucide-react';
+import axios from 'axios';
+import { ArrowRight, Lock, ShieldCheck, TicketPercent } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { useCart } from '../../cart/CartContext';
 import { checkout } from '../orders/orders.api';
+import { applyPromo } from './promos.api';
 import type { DocumentType } from '../../models/order';
 import './checkout.css';
 
@@ -27,6 +29,13 @@ export function CheckoutPage() {
   const [customerDoc, setCustomerDoc] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Cupón: el descuento real lo aplica el backend; acá es preview.
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [couponMsg, setCouponMsg] = useState<string | null>(null);
+  const [couponOk, setCouponOk] = useState(false);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   // 1) Sin sesión.
   if (!isAuthenticated) {
@@ -52,10 +61,32 @@ export function CheckoutPage() {
 
   // Preview de montos (misma regla que el backend; el backend es la fuente de verdad).
   const subtotal = cart.total;
-  const shipping = subtotal >= 300 ? 0 : 20;
-  const total = subtotal + shipping;
+  const shipping = subtotal >= 300 ? 0 : 20; // el envío se calcula sobre el subtotal, no sobre el descuento
+  const total = subtotal - discount + shipping;
   const base = round2(total / 1.18);
   const igv = round2(total - base);
+
+  // Aplica el cupón sobre el subtotal y refleja el descuento en el resumen.
+  const onApplyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code || applyingCoupon) return;
+    setApplyingCoupon(true);
+    setCouponMsg(null);
+    try {
+      const resp = await applyPromo({ code, amount: subtotal });
+      setDiscount(resp.discount);
+      setCouponOk(true);
+      setCouponMsg(`Cupón aplicado: −${pen.format(resp.discount)}`);
+    } catch (err) {
+      setDiscount(0);
+      setCouponOk(false);
+      setCouponMsg(axios.isAxiosError(err) && err.response?.status === 422
+        ? 'Cupón inválido'
+        : 'No se pudo validar el cupón. Intentá de nuevo.');
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
 
   // Validación cliente: BOLETA → DNI 8 díg, FACTURA → RUC 11 díg (espejo del backend).
   const docLen = documentType === 'FACTURA' ? 11 : 8;
@@ -68,7 +99,12 @@ export function CheckoutPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const order = await checkout({ documentType, customerName: customerName.trim(), customerDoc });
+      const order = await checkout({
+        documentType,
+        customerName: customerName.trim(),
+        customerDoc,
+        couponCode: couponOk ? couponCode.trim() : undefined,
+      });
       await refresh(); // el carrito quedó vacío en el backend
       navigate(`/pedidos/${order.id}`);
     } catch {
@@ -137,11 +173,48 @@ export function CheckoutPage() {
         {/* RESUMEN */}
         <aside className="ck-summary">
           <h2>Resumen</h2>
+
+          {/* CUPÓN — el descuento real lo confirma el backend al crear el pedido. */}
+          <div className="ck-coupon">
+            <label className="ck-coupon__label" htmlFor="ck-coupon-input">
+              <TicketPercent size={15} /> Código de descuento
+            </label>
+            <div className="ck-coupon__row">
+              <input
+                id="ck-coupon-input"
+                type="text"
+                className="ck-coupon__input"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder="Ingresá tu cupón"
+                autoComplete="off"
+              />
+              <button
+                type="button"
+                className="ck-coupon__btn"
+                onClick={onApplyCoupon}
+                disabled={applyingCoupon || couponCode.trim().length === 0}
+              >
+                {applyingCoupon ? 'Aplicando…' : 'Aplicar'}
+              </button>
+            </div>
+            {couponMsg && (
+              <small className={couponOk ? 'ck-coupon__msg ck-coupon__msg--ok' : 'ck-coupon__msg ck-coupon__msg--err'}>
+                {couponMsg}
+              </small>
+            )}
+          </div>
+
           <div className="ck-summary__row"><span>Subtotal</span><span>{pen.format(subtotal)}</span></div>
           <div className="ck-summary__row">
             <span>Envío</span>
             <span>{shipping === 0 ? 'Gratis' : pen.format(shipping)}</span>
           </div>
+          {discount > 0 && (
+            <div className="ck-summary__row ck-summary__row--save">
+              <span>Descuento</span><span>−{pen.format(discount)}</span>
+            </div>
+          )}
           <div className="ck-summary__row ck-summary__row--muted">
             <span>IGV (incluido)</span><span>{pen.format(igv)}</span>
           </div>

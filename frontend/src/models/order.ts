@@ -48,6 +48,8 @@ export interface CheckoutRequest {
   documentType: DocumentType;
   customerName: string;
   customerDoc: string;
+  /** Cupón de descuento opcional; el backend aplica el descuento real al total. */
+  couponCode?: string;
 }
 
 /** Body del pago (POST /api/orders/{id}/pay). */
