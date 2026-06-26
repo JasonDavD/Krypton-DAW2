@@ -5,7 +5,7 @@ spring:
   application:
     name: payment-service
   datasource:
-    url: jdbc:mysql://localhost:3307/krypton_payments
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/krypton_payments
     username: krypton
     password: krypton
   jpa:
@@ -27,4 +27,6 @@ app:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: ${EUREKA_PREFER_IP:false}
