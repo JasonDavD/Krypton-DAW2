@@ -3,8 +3,8 @@ package pe.com.krypton.mapper;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.stereotype.Component;
-import pe.com.krypton.dto.response.OrderItemResponse;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.ItemOrdenResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.entity.Orden;
 import pe.com.krypton.entity.ItemOrden;
 
@@ -17,10 +17,10 @@ public class OrdenMapper {
      * subtotal = unitPrice (snapshot) × quantity.
      * NEVER reads item.getProduct().getPrice() — that would break the price snapshot invariant.
      */
-    public OrderItemResponse toItemResponse(ItemOrden item) {
+    public ItemOrdenResponse toItemResponse(ItemOrden item) {
         BigDecimal subtotal = item.getUnitPrice()
                 .multiply(BigDecimal.valueOf(item.getQuantity()));
-        return new OrderItemResponse(
+        return new ItemOrdenResponse(
                 item.getId(),
                 item.getProduct().getId(),
                 item.getProduct().getName(),
@@ -35,11 +35,11 @@ public class OrdenMapper {
      * status → enum.name() String (wire-decoupled from the Java enum).
      * userId → order.getUser().getId() (required for admin attribution — REQ-OM-10).
      */
-    public OrderResponse toResponse(Orden order, List<ItemOrden> items) {
-        List<OrderItemResponse> itemResponses = items.stream()
+    public OrdenResponse toResponse(Orden order, List<ItemOrden> items) {
+        List<ItemOrdenResponse> itemResponses = items.stream()
                 .map(this::toItemResponse)
                 .toList();
-        return new OrderResponse(
+        return new OrdenResponse(
                 order.getId(),
                 order.getUser().getId(),
                 order.getOrderDate(),

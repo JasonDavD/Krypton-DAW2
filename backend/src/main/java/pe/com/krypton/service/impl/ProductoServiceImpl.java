@@ -6,9 +6,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pe.com.krypton.dto.request.ProductRequest;
+import pe.com.krypton.dto.request.ProductoRequest;
 import pe.com.krypton.dto.response.PageResponse;
-import pe.com.krypton.dto.response.ProductResponse;
+import pe.com.krypton.dto.response.ProductoResponse;
 import pe.com.krypton.exception.DuplicateSkuException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.mapper.ProductoMapper;
@@ -36,7 +36,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ProductResponse> search(String name, Long categoryId,
+    public PageResponse<ProductoResponse> search(String name, Long categoryId,
                                                  BigDecimal priceMin, BigDecimal priceMax,
                                                  Pageable pageable) {
         Specification<Producto> spec = Specification
@@ -45,7 +45,7 @@ public class ProductoServiceImpl implements ProductoService {
                 .and(ProductoSpecification.hasCategory(categoryId))
                 .and(ProductoSpecification.priceBetween(priceMin, priceMax));
 
-        Page<ProductResponse> page = productRepository
+        Page<ProductoResponse> page = productRepository
                 .findAll(spec, pageable)
                 .map(productMapper::toResponse);
 
@@ -54,7 +54,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProductResponse getById(Long id) {
+    public ProductoResponse getById(Long id) {
         Producto product = findOrThrow(id);
         if (!product.isActive()) {
             throw new ResourceNotFoundException("Producto no encontrado: " + id);
@@ -65,7 +65,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public ProductResponse create(ProductRequest request) {
+    public ProductoResponse create(ProductoRequest request) {
         if (productRepository.existsBySku(request.sku())) {
             throw new DuplicateSkuException("El SKU ya está registrado: " + request.sku());
         }
@@ -87,7 +87,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public ProductResponse update(Long id, ProductRequest request) {
+    public ProductoResponse update(Long id, ProductoRequest request) {
         Producto product = findOrThrow(id);
 
         if (productRepository.existsBySkuAndIdNot(request.sku(), id)) {

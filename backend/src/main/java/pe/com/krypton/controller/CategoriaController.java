@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import pe.com.krypton.dto.response.CategoryResponse;
+import pe.com.krypton.dto.response.CategoriaResponse;
 import pe.com.krypton.service.CategoriaService;
 
 /** Endpoints públicos de categorías — solo lectura. Seguridad: GET permitAll en SecurityConfig. */
@@ -20,12 +20,12 @@ public class CategoriaController {
     }
 
     @GetMapping
-    public List<CategoryResponse> list() {
+    public List<CategoriaResponse> list() {
         return categoryService.list();
     }
 
     @GetMapping("/{id}")
-    public CategoryResponse getById(@PathVariable Long id) {
+    public CategoriaResponse getById(@PathVariable Long id) {
         return categoryService.getById(id);
     }
 }

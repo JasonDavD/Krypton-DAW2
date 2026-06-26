@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pe.com.krypton.dto.request.LoginRequest;
 import pe.com.krypton.dto.request.RegisterRequest;
 import pe.com.krypton.dto.response.AuthResponse;
-import pe.com.krypton.dto.response.UserResponse;
+import pe.com.krypton.dto.response.UsuarioResponse;
 import pe.com.krypton.service.AuthService;
 
 @RestController
@@ -25,7 +25,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse register(@Valid @RequestBody RegisterRequest request) {
+    public UsuarioResponse register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
     }
 

@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pe.com.krypton.dto.request.CreateUserRequest;
-import pe.com.krypton.dto.response.UserResponse;
+import pe.com.krypton.dto.request.CreateUsuarioRequest;
+import pe.com.krypton.dto.response.UsuarioResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.LastAdminException;
 import pe.com.krypton.exception.ResourceNotFoundException;
@@ -31,13 +31,13 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserResponse> listAll() {
+    public List<UsuarioResponse> listAll() {
         return userRepository.findAll().stream().map(userMapper::toResponse).toList();
     }
 
     @Override
     @Transactional
-    public UserResponse create(CreateUserRequest request) {
+    public UsuarioResponse create(CreateUsuarioRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateEmailException("El email ya está registrado");
         }
@@ -53,7 +53,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional
-    public UserResponse changeRole(Long id, Rol newRole) {
+    public UsuarioResponse changeRole(Long id, Rol newRole) {
         Usuario user = findOrThrow(id);
         if (newRole != Rol.ADMIN && isLastActiveAdmin(user)) {
             throw new LastAdminException("No se puede degradar al último administrador activo");
@@ -64,7 +64,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional
-    public UserResponse setStatus(Long id, boolean active) {
+    public UsuarioResponse setStatus(Long id, boolean active) {
         Usuario user = findOrThrow(id);
         if (!active && isLastActiveAdmin(user)) {
             throw new LastAdminException("No se puede desactivar al último administrador activo");

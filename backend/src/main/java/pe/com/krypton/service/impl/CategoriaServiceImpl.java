@@ -3,8 +3,8 @@ package pe.com.krypton.service.impl;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pe.com.krypton.dto.request.CategoryRequest;
-import pe.com.krypton.dto.response.CategoryResponse;
+import pe.com.krypton.dto.request.CategoriaRequest;
+import pe.com.krypton.dto.response.CategoriaResponse;
 import pe.com.krypton.exception.CategoryInUseException;
 import pe.com.krypton.exception.DuplicateCategoryNameException;
 import pe.com.krypton.exception.ResourceNotFoundException;
@@ -31,7 +31,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CategoryResponse> list() {
+    public List<CategoriaResponse> list() {
         return categoryRepository.findAll().stream()
                 .map(categoryMapper::toResponse)
                 .toList();
@@ -39,13 +39,13 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     @Transactional(readOnly = true)
-    public CategoryResponse getById(Long id) {
+    public CategoriaResponse getById(Long id) {
         return categoryMapper.toResponse(findOrThrow(id));
     }
 
     @Override
     @Transactional
-    public CategoryResponse create(CategoryRequest request) {
+    public CategoriaResponse create(CategoriaRequest request) {
         if (categoryRepository.existsByName(request.name())) {
             throw new DuplicateCategoryNameException("El nombre de categoría ya está registrado: " + request.name());
         }
@@ -57,7 +57,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     @Transactional
-    public CategoryResponse update(Long id, CategoryRequest request) {
+    public CategoriaResponse update(Long id, CategoriaRequest request) {
         Categoria category = findOrThrow(id);
 
         if (categoryRepository.existsByNameAndIdNot(request.name(), id)) {

@@ -19,7 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import pe.com.krypton.dto.request.LoginRequest;
 import pe.com.krypton.dto.request.RegisterRequest;
 import pe.com.krypton.dto.response.AuthResponse;
-import pe.com.krypton.dto.response.UserResponse;
+import pe.com.krypton.dto.response.UsuarioResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.InvalidCredentialsException;
 import pe.com.krypton.mapper.UsuarioMapper;
@@ -69,7 +69,7 @@ class AuthServiceImplTest {
             return u;
         });
 
-        UserResponse res = service.register(new RegisterRequest("Ana", "ana@krypton.pe", "Secret123"));
+        UsuarioResponse res = service.register(new RegisterRequest("Ana", "ana@krypton.pe", "Secret123"));
 
         assertThat(res.role()).isEqualTo(Rol.CLIENTE);
         assertThat(res.active()).isTrue();

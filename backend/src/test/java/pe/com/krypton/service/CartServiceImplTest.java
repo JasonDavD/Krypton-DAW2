@@ -18,9 +18,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
-import pe.com.krypton.dto.request.CartItemRequest;
+import pe.com.krypton.dto.request.ItemCarritoRequest;
 import pe.com.krypton.dto.request.UpdateQuantityRequest;
-import pe.com.krypton.dto.response.CartResponse;
+import pe.com.krypton.dto.response.CarritoResponse;
 import pe.com.krypton.exception.InsufficientStockException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.mapper.CarritoMapper;
@@ -104,7 +104,7 @@ class CartServiceImplTest {
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.empty());
 
-        CartResponse resp = service.getCart("test@krypton.pe");
+        CarritoResponse resp = service.getCart("test@krypton.pe");
 
         assertThat(resp.cartId()).isNull();
         assertThat(resp.items()).isEmpty();
@@ -124,7 +124,7 @@ class CartServiceImplTest {
         when(cartRepository.findByUser(u)).thenReturn(Optional.of(c));
         when(cartItemRepository.findByCart(c)).thenReturn(List.of(item));
 
-        CartResponse resp = service.getCart("test@krypton.pe");
+        CarritoResponse resp = service.getCart("test@krypton.pe");
 
         assertThat(resp.cartId()).isEqualTo(10L);
         assertThat(resp.items()).hasSize(1);
@@ -153,7 +153,7 @@ class CartServiceImplTest {
         when(cartRepository.save(any(Carrito.class))).thenAnswer(inv -> inv.getArgument(0));
         when(cartItemRepository.findByCart(c)).thenReturn(List.of());
 
-        CartResponse resp = service.attemptAddItem("test@krypton.pe", new CartItemRequest(5L, 3));
+        CarritoResponse resp = service.attemptAddItem("test@krypton.pe", new ItemCarritoRequest(5L, 3));
 
         verify(cartItemRepository).saveAndFlush(any(ItemCarrito.class));
         ArgumentCaptor<Carrito> cartCaptor = ArgumentCaptor.forClass(Carrito.class);
@@ -176,7 +176,7 @@ class CartServiceImplTest {
         when(cartRepository.save(any(Carrito.class))).thenAnswer(inv -> inv.getArgument(0));
         when(cartItemRepository.findByCart(c)).thenReturn(List.of(existing));
 
-        service.attemptAddItem("test@krypton.pe", new CartItemRequest(5L, 3));
+        service.attemptAddItem("test@krypton.pe", new ItemCarritoRequest(5L, 3));
 
         // merge path uses save (not saveAndFlush), quantity summed = 2+3=5
         verify(cartItemRepository, never()).saveAndFlush(any());
@@ -200,7 +200,7 @@ class CartServiceImplTest {
         when(cartItemRepository.findByCartAndProduct(c, p)).thenReturn(Optional.of(existing));
 
         // Total would be 3+3=6 > stock=5
-        assertThatThrownBy(() -> service.attemptAddItem("test@krypton.pe", new CartItemRequest(5L, 3)))
+        assertThatThrownBy(() -> service.attemptAddItem("test@krypton.pe", new ItemCarritoRequest(5L, 3)))
                 .isInstanceOf(InsufficientStockException.class);
 
         verify(cartItemRepository, never()).save(any());
@@ -219,7 +219,7 @@ class CartServiceImplTest {
         when(cartRepository.findByUser(u)).thenReturn(Optional.of(c));
         when(productRepository.findById(5L)).thenReturn(Optional.of(p));
 
-        assertThatThrownBy(() -> service.attemptAddItem("test@krypton.pe", new CartItemRequest(5L, 1)))
+        assertThatThrownBy(() -> service.attemptAddItem("test@krypton.pe", new ItemCarritoRequest(5L, 1)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -232,7 +232,7 @@ class CartServiceImplTest {
         when(cartRepository.findByUser(u)).thenReturn(Optional.of(c));
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.attemptAddItem("test@krypton.pe", new CartItemRequest(99L, 1)))
+        assertThatThrownBy(() -> service.attemptAddItem("test@krypton.pe", new ItemCarritoRequest(99L, 1)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -240,14 +240,14 @@ class CartServiceImplTest {
 
     @Test
     void addItem_calls_mergeOnConflict_when_attemptAddItem_throws_DataIntegrityViolation() {
-        CartItemRequest req = new CartItemRequest(5L, 2);
-        CartResponse mergeResult = new CartResponse(10L, List.of(), BigDecimal.ZERO, Instant.now());
+        ItemCarritoRequest req = new ItemCarritoRequest(5L, 2);
+        CarritoResponse mergeResult = new CarritoResponse(10L, List.of(), BigDecimal.ZERO, Instant.now());
 
         when(selfMock.attemptAddItem("test@krypton.pe", req))
                 .thenThrow(new DataIntegrityViolationException("unique constraint"));
         when(selfMock.mergeOnConflict("test@krypton.pe", req)).thenReturn(mergeResult);
 
-        CartResponse result = service.addItem("test@krypton.pe", req);
+        CarritoResponse result = service.addItem("test@krypton.pe", req);
 
         verify(selfMock).mergeOnConflict("test@krypton.pe", req);
         assertThat(result).isSameAs(mergeResult);
@@ -255,12 +255,12 @@ class CartServiceImplTest {
 
     @Test
     void addItem_returns_attemptAddItem_result_when_no_conflict() {
-        CartItemRequest req = new CartItemRequest(5L, 2);
-        CartResponse insertResult = new CartResponse(10L, List.of(), BigDecimal.TEN, Instant.now());
+        ItemCarritoRequest req = new ItemCarritoRequest(5L, 2);
+        CarritoResponse insertResult = new CarritoResponse(10L, List.of(), BigDecimal.TEN, Instant.now());
 
         when(selfMock.attemptAddItem("test@krypton.pe", req)).thenReturn(insertResult);
 
-        CartResponse result = service.addItem("test@krypton.pe", req);
+        CarritoResponse result = service.addItem("test@krypton.pe", req);
 
         verify(selfMock, never()).mergeOnConflict(any(), any());
         assertThat(result).isSameAs(insertResult);
@@ -282,7 +282,7 @@ class CartServiceImplTest {
         when(cartRepository.save(any(Carrito.class))).thenAnswer(inv -> inv.getArgument(0));
         when(cartItemRepository.findByCart(c)).thenReturn(List.of(item));
 
-        CartResponse resp = service.updateItem("test@krypton.pe", 100L, new UpdateQuantityRequest(7));
+        CarritoResponse resp = service.updateItem("test@krypton.pe", 100L, new UpdateQuantityRequest(7));
 
         ArgumentCaptor<ItemCarrito> itemCaptor = ArgumentCaptor.forClass(ItemCarrito.class);
         verify(cartItemRepository).save(itemCaptor.capture());
@@ -448,7 +448,7 @@ class CartServiceImplTest {
         when(cartRepository.save(any(Carrito.class))).thenAnswer(inv -> inv.getArgument(0));
         when(cartItemRepository.findByCart(any(Carrito.class))).thenReturn(List.of());
 
-        service.attemptAddItem("test@krypton.pe", new CartItemRequest(5L, 2));
+        service.attemptAddItem("test@krypton.pe", new ItemCarritoRequest(5L, 2));
 
         verify(cartRepository).saveAndFlush(any(Carrito.class));
     }

@@ -1,22 +1,22 @@
 package pe.com.krypton.service;
 
-import pe.com.krypton.dto.request.CartItemRequest;
+import pe.com.krypton.dto.request.ItemCarritoRequest;
 import pe.com.krypton.dto.request.UpdateQuantityRequest;
-import pe.com.krypton.dto.response.CartResponse;
+import pe.com.krypton.dto.response.CarritoResponse;
 
 public interface CarritoService {
 
-    CartResponse getCart(String email);
+    CarritoResponse getCart(String email);
 
-    CartResponse addItem(String email, CartItemRequest request);
+    CarritoResponse addItem(String email, ItemCarritoRequest request);
 
     /** Public so Spring proxy can intercept. Tx1: insert path. */
-    CartResponse attemptAddItem(String email, CartItemRequest request);
+    CarritoResponse attemptAddItem(String email, ItemCarritoRequest request);
 
     /** Public so Spring proxy can intercept. Tx2: merge path after constraint violation. */
-    CartResponse mergeOnConflict(String email, CartItemRequest request);
+    CarritoResponse mergeOnConflict(String email, ItemCarritoRequest request);
 
-    CartResponse updateItem(String email, Long itemId, UpdateQuantityRequest request);
+    CarritoResponse updateItem(String email, Long itemId, UpdateQuantityRequest request);
 
     void removeItem(String email, Long itemId);
 

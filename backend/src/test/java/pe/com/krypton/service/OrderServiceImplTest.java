@@ -26,7 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import pe.com.krypton.dto.request.CheckoutRequest;
 import pe.com.krypton.dto.request.PaymentRequest;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.dto.response.PageResponse;
 import pe.com.krypton.exception.ComprobanteNotAvailableException;
 import pe.com.krypton.exception.EmptyCartException;
@@ -147,8 +147,8 @@ class OrderServiceImplTest {
         return oi;
     }
 
-    private OrderResponse sampleResponse() {
-        return new OrderResponse(1L, 3L, Instant.now(), "PENDIENTE",
+    private OrdenResponse sampleResponse() {
+        return new OrdenResponse(1L, 3L, Instant.now(), "PENDIENTE",
                 "BOLETA", "Juan Cliente", "12345678",
                 new BigDecimal("299.90"), BigDecimal.ZERO, new BigDecimal("45.75"),
                 new BigDecimal("299.90"), List.of());
@@ -182,10 +182,10 @@ class OrderServiceImplTest {
         when(orderItemRepository.save(any(ItemOrden.class))).thenReturn(savedOrderItem);
         when(stockMovementRepository.save(any(MovimientoStock.class))).thenReturn(new MovimientoStock());
 
-        OrderResponse expectedResponse = sampleResponse();
+        OrdenResponse expectedResponse = sampleResponse();
         when(orderMapper.toResponse(eq(savedOrder), any())).thenReturn(expectedResponse);
 
-        OrderResponse result = service.checkout(email, boletaRequest());
+        OrdenResponse result = service.checkout(email, boletaRequest());
 
         assertThat(result).isNotNull();
 
@@ -425,12 +425,12 @@ class OrderServiceImplTest {
         when(orderItemRepository.findByOrder(any())).thenReturn(List.of());
         when(orderMapper.toResponse(any(), any())).thenAnswer(inv -> {
             Orden o = inv.getArgument(0);
-            return new OrderResponse(o.getId(), 3L, o.getOrderDate(), o.getStatus().name(),
+            return new OrdenResponse(o.getId(), 3L, o.getOrderDate(), o.getStatus().name(),
                     "BOLETA", "Cliente", "00000000",
                     o.getTotal(), BigDecimal.ZERO, BigDecimal.ZERO, o.getTotal(), List.of());
         });
 
-        List<OrderResponse> result = service.getMyOrders(email);
+        List<OrdenResponse> result = service.getMyOrders(email);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).id()).isEqualTo(2L); // newest first
@@ -449,7 +449,7 @@ class OrderServiceImplTest {
         when(orderItemRepository.findByOrder(o)).thenReturn(items);
         when(orderMapper.toResponse(o, items)).thenReturn(sampleResponse());
 
-        OrderResponse result = service.getMyOrder(email, 5L);
+        OrdenResponse result = service.getMyOrder(email, 5L);
 
         assertThat(result).isNotNull();
     }
@@ -480,11 +480,11 @@ class OrderServiceImplTest {
         when(orderRepository.save(o)).thenReturn(o);
         when(orderItemRepository.findByOrder(o)).thenReturn(items);
         when(orderMapper.toResponse(o, items)).thenReturn(
-                new OrderResponse(3L, 3L, Instant.now(), "CONFIRMADA",
+                new OrdenResponse(3L, 3L, Instant.now(), "CONFIRMADA",
                         "BOLETA", "Cliente", "00000000",
                         BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.TEN, List.of()));
 
-        OrderResponse result = service.pay(email, 3L, new PaymentRequest(MetodoPago.YAPE));
+        OrdenResponse result = service.pay(email, 3L, new PaymentRequest(MetodoPago.YAPE));
 
         assertThat(result.status()).isEqualTo("CONFIRMADA");
         assertThat(o.getStatus()).isEqualTo(EstadoOrden.CONFIRMADA);
@@ -604,7 +604,7 @@ class OrderServiceImplTest {
         when(orderItemRepository.findByOrder(o)).thenReturn(List.of());
         when(orderMapper.toResponse(eq(o), any())).thenReturn(sampleResponse());
 
-        PageResponse<OrderResponse> result = service.getAllOrders(null, null, null, pageable);
+        PageResponse<OrdenResponse> result = service.getAllOrders(null, null, null, pageable);
 
         assertThat(result.content()).hasSize(1);
         assertThat(result.totalElements()).isEqualTo(1);
@@ -620,7 +620,7 @@ class OrderServiceImplTest {
         when(orderItemRepository.findByOrder(o)).thenReturn(items);
         when(orderMapper.toResponse(o, items)).thenReturn(sampleResponse());
 
-        OrderResponse result = service.getOrder(10L);
+        OrdenResponse result = service.getOrder(10L);
 
         assertThat(result).isNotNull();
     }
@@ -646,12 +646,12 @@ class OrderServiceImplTest {
         when(productRepository.findByIdWithLock(10L)).thenReturn(Optional.of(p));
         when(orderRepository.save(o)).thenReturn(o);
         when(orderMapper.toResponse(eq(o), any())).thenReturn(
-                new OrderResponse(2L, 3L, Instant.now(), "CANCELADA",
+                new OrdenResponse(2L, 3L, Instant.now(), "CANCELADA",
                         "BOLETA", "Cliente", "00000000",
                         new BigDecimal("599.80"), BigDecimal.ZERO, BigDecimal.ZERO,
                         new BigDecimal("599.80"), List.of()));
 
-        OrderResponse result = service.updateStatus(2L, EstadoOrden.CANCELADA);
+        OrdenResponse result = service.updateStatus(2L, EstadoOrden.CANCELADA);
 
         assertThat(o.getStatus()).isEqualTo(EstadoOrden.CANCELADA);
         assertThat(p.getStock()).isEqualTo(5); // 3 + 2 repuestas
@@ -682,7 +682,7 @@ class OrderServiceImplTest {
         when(productRepository.findByIdWithLock(10L)).thenReturn(Optional.of(p));
         when(orderRepository.save(o)).thenReturn(o);
         when(orderMapper.toResponse(eq(o), any())).thenReturn(
-                new OrderResponse(2L, 3L, Instant.now(), "CANCELADA",
+                new OrdenResponse(2L, 3L, Instant.now(), "CANCELADA",
                         "BOLETA", "Cliente", "00000000",
                         new BigDecimal("299.90"), BigDecimal.ZERO, BigDecimal.ZERO,
                         new BigDecimal("299.90"), List.of()));
@@ -720,11 +720,11 @@ class OrderServiceImplTest {
         when(orderRepository.save(o)).thenReturn(o);
         when(orderItemRepository.findByOrder(o)).thenReturn(List.of());
         when(orderMapper.toResponse(eq(o), any())).thenReturn(
-                new OrderResponse(2L, 3L, Instant.now(), "CONFIRMADA",
+                new OrdenResponse(2L, 3L, Instant.now(), "CONFIRMADA",
                         "BOLETA", "Cliente", "00000000",
                         BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.TEN, List.of()));
 
-        OrderResponse result = service.updateStatus(2L, EstadoOrden.CONFIRMADA);
+        OrdenResponse result = service.updateStatus(2L, EstadoOrden.CONFIRMADA);
 
         assertThat(o.getStatus()).isEqualTo(EstadoOrden.CONFIRMADA);
         verify(stockMovementRepository, never()).save(any());

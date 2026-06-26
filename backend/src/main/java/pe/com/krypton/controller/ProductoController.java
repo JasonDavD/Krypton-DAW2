@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.com.krypton.dto.response.PageResponse;
-import pe.com.krypton.dto.response.ProductResponse;
+import pe.com.krypton.dto.response.ProductoResponse;
 import pe.com.krypton.service.ProductoService;
 
 /** Endpoints públicos de catálogo — solo lectura. Seguridad: GET permitAll en SecurityConfig. */
@@ -23,7 +23,7 @@ public class ProductoController {
     }
 
     @GetMapping
-    public PageResponse<ProductResponse> search(
+    public PageResponse<ProductoResponse> search(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) BigDecimal priceMin,
@@ -33,7 +33,7 @@ public class ProductoController {
     }
 
     @GetMapping("/{id}")
-    public ProductResponse getById(@PathVariable Long id) {
+    public ProductoResponse getById(@PathVariable Long id) {
         return productService.getById(id);
     }
 }

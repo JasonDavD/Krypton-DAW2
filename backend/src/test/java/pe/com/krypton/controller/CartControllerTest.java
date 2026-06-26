@@ -27,8 +27,8 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import pe.com.krypton.dto.response.CartItemResponse;
-import pe.com.krypton.dto.response.CartResponse;
+import pe.com.krypton.dto.response.ItemCarritoResponse;
+import pe.com.krypton.dto.response.CarritoResponse;
 import pe.com.krypton.exception.InsufficientStockException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
@@ -52,15 +52,15 @@ class CartControllerTest {
     private static final String JSON = MediaType.APPLICATION_JSON_VALUE;
     private static final String USER_EMAIL = "user@krypton.pe";
 
-    private CartResponse sampleCart() {
-        CartItemResponse item = new CartItemResponse(
+    private CarritoResponse sampleCart() {
+        ItemCarritoResponse item = new ItemCarritoResponse(
                 5L, 12L, "Laptop", "LAP-001",
                 new BigDecimal("999.90"), 2, new BigDecimal("1999.80"));
-        return new CartResponse(1L, List.of(item), new BigDecimal("1999.80"), Instant.now());
+        return new CarritoResponse(1L, List.of(item), new BigDecimal("1999.80"), Instant.now());
     }
 
-    private CartResponse emptyCart() {
-        return new CartResponse(null, List.of(), BigDecimal.ZERO, null);
+    private CarritoResponse emptyCart() {
+        return new CarritoResponse(null, List.of(), BigDecimal.ZERO, null);
     }
 
     // ─── GET /api/cart ──────────────────────────────────────────────────────────

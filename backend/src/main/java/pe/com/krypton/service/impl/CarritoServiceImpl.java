@@ -6,9 +6,9 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pe.com.krypton.dto.request.CartItemRequest;
+import pe.com.krypton.dto.request.ItemCarritoRequest;
 import pe.com.krypton.dto.request.UpdateQuantityRequest;
-import pe.com.krypton.dto.response.CartResponse;
+import pe.com.krypton.dto.response.CarritoResponse;
 import pe.com.krypton.exception.InsufficientStockException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.mapper.CarritoMapper;
@@ -50,7 +50,7 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     @Transactional(readOnly = true)
-    public CartResponse getCart(String email) {
+    public CarritoResponse getCart(String email) {
         Usuario user = resolveUser(email);
         return cartRepository.findByUser(user)
                 .map(this::currentCart)
@@ -59,7 +59,7 @@ public class CarritoServiceImpl implements CarritoService {
 
     /** Non-transactional orchestrator — catches constraint violation from tx1, retries in tx2. */
     @Override
-    public CartResponse addItem(String email, CartItemRequest request) {
+    public CarritoResponse addItem(String email, ItemCarritoRequest request) {
         try {
             return self.attemptAddItem(email, request);
         } catch (DataIntegrityViolationException ex) {
@@ -69,7 +69,7 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     @Transactional
-    public CartResponse attemptAddItem(String email, CartItemRequest request) {
+    public CarritoResponse attemptAddItem(String email, ItemCarritoRequest request) {
         Usuario user = resolveUser(email);
         Carrito cart = getOrCreateCart(user);
         Producto product = resolveActiveProduct(request.productId());
@@ -98,7 +98,7 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     @Transactional
-    public CartResponse mergeOnConflict(String email, CartItemRequest request) {
+    public CarritoResponse mergeOnConflict(String email, ItemCarritoRequest request) {
         Usuario user = resolveUser(email);
         Carrito cart = getOrCreateCart(user);
         Producto product = resolveActiveProduct(request.productId());
@@ -128,7 +128,7 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     @Transactional
-    public CartResponse updateItem(String email, Long itemId, UpdateQuantityRequest request) {
+    public CarritoResponse updateItem(String email, Long itemId, UpdateQuantityRequest request) {
         Usuario user = resolveUser(email);
         ItemCarrito item = cartItemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item no encontrado: " + itemId));
@@ -214,7 +214,7 @@ public class CarritoServiceImpl implements CarritoService {
         return item;
     }
 
-    private CartResponse currentCart(Carrito cart) {
+    private CarritoResponse currentCart(Carrito cart) {
         List<ItemCarrito> items = cartItemRepository.findByCart(cart);
         return cartMapper.toResponse(cart, items);
     }

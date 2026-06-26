@@ -7,8 +7,8 @@ import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import pe.com.krypton.dto.response.OrderItemResponse;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.ItemOrdenResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.entity.Orden;
 import pe.com.krypton.entity.ItemOrden;
 import pe.com.krypton.entity.Producto;
@@ -85,7 +85,7 @@ class OrderMapperTest {
         Producto p = product(12L, "Notebook", new BigDecimal("2999.90"));
         ItemOrden item = orderItem(1L, o, p, 2, new BigDecimal("2999.90"));
 
-        OrderItemResponse resp = mapper.toItemResponse(item);
+        ItemOrdenResponse resp = mapper.toItemResponse(item);
 
         assertThat(resp.id()).isEqualTo(1L);
         assertThat(resp.productId()).isEqualTo(12L);
@@ -103,7 +103,7 @@ class OrderMapperTest {
         Producto p = product(12L, "Notebook", new BigDecimal("150.00")); // price updated later
         ItemOrden item = orderItem(1L, o, p, 1, new BigDecimal("100.00")); // snapshot at purchase
 
-        OrderItemResponse resp = mapper.toItemResponse(item);
+        ItemOrdenResponse resp = mapper.toItemResponse(item);
 
         // subtotal must use the unitPrice snapshot (100.00), NOT the current product price (150.00)
         assertThat(resp.unitPrice()).isEqualByComparingTo(new BigDecimal("100.00"));
@@ -122,7 +122,7 @@ class OrderMapperTest {
         ItemOrden item1 = orderItem(1L, o, p, 1, new BigDecimal("499.00"));
         ItemOrden item2 = orderItem(2L, o, p, 1, new BigDecimal("500.00"));
 
-        OrderResponse resp = mapper.toResponse(o, List.of(item1, item2));
+        OrdenResponse resp = mapper.toResponse(o, List.of(item1, item2));
 
         // total MUST come from order.getTotal(), not sum of items
         assertThat(resp.total()).isEqualByComparingTo(new BigDecimal("999.00"));
@@ -133,7 +133,7 @@ class OrderMapperTest {
         Usuario u = user(3L);
         Orden o = order(1L, u, BigDecimal.TEN, EstadoOrden.CONFIRMADA);
 
-        OrderResponse resp = mapper.toResponse(o, List.of());
+        OrdenResponse resp = mapper.toResponse(o, List.of());
 
         assertThat(resp.status()).isEqualTo("CONFIRMADA");
     }
@@ -143,7 +143,7 @@ class OrderMapperTest {
         Usuario u = user(42L);
         Orden o = order(7L, u, BigDecimal.TEN, EstadoOrden.PENDIENTE);
 
-        OrderResponse resp = mapper.toResponse(o, List.of());
+        OrdenResponse resp = mapper.toResponse(o, List.of());
 
         assertThat(resp.userId()).isEqualTo(42L);
     }
@@ -157,7 +157,7 @@ class OrderMapperTest {
         ItemOrden item1 = orderItem(1L, o, p1, 1, new BigDecimal("300.00"));
         ItemOrden item2 = orderItem(2L, o, p2, 1, new BigDecimal("50.00"));
 
-        OrderResponse resp = mapper.toResponse(o, List.of(item1, item2));
+        OrdenResponse resp = mapper.toResponse(o, List.of(item1, item2));
 
         assertThat(resp.items()).hasSize(2);
         assertThat(resp.items().get(0).productName()).isEqualTo("Laptop");
@@ -175,7 +175,7 @@ class OrderMapperTest {
         o.setShippingCost(new BigDecimal("20.00"));
         o.setIgv(new BigDecimal("18.31"));
 
-        OrderResponse resp = mapper.toResponse(o, List.of());
+        OrdenResponse resp = mapper.toResponse(o, List.of());
 
         assertThat(resp.documentType()).isEqualTo("FACTURA"); // enum.name() — desacoplado del wire
         assertThat(resp.customerName()).isEqualTo("ACME SAC");

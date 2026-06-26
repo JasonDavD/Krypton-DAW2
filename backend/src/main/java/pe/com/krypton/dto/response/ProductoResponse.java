@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigDecimal;
 import java.util.List;
 
-public record ProductResponse(
+public record ProductoResponse(
         Long id,
         String sku,
         String name,
@@ -15,5 +15,5 @@ public record ProductResponse(
         boolean active,
         Long categoryId,
         String categoryName,
-        @JsonInclude(JsonInclude.Include.NON_NULL) List<ProductImageResponse> images) {
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<ImagenProductoResponse> images) {
 }

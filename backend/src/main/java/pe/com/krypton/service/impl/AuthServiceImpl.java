@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pe.com.krypton.dto.request.LoginRequest;
 import pe.com.krypton.dto.request.RegisterRequest;
 import pe.com.krypton.dto.response.AuthResponse;
-import pe.com.krypton.dto.response.UserResponse;
+import pe.com.krypton.dto.response.UsuarioResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.InvalidCredentialsException;
 import pe.com.krypton.mapper.UsuarioMapper;
@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public UserResponse register(RegisterRequest request) {
+    public UsuarioResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateEmailException("El email ya está registrado");
         }

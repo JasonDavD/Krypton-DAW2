@@ -3,8 +3,8 @@ package pe.com.krypton.mapper;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.stereotype.Component;
-import pe.com.krypton.dto.response.CartItemResponse;
-import pe.com.krypton.dto.response.CartResponse;
+import pe.com.krypton.dto.response.ItemCarritoResponse;
+import pe.com.krypton.dto.response.CarritoResponse;
 import pe.com.krypton.entity.Carrito;
 import pe.com.krypton.entity.ItemCarrito;
 import pe.com.krypton.entity.Producto;
@@ -13,11 +13,11 @@ import pe.com.krypton.entity.Producto;
 @Component
 public class CarritoMapper {
 
-    public CartItemResponse toItemResponse(ItemCarrito item) {
+    public ItemCarritoResponse toItemResponse(ItemCarrito item) {
         Producto product = item.getProduct();
         BigDecimal subtotal = product.getPrice()
                 .multiply(BigDecimal.valueOf(item.getQuantity()));
-        return new CartItemResponse(
+        return new ItemCarritoResponse(
                 item.getId(),
                 product.getId(),
                 product.getName(),
@@ -27,21 +27,21 @@ public class CarritoMapper {
                 subtotal);
     }
 
-    public CartResponse toResponse(Carrito cart, List<ItemCarrito> items) {
-        List<CartItemResponse> itemResponses = items.stream()
+    public CarritoResponse toResponse(Carrito cart, List<ItemCarrito> items) {
+        List<ItemCarritoResponse> itemResponses = items.stream()
                 .map(this::toItemResponse)
                 .toList();
         BigDecimal total = itemResponses.stream()
-                .map(CartItemResponse::subtotal)
+                .map(ItemCarritoResponse::subtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new CartResponse(
+        return new CarritoResponse(
                 cart.getId(),
                 itemResponses,
                 total,
                 cart.getUpdatedAt());
     }
 
-    public CartResponse emptyCart() {
-        return new CartResponse(null, List.of(), BigDecimal.ZERO, null);
+    public CarritoResponse emptyCart() {
+        return new CarritoResponse(null, List.of(), BigDecimal.ZERO, null);
     }
 }

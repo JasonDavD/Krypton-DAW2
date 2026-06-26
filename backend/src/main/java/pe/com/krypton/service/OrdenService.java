@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 import pe.com.krypton.dto.request.CheckoutRequest;
 import pe.com.krypton.dto.request.PaymentRequest;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.dto.response.PageResponse;
 import pe.com.krypton.entity.enums.EstadoOrden;
 
@@ -16,33 +16,33 @@ public interface OrdenService {
      * Calcula el envío (gratis ≥ S/300, si no S/20) y desglosa el IGV (el precio ya lo
      * incluye). El comprobante (boleta/factura + receptor) viene en {@code request}.
      */
-    OrderResponse checkout(String email, CheckoutRequest request);
+    OrdenResponse checkout(String email, CheckoutRequest request);
 
     /** Returns the authenticated client's orders ordered by date DESC. */
-    List<OrderResponse> getMyOrders(String email);
+    List<OrdenResponse> getMyOrders(String email);
 
     /** Returns the client's own order detail. Throws ResourceNotFoundException (404) if IDOR. */
-    OrderResponse getMyOrder(String email, Long orderId);
+    OrdenResponse getMyOrder(String email, Long orderId);
 
     /**
      * Simulated payment: PENDIENTE → CONFIRMADA.
      * Throws ResourceNotFoundException (404) if IDOR.
      * Throws OrderStatusTransitionException (422) if not PENDIENTE.
      */
-    OrderResponse pay(String email, Long orderId, PaymentRequest request);
+    OrdenResponse pay(String email, Long orderId, PaymentRequest request);
 
     /** Admin: lista paginada de órdenes con filtros opcionales (estado, rango de fecha). */
-    PageResponse<OrderResponse> getAllOrders(EstadoOrden status, Instant from, Instant to, Pageable pageable);
+    PageResponse<OrdenResponse> getAllOrders(EstadoOrden status, Instant from, Instant to, Pageable pageable);
 
     /** Admin: single order by id. Throws ResourceNotFoundException (404) if not found. */
-    OrderResponse getOrder(Long orderId);
+    OrdenResponse getOrder(Long orderId);
 
     /**
      * Admin: cambia el estado de una orden respetando la máquina de estados
      * (EstadoOrdenPolicy). Transición ilegal → OrderStatusTransitionException (422).
      * Cancelar (→ CANCELADA) repone el stock con un MovimientoStock(ENTRADA).
      */
-    OrderResponse updateStatus(Long orderId, EstadoOrden newStatus);
+    OrdenResponse updateStatus(Long orderId, EstadoOrden newStatus);
 
     /**
      * Cliente: PDF del comprobante (boleta/factura) de su propio pedido PAGADO.

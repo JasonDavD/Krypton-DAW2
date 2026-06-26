@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import pe.com.krypton.dto.request.ProductRequest;
-import pe.com.krypton.dto.response.ProductResponse;
+import pe.com.krypton.dto.request.ProductoRequest;
+import pe.com.krypton.dto.response.ProductoResponse;
 import pe.com.krypton.service.ProductoService;
 
 /** CRUD de productos — solo ADMIN (autorización: /api/admin/** hasRole(ADMIN) en SecurityConfig). */
@@ -27,12 +27,12 @@ public class AdminProductoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductResponse create(@Valid @RequestBody ProductRequest request) {
+    public ProductoResponse create(@Valid @RequestBody ProductoRequest request) {
         return productService.create(request);
     }
 
     @PutMapping("/{id}")
-    public ProductResponse update(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
+    public ProductoResponse update(@PathVariable Long id, @Valid @RequestBody ProductoRequest request) {
         return productService.update(id, request);
     }
 

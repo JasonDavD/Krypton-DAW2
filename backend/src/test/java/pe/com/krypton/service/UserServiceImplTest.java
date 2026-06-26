@@ -16,8 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import pe.com.krypton.dto.request.CreateUserRequest;
-import pe.com.krypton.dto.response.UserResponse;
+import pe.com.krypton.dto.request.CreateUsuarioRequest;
+import pe.com.krypton.dto.response.UsuarioResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.LastAdminException;
 import pe.com.krypton.exception.ResourceNotFoundException;
@@ -57,7 +57,7 @@ class UserServiceImplTest {
     void should_list_users() {
         when(userRepository.findAll()).thenReturn(List.of(user(1L, Rol.ADMIN, true), user(2L, Rol.CLIENTE, true)));
 
-        List<UserResponse> res = service.listAll();
+        List<UsuarioResponse> res = service.listAll();
 
         assertThat(res).hasSize(2);
         assertThat(res.get(0).email()).isEqualTo("u1@krypton.pe");
@@ -73,7 +73,7 @@ class UserServiceImplTest {
             return u;
         });
 
-        UserResponse res = service.create(new CreateUserRequest("Nuevo", "nuevo@krypton.pe", "Secret123", Rol.ADMIN));
+        UsuarioResponse res = service.create(new CreateUsuarioRequest("Nuevo", "nuevo@krypton.pe", "Secret123", Rol.ADMIN));
 
         assertThat(res.role()).isEqualTo(Rol.ADMIN);
         assertThat(res.active()).isTrue();
@@ -83,7 +83,7 @@ class UserServiceImplTest {
     void should_reject_create_when_email_exists() {
         when(userRepository.existsByEmail("dup@krypton.pe")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.create(new CreateUserRequest("X", "dup@krypton.pe", "x", Rol.CLIENTE)))
+        assertThatThrownBy(() -> service.create(new CreateUsuarioRequest("X", "dup@krypton.pe", "x", Rol.CLIENTE)))
                 .isInstanceOf(DuplicateEmailException.class);
         verify(userRepository, never()).save(any());
     }
@@ -94,7 +94,7 @@ class UserServiceImplTest {
         when(userRepository.findById(5L)).thenReturn(Optional.of(u));
         when(userRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        UserResponse res = service.changeRole(5L, Rol.ADMIN);
+        UsuarioResponse res = service.changeRole(5L, Rol.ADMIN);
 
         assertThat(res.role()).isEqualTo(Rol.ADMIN);
     }
@@ -115,7 +115,7 @@ class UserServiceImplTest {
         when(userRepository.findById(7L)).thenReturn(Optional.of(u));
         when(userRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        UserResponse res = service.setStatus(7L, false);
+        UsuarioResponse res = service.setStatus(7L, false);
 
         assertThat(res.active()).isFalse();
     }

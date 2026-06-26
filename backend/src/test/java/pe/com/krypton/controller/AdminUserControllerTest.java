@@ -22,7 +22,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import pe.com.krypton.dto.response.UserResponse;
+import pe.com.krypton.dto.response.UsuarioResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.LastAdminException;
 import pe.com.krypton.entity.enums.Rol;
@@ -43,8 +43,8 @@ class AdminUserControllerTest {
     @Autowired MockMvc mvc;
     @MockBean UsuarioService userService;
 
-    private UserResponse sample(Long id, Rol role, boolean active) {
-        return new UserResponse(id, "U" + id, "u" + id + "@krypton.pe", role, active, Instant.now());
+    private UsuarioResponse sample(Long id, Rol role, boolean active) {
+        return new UsuarioResponse(id, "U" + id, "u" + id + "@krypton.pe", role, active, Instant.now());
     }
 
     @Test

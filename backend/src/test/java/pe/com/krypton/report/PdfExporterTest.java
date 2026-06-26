@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.dto.response.report.KardexMovimientoRow;
 import pe.com.krypton.dto.response.report.KardexReport;
 import pe.com.krypton.dto.response.report.OrdenesListadoReport;
@@ -94,7 +94,7 @@ class PdfExporterTest {
 
     @Test
     void exportOrdenes_nonempty_produces_pdf_magic() {
-        OrderResponse order = new OrderResponse(
+        OrdenResponse order = new OrdenResponse(
                 1L, 10L, Instant.now(), "CONFIRMADA",
                 "BOLETA", "Juan Cliente", "12345678",
                 new BigDecimal("99.00"), BigDecimal.ZERO, new BigDecimal("15.10"),

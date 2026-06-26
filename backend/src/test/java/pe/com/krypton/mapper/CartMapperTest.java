@@ -7,8 +7,8 @@ import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import pe.com.krypton.dto.response.CartItemResponse;
-import pe.com.krypton.dto.response.CartResponse;
+import pe.com.krypton.dto.response.ItemCarritoResponse;
+import pe.com.krypton.dto.response.CarritoResponse;
 import pe.com.krypton.entity.Carrito;
 import pe.com.krypton.entity.ItemCarrito;
 import pe.com.krypton.entity.Producto;
@@ -69,7 +69,7 @@ class CartMapperTest {
         Producto p = product(10L, "SKU-001", "Laptop Pro", new BigDecimal("999.90"));
         ItemCarrito item = cartItem(5L, c, p, 2);
 
-        CartItemResponse resp = mapper.toItemResponse(item);
+        ItemCarritoResponse resp = mapper.toItemResponse(item);
 
         assertThat(resp.itemId()).isEqualTo(5L);
         assertThat(resp.productId()).isEqualTo(10L);
@@ -90,7 +90,7 @@ class CartMapperTest {
         ItemCarrito item1 = cartItem(5L, c, p1, 2);  // subtotal = 1999.80
         ItemCarrito item2 = cartItem(6L, c, p2, 3);  // subtotal = 150.00
 
-        CartResponse resp = mapper.toResponse(c, List.of(item1, item2));
+        CarritoResponse resp = mapper.toResponse(c, List.of(item1, item2));
 
         assertThat(resp.cartId()).isEqualTo(1L);
         assertThat(resp.items()).hasSize(2);
@@ -102,7 +102,7 @@ class CartMapperTest {
     void toResponse_with_empty_items_has_zero_total() {
         Carrito c = cart(1L);
 
-        CartResponse resp = mapper.toResponse(c, List.of());
+        CarritoResponse resp = mapper.toResponse(c, List.of());
 
         assertThat(resp.cartId()).isEqualTo(1L);
         assertThat(resp.items()).isEmpty();
@@ -113,7 +113,7 @@ class CartMapperTest {
 
     @Test
     void emptyCart_has_null_cartId_empty_items_zero_total_null_updatedAt() {
-        CartResponse resp = mapper.emptyCart();
+        CarritoResponse resp = mapper.emptyCart();
 
         assertThat(resp.cartId()).isNull();
         assertThat(resp.items()).isEmpty();

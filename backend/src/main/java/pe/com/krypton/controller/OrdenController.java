@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import pe.com.krypton.dto.request.CheckoutRequest;
 import pe.com.krypton.dto.request.PaymentRequest;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.service.OrdenService;
 
 /**
@@ -35,30 +35,30 @@ public class OrdenController {
 
     private final OrdenService orderService;
 
-    /** POST /api/orders/checkout → 201 OrderResponse */
+    /** POST /api/orders/checkout → 201 OrdenResponse */
     @PostMapping("/checkout")
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse checkout(@AuthenticationPrincipal UserDetails principal,
+    public OrdenResponse checkout(@AuthenticationPrincipal UserDetails principal,
                                   @Valid @RequestBody CheckoutRequest request) {
         return orderService.checkout(principal.getUsername(), request);
     }
 
-    /** GET /api/orders → 200 List<OrderResponse> (only the caller's orders, newest first) */
+    /** GET /api/orders → 200 List<OrdenResponse> (only the caller's orders, newest first) */
     @GetMapping
-    public List<OrderResponse> getMyOrders(@AuthenticationPrincipal UserDetails principal) {
+    public List<OrdenResponse> getMyOrders(@AuthenticationPrincipal UserDetails principal) {
         return orderService.getMyOrders(principal.getUsername());
     }
 
-    /** GET /api/orders/{id} → 200 OrderResponse (404 if not owner or not found) */
+    /** GET /api/orders/{id} → 200 OrdenResponse (404 if not owner or not found) */
     @GetMapping("/{id}")
-    public OrderResponse getMyOrder(@AuthenticationPrincipal UserDetails principal,
+    public OrdenResponse getMyOrder(@AuthenticationPrincipal UserDetails principal,
                                     @PathVariable Long id) {
         return orderService.getMyOrder(principal.getUsername(), id);
     }
 
-    /** POST /api/orders/{id}/pay → 200 OrderResponse (simulated payment: PENDIENTE → CONFIRMADA) */
+    /** POST /api/orders/{id}/pay → 200 OrdenResponse (simulated payment: PENDIENTE → CONFIRMADA) */
     @PostMapping("/{id}/pay")
-    public OrderResponse pay(@AuthenticationPrincipal UserDetails principal,
+    public OrdenResponse pay(@AuthenticationPrincipal UserDetails principal,
                              @PathVariable Long id,
                              @Valid @RequestBody PaymentRequest request) {
         return orderService.pay(principal.getUsername(), id, request);

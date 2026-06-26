@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import pe.com.krypton.dto.request.CreateUserRequest;
+import pe.com.krypton.dto.request.CreateUsuarioRequest;
 import pe.com.krypton.dto.request.UpdateRoleRequest;
 import pe.com.krypton.dto.request.UpdateStatusRequest;
-import pe.com.krypton.dto.response.UserResponse;
+import pe.com.krypton.dto.response.UsuarioResponse;
 import pe.com.krypton.service.UsuarioService;
 
 /** Gestión de usuarios — solo ADMIN (autorización en SecurityConfig: /api/admin/**). */
@@ -29,23 +29,23 @@ public class AdminUsuarioController {
     }
 
     @GetMapping
-    public List<UserResponse> list() {
+    public List<UsuarioResponse> list() {
         return userService.listAll();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse create(@Valid @RequestBody CreateUserRequest request) {
+    public UsuarioResponse create(@Valid @RequestBody CreateUsuarioRequest request) {
         return userService.create(request);
     }
 
     @PatchMapping("/{id}/role")
-    public UserResponse changeRole(@PathVariable Long id, @Valid @RequestBody UpdateRoleRequest request) {
+    public UsuarioResponse changeRole(@PathVariable Long id, @Valid @RequestBody UpdateRoleRequest request) {
         return userService.changeRole(id, request.role());
     }
 
     @PatchMapping("/{id}/status")
-    public UserResponse setStatus(@PathVariable Long id, @Valid @RequestBody UpdateStatusRequest request) {
+    public UsuarioResponse setStatus(@PathVariable Long id, @Valid @RequestBody UpdateStatusRequest request) {
         return userService.setStatus(id, request.active());
     }
 }

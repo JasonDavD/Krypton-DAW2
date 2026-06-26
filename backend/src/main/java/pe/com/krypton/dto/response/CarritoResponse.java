@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-public record CartResponse(
+public record CarritoResponse(
         Long cartId,
-        List<CartItemResponse> items,
+        List<ItemCarritoResponse> items,
         BigDecimal total,
         Instant updatedAt) {
 }

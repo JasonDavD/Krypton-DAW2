@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import pe.com.krypton.entity.enums.Rol;
 
 /** Alta de usuario por un ADMIN: el rol es elegible (CLIENTE o ADMIN). */
-public record CreateUserRequest(
+public record CreateUsuarioRequest(
         @NotBlank String name,
         @NotBlank @Email String email,
         @NotBlank String password,

@@ -20,8 +20,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import pe.com.krypton.dto.response.PageResponse;
-import pe.com.krypton.dto.response.ProductImageResponse;
-import pe.com.krypton.dto.response.ProductResponse;
+import pe.com.krypton.dto.response.ImagenProductoResponse;
+import pe.com.krypton.dto.response.ProductoResponse;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
 import pe.com.krypton.service.ProductoService;
@@ -40,16 +40,16 @@ class ProductControllerTest {
     @Autowired MockMvc mvc;
     @MockBean ProductoService productService;
 
-    private ProductResponse sampleProduct(Long id) {
-        return new ProductResponse(id, "SKU-" + id, "Producto " + id, "Desc",
+    private ProductoResponse sampleProduct(Long id) {
+        return new ProductoResponse(id, "SKU-" + id, "Producto " + id, "Desc",
                 new BigDecimal("99.90"), 10, null, true, 1L, "Electronics", null);
     }
 
-    private ProductResponse sampleProductWithImages(Long id) {
-        List<ProductImageResponse> images = List.of(
-                new ProductImageResponse(10L, "http://localhost:8080/api/uploads/images/a.jpg", (short) 0, true),
-                new ProductImageResponse(11L, "http://localhost:8080/api/uploads/images/b.jpg", (short) 1, false));
-        return new ProductResponse(id, "SKU-" + id, "Producto " + id, "Desc",
+    private ProductoResponse sampleProductWithImages(Long id) {
+        List<ImagenProductoResponse> images = List.of(
+                new ImagenProductoResponse(10L, "http://localhost:8080/api/uploads/images/a.jpg", (short) 0, true),
+                new ImagenProductoResponse(11L, "http://localhost:8080/api/uploads/images/b.jpg", (short) 1, false));
+        return new ProductoResponse(id, "SKU-" + id, "Producto " + id, "Desc",
                 new BigDecimal("99.90"), 10, "http://localhost:8080/api/uploads/images/a.jpg",
                 true, 1L, "Electronics", images);
     }

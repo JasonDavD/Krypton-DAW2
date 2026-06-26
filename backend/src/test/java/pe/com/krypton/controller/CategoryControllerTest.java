@@ -14,7 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.test.web.servlet.MockMvc;
-import pe.com.krypton.dto.response.CategoryResponse;
+import pe.com.krypton.dto.response.CategoriaResponse;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
 import pe.com.krypton.service.CategoriaService;
@@ -33,8 +33,8 @@ class CategoryControllerTest {
     @Autowired MockMvc mvc;
     @MockBean CategoriaService categoryService;
 
-    private CategoryResponse sample(Long id) {
-        return new CategoryResponse(id, "Categoria " + id, "Description " + id);
+    private CategoriaResponse sample(Long id) {
+        return new CategoriaResponse(id, "Categoria " + id, "Description " + id);
     }
 
     @Test

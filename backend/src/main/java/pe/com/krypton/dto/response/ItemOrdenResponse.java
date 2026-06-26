@@ -2,12 +2,11 @@ package pe.com.krypton.dto.response;
 
 import java.math.BigDecimal;
 
-public record CartItemResponse(
-        Long itemId,
+public record ItemOrdenResponse(
+        Long id,
         Long productId,
         String productName,
-        String sku,
-        BigDecimal price,
         int quantity,
+        BigDecimal unitPrice,
         BigDecimal subtotal) {
 }

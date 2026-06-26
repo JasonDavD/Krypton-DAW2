@@ -3,8 +3,8 @@ package pe.com.krypton.mapper;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import pe.com.krypton.dto.response.ProductImageResponse;
-import pe.com.krypton.dto.response.ProductResponse;
+import pe.com.krypton.dto.response.ImagenProductoResponse;
+import pe.com.krypton.dto.response.ProductoResponse;
 import pe.com.krypton.entity.Producto;
 import pe.com.krypton.entity.ImagenProducto;
 
@@ -28,8 +28,8 @@ public class ProductoMapper {
     }
 
     /** Lean mapping: images field is null (omitted from JSON via @JsonInclude NON_NULL). */
-    public ProductResponse toResponse(Producto product) {
-        return new ProductResponse(
+    public ProductoResponse toResponse(Producto product) {
+        return new ProductoResponse(
                 product.getId(),
                 product.getSku(),
                 product.getName(),
@@ -47,12 +47,12 @@ public class ProductoMapper {
      * Full mapping: images collection is loaded (caller must be inside @Transactional(readOnly=true)
      * because the collection is LAZY). The list is already ordered by @OrderBy on Producto.images.
      */
-    public ProductResponse toResponseWithImages(Producto product) {
-        List<ProductImageResponse> imageResponses = product.getImages().stream()
+    public ProductoResponse toResponseWithImages(Producto product) {
+        List<ImagenProductoResponse> imageResponses = product.getImages().stream()
                 .map(this::toImageResponse)
                 .toList();
 
-        return new ProductResponse(
+        return new ProductoResponse(
                 product.getId(),
                 product.getSku(),
                 product.getName(),
@@ -68,9 +68,9 @@ public class ProductoMapper {
 
     // ─── private helpers ─────────────────────────────────────────────────────────
 
-    private ProductImageResponse toImageResponse(ImagenProducto image) {
+    private ImagenProductoResponse toImageResponse(ImagenProducto image) {
         String url = baseUrl + "/api/uploads/images/" + image.getPath();
-        return new ProductImageResponse(
+        return new ImagenProductoResponse(
                 image.getId(),
                 url,
                 image.getDisplayOrder(),

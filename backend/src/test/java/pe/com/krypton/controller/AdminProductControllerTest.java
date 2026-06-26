@@ -23,7 +23,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import pe.com.krypton.dto.response.ProductResponse;
+import pe.com.krypton.dto.response.ProductoResponse;
 import pe.com.krypton.exception.DuplicateSkuException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
@@ -47,8 +47,8 @@ class AdminProductControllerTest {
             {"sku":"SKU-01","name":"Laptop Pro","description":"Desc","price":1500.00,"stock":5,"imageUrl":null,"categoryId":1}
             """;
 
-    private ProductResponse sampleProduct(Long id) {
-        return new ProductResponse(id, "SKU-01", "Laptop Pro", "Desc",
+    private ProductoResponse sampleProduct(Long id) {
+        return new ProductoResponse(id, "SKU-01", "Laptop Pro", "Desc",
                 new BigDecimal("1500.00"), 5, null, true, 1L, "Electronics", null);
     }
 

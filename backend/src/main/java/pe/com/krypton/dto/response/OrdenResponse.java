@@ -10,7 +10,7 @@ import java.util.List;
  * (base = total − igv). `total = subtotal + shippingCost`. Boleta y factura
  * devuelven el mismo total; sólo cambia si el front muestra el desglose.
  */
-public record OrderResponse(
+public record OrdenResponse(
         Long id,
         Long userId,
         Instant orderDate,
@@ -22,5 +22,5 @@ public record OrderResponse(
         BigDecimal shippingCost,
         BigDecimal igv,
         BigDecimal total,
-        List<OrderItemResponse> items) {
+        List<ItemOrdenResponse> items) {
 }

@@ -19,7 +19,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import pe.com.krypton.dto.response.AuthResponse;
-import pe.com.krypton.dto.response.UserResponse;
+import pe.com.krypton.dto.response.UsuarioResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.InvalidCredentialsException;
 import pe.com.krypton.entity.enums.Rol;
@@ -44,7 +44,7 @@ class AuthControllerTest {
     @Test
     void should_return_201_and_hide_password_when_register_is_valid() throws Exception {
         when(authService.register(any())).thenReturn(
-                new UserResponse(1L, "Ana", "ana@krypton.pe", Rol.CLIENTE, true, Instant.now()));
+                new UsuarioResponse(1L, "Ana", "ana@krypton.pe", Rol.CLIENTE, true, Instant.now()));
 
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Ana\",\"email\":\"ana@krypton.pe\",\"password\":\"Secret123\"}"))

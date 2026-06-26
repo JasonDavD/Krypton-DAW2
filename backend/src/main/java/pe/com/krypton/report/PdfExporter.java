@@ -16,7 +16,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.dto.response.report.KardexMovimientoRow;
 import pe.com.krypton.dto.response.report.KardexReport;
 import pe.com.krypton.dto.response.report.OrdenesListadoReport;
@@ -130,7 +130,7 @@ public class PdfExporter {
             addHeaderCell(table, "Estado");
             addHeaderCell(table, "Total (S/)");
 
-            for (OrderResponse orden : report.ordenes()) {
+            for (OrdenResponse orden : report.ordenes()) {
                 table.addCell(String.valueOf(orden.id()));
                 table.addCell(DT_FMT.format(orden.orderDate()));
                 table.addCell(String.valueOf(orden.userId()));

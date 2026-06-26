@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.com.krypton.dto.request.CheckoutRequest;
 import pe.com.krypton.dto.request.PaymentRequest;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.dto.response.PageResponse;
 import pe.com.krypton.exception.ComprobanteNotAvailableException;
 import pe.com.krypton.exception.EmptyCartException;
@@ -101,7 +101,7 @@ public class OrdenServiceImpl implements OrdenService {
      */
     @Override
     @Transactional
-    public OrderResponse checkout(String email, CheckoutRequest request) {
+    public OrdenResponse checkout(String email, CheckoutRequest request) {
         validateDocument(request);
         Usuario user = resolveUser(email);
 
@@ -186,7 +186,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OrderResponse> getMyOrders(String email) {
+    public List<OrdenResponse> getMyOrders(String email) {
         Usuario user = resolveUser(email);
         List<Orden> orders = orderRepository.findByUserOrderByOrderDateDesc(user);
         return orders.stream()
@@ -196,7 +196,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional(readOnly = true)
-    public OrderResponse getMyOrder(String email, Long orderId) {
+    public OrdenResponse getMyOrder(String email, Long orderId) {
         Usuario user = resolveUser(email);
         Orden order = orderRepository.findByIdAndUser(orderId, user)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -208,7 +208,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional
-    public OrderResponse pay(String email, Long orderId, PaymentRequest request) {
+    public OrdenResponse pay(String email, Long orderId, PaymentRequest request) {
         Usuario user = resolveUser(email);
         Orden order = orderRepository.findByIdAndUser(orderId, user)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -255,19 +255,19 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<OrderResponse> getAllOrders(EstadoOrden status, Instant from, Instant to, Pageable pageable) {
+    public PageResponse<OrdenResponse> getAllOrders(EstadoOrden status, Instant from, Instant to, Pageable pageable) {
         // Compone los filtros opcionales (null = ausente, gracias al contrato de OrdenSpecification).
         Specification<Orden> spec = Specification
                 .where(OrdenSpecification.hasStatus(status))
                 .and(OrdenSpecification.dateBetween(from, to));
-        Page<OrderResponse> responsePage = orderRepository.findAll(spec, pageable)
+        Page<OrdenResponse> responsePage = orderRepository.findAll(spec, pageable)
                 .map(o -> orderMapper.toResponse(o, orderItemRepository.findByOrder(o)));
         return PageResponse.of(responsePage);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public OrderResponse getOrder(Long orderId) {
+    public OrdenResponse getOrder(Long orderId) {
         Orden order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Orden no encontrada: " + orderId));
@@ -276,7 +276,7 @@ public class OrdenServiceImpl implements OrdenService {
 
     @Override
     @Transactional
-    public OrderResponse updateStatus(Long orderId, EstadoOrden newStatus) {
+    public OrdenResponse updateStatus(Long orderId, EstadoOrden newStatus) {
         Orden order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Orden no encontrada: " + orderId));

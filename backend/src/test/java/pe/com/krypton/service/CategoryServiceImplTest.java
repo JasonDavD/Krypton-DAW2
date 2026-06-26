@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import pe.com.krypton.dto.request.CategoryRequest;
-import pe.com.krypton.dto.response.CategoryResponse;
+import pe.com.krypton.dto.request.CategoriaRequest;
+import pe.com.krypton.dto.response.CategoriaResponse;
 import pe.com.krypton.exception.CategoryInUseException;
 import pe.com.krypton.exception.DuplicateCategoryNameException;
 import pe.com.krypton.exception.ResourceNotFoundException;
@@ -59,7 +59,7 @@ class CategoryServiceImplTest {
         when(categoryRepository.findAll())
                 .thenReturn(List.of(category(1L, "Electronics"), category(2L, "Books")));
 
-        List<CategoryResponse> result = service.list();
+        List<CategoriaResponse> result = service.list();
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).name()).isEqualTo("Electronics");
@@ -71,7 +71,7 @@ class CategoryServiceImplTest {
     void should_return_category_when_found() {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category(1L, "Electronics")));
 
-        CategoryResponse result = service.getById(1L);
+        CategoriaResponse result = service.getById(1L);
 
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.name()).isEqualTo("Electronics");
@@ -89,7 +89,7 @@ class CategoryServiceImplTest {
 
     @Test
     void should_create_category_when_name_is_unique() {
-        CategoryRequest req = new CategoryRequest("NewCat", "A new category");
+        CategoriaRequest req = new CategoriaRequest("NewCat", "A new category");
         when(categoryRepository.existsByName("NewCat")).thenReturn(false);
         when(categoryRepository.save(any(Categoria.class))).thenAnswer(inv -> {
             Categoria c = inv.getArgument(0);
@@ -97,7 +97,7 @@ class CategoryServiceImplTest {
             return c;
         });
 
-        CategoryResponse result = service.create(req);
+        CategoriaResponse result = service.create(req);
 
         assertThat(result.id()).isEqualTo(5L);
         assertThat(result.name()).isEqualTo("NewCat");
@@ -107,7 +107,7 @@ class CategoryServiceImplTest {
     void should_reject_create_when_name_already_exists() {
         when(categoryRepository.existsByName("Electronics")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.create(new CategoryRequest("Electronics", "Desc")))
+        assertThatThrownBy(() -> service.create(new CategoriaRequest("Electronics", "Desc")))
                 .isInstanceOf(DuplicateCategoryNameException.class);
         verify(categoryRepository, never()).save(any());
     }
@@ -121,7 +121,7 @@ class CategoryServiceImplTest {
         when(categoryRepository.existsByNameAndIdNot("NewName", 1L)).thenReturn(false);
         when(categoryRepository.save(any(Categoria.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        CategoryResponse result = service.update(1L, new CategoryRequest("NewName", "Updated desc"));
+        CategoriaResponse result = service.update(1L, new CategoriaRequest("NewName", "Updated desc"));
 
         assertThat(result.name()).isEqualTo("NewName");
     }
@@ -134,7 +134,7 @@ class CategoryServiceImplTest {
         when(categoryRepository.existsByNameAndIdNot("Electronics", 1L)).thenReturn(false);
         when(categoryRepository.save(any(Categoria.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        CategoryResponse result = service.update(1L, new CategoryRequest("Electronics", "Updated desc"));
+        CategoriaResponse result = service.update(1L, new CategoriaRequest("Electronics", "Updated desc"));
 
         assertThat(result.name()).isEqualTo("Electronics");
     }
@@ -145,7 +145,7 @@ class CategoryServiceImplTest {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(categoryRepository.existsByNameAndIdNot("TakenName", 1L)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.update(1L, new CategoryRequest("TakenName", "Desc")))
+        assertThatThrownBy(() -> service.update(1L, new CategoriaRequest("TakenName", "Desc")))
                 .isInstanceOf(DuplicateCategoryNameException.class);
         verify(categoryRepository, never()).save(any());
     }

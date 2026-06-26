@@ -13,7 +13,7 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.dto.response.report.KardexMovimientoRow;
 import pe.com.krypton.dto.response.report.KardexReport;
 import pe.com.krypton.dto.response.report.OrdenesListadoReport;
@@ -170,7 +170,7 @@ public class ExcelExporter {
             writeHeaderCell(headerRow, 4, "Total (S/)", headerSt);
 
             // Data rows
-            for (OrderResponse orden : report.ordenes()) {
+            for (OrdenResponse orden : report.ordenes()) {
                 XSSFRow dataRow = sheet.createRow(row++);
                 dataRow.createCell(0).setCellValue(orden.id());
                 dataRow.createCell(1).setCellValue(DT_FMT.format(orden.orderDate()));

@@ -22,7 +22,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import pe.com.krypton.dto.response.CategoryResponse;
+import pe.com.krypton.dto.response.CategoriaResponse;
 import pe.com.krypton.exception.CategoryInUseException;
 import pe.com.krypton.exception.DuplicateCategoryNameException;
 import pe.com.krypton.exception.ResourceNotFoundException;
@@ -47,8 +47,8 @@ class AdminCategoryControllerTest {
             {"name":"Electronics","description":"Electronic products"}
             """;
 
-    private CategoryResponse sample(Long id) {
-        return new CategoryResponse(id, "Electronics", "Electronic products");
+    private CategoriaResponse sample(Long id) {
+        return new CategoriaResponse(id, "Electronics", "Electronic products");
     }
 
     @Test

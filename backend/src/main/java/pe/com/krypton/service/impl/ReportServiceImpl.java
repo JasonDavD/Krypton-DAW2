@@ -11,7 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.dto.response.report.KardexMovimientoRow;
 import pe.com.krypton.dto.response.report.KardexReport;
 import pe.com.krypton.dto.response.report.OrdenesListadoReport;
@@ -168,7 +168,7 @@ public class ReportServiceImpl implements ReportService {
 
         List<Orden> orders = orderRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "orderDate"));
 
-        List<OrderResponse> responses = orders.stream()
+        List<OrdenResponse> responses = orders.stream()
                 .map(o -> orderMapper.toResponse(o, orderItemRepository.findByOrder(o)))
                 .toList();
 

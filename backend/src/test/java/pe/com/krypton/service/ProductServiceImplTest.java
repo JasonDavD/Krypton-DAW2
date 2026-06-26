@@ -21,10 +21,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import pe.com.krypton.dto.request.ProductRequest;
+import pe.com.krypton.dto.request.ProductoRequest;
 import pe.com.krypton.dto.response.PageResponse;
-import pe.com.krypton.dto.response.ProductImageResponse;
-import pe.com.krypton.dto.response.ProductResponse;
+import pe.com.krypton.dto.response.ImagenProductoResponse;
+import pe.com.krypton.dto.response.ProductoResponse;
 import pe.com.krypton.entity.ImagenProducto;
 import pe.com.krypton.exception.DuplicateSkuException;
 import pe.com.krypton.exception.ResourceNotFoundException;
@@ -76,8 +76,8 @@ class ProductServiceImplTest {
         return p;
     }
 
-    private ProductRequest request(String sku, Long categoryId, Integer stock) {
-        return new ProductRequest(sku, "Some Producto", "Desc",
+    private ProductoRequest request(String sku, Long categoryId, Integer stock) {
+        return new ProductoRequest(sku, "Some Producto", "Desc",
                 new BigDecimal("49.99"), stock, null, categoryId);
     }
 
@@ -91,7 +91,7 @@ class ProductServiceImplTest {
         Page<Producto> page = new PageImpl<>(List.of(p), pageable, 1);
         when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
-        PageResponse<ProductResponse> result = service.search(null, null, null, null, pageable);
+        PageResponse<ProductoResponse> result = service.search(null, null, null, null, pageable);
 
         assertThat(result.content()).hasSize(1);
         assertThat(result.totalElements()).isEqualTo(1);
@@ -105,7 +105,7 @@ class ProductServiceImplTest {
         Producto p = product(1L, "SKU-001", true);
         when(productRepository.findById(1L)).thenReturn(Optional.of(p));
 
-        ProductResponse result = service.getById(1L);
+        ProductoResponse result = service.getById(1L);
 
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.sku()).isEqualTo("SKU-001");
@@ -134,7 +134,7 @@ class ProductServiceImplTest {
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(p));
 
-        ProductResponse result = service.getById(1L);
+        ProductoResponse result = service.getById(1L);
 
         assertThat(result.images()).isNotNull();
         assertThat(result.images()).hasSize(2);
@@ -152,7 +152,7 @@ class ProductServiceImplTest {
         Page<Producto> page = new PageImpl<>(List.of(p), pageable, 1);
         when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
-        PageResponse<ProductResponse> result = service.search(null, null, null, null, pageable);
+        PageResponse<ProductoResponse> result = service.search(null, null, null, null, pageable);
 
         assertThat(result.content()).hasSize(1);
         // images field must be null (lean mapping) so @JsonInclude(NON_NULL) omits it in JSON
@@ -180,7 +180,7 @@ class ProductServiceImplTest {
 
     @Test
     void should_create_product_when_sku_is_unique_and_category_exists() {
-        ProductRequest req = request("NEW-SKU", 1L, 5);
+        ProductoRequest req = request("NEW-SKU", 1L, 5);
         Categoria cat = category(1L);
         when(productRepository.existsBySku("NEW-SKU")).thenReturn(false);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(cat));
@@ -190,7 +190,7 @@ class ProductServiceImplTest {
             return p;
         });
 
-        ProductResponse result = service.create(req);
+        ProductoResponse result = service.create(req);
 
         assertThat(result.id()).isEqualTo(10L);
         assertThat(result.sku()).isEqualTo("NEW-SKU");
@@ -224,7 +224,7 @@ class ProductServiceImplTest {
         existing.setStock(42); // stock must stay 42 after update
         Categoria cat = category(1L);
 
-        ProductRequest req = new ProductRequest("NEW-SKU", "New Name", "New Desc",
+        ProductoRequest req = new ProductoRequest("NEW-SKU", "New Name", "New Desc",
                 new BigDecimal("199.99"), 999 /* ignored */, "http://img.png", 1L);
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
@@ -232,7 +232,7 @@ class ProductServiceImplTest {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(cat));
         when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ProductResponse result = service.update(1L, req);
+        ProductoResponse result = service.update(1L, req);
 
         assertThat(result.name()).isEqualTo("New Name");
         assertThat(result.sku()).isEqualTo("NEW-SKU");
@@ -259,13 +259,13 @@ class ProductServiceImplTest {
         Producto existing = product(1L, "SAME-SKU", true);
         Categoria cat = category(1L);
 
-        ProductRequest req = request("SAME-SKU", 1L, 0);
+        ProductoRequest req = request("SAME-SKU", 1L, 0);
         when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(productRepository.existsBySkuAndIdNot("SAME-SKU", 1L)).thenReturn(false);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(cat));
         when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ProductResponse result = service.update(1L, req);
+        ProductoResponse result = service.update(1L, req);
 
         assertThat(result.sku()).isEqualTo("SAME-SKU");
     }

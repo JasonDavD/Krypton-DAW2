@@ -22,7 +22,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.dto.response.PageResponse;
 import pe.com.krypton.exception.OrderStatusTransitionException;
 import pe.com.krypton.exception.ResourceNotFoundException;
@@ -48,14 +48,14 @@ class AdminOrderControllerTest {
 
     private static final String JSON = MediaType.APPLICATION_JSON_VALUE;
 
-    private OrderResponse sampleOrder(Long id, String status) {
-        return new OrderResponse(id, 3L, Instant.now(), status,
+    private OrdenResponse sampleOrder(Long id, String status) {
+        return new OrdenResponse(id, 3L, Instant.now(), status,
                 "BOLETA", "Juan Cliente", "12345678",
                 new BigDecimal("299.90"), BigDecimal.ZERO, new BigDecimal("45.75"),
                 new BigDecimal("299.90"), List.of());
     }
 
-    private PageResponse<OrderResponse> singlePage(OrderResponse order) {
+    private PageResponse<OrdenResponse> singlePage(OrdenResponse order) {
         return new PageResponse<>(List.of(order), 0, 10, 1L, 1);
     }
 

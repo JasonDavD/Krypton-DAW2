@@ -22,8 +22,8 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import pe.com.krypton.dto.response.OrderItemResponse;
-import pe.com.krypton.dto.response.OrderResponse;
+import pe.com.krypton.dto.response.ItemOrdenResponse;
+import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.exception.ComprobanteNotAvailableException;
 import pe.com.krypton.exception.EmptyCartException;
 import pe.com.krypton.exception.InsufficientStockException;
@@ -55,10 +55,10 @@ class OrderControllerTest {
     private static final String CHECKOUT_BODY =
             "{\"documentType\":\"BOLETA\",\"customerName\":\"Juan Cliente\",\"customerDoc\":\"12345678\"}";
 
-    private OrderResponse sampleOrder(Long id, String status) {
-        OrderItemResponse item = new OrderItemResponse(
+    private OrdenResponse sampleOrder(Long id, String status) {
+        ItemOrdenResponse item = new ItemOrdenResponse(
                 1L, 12L, "Notebook", 2, new BigDecimal("2999.90"), new BigDecimal("5999.80"));
-        return new OrderResponse(id, 3L, Instant.now(), status,
+        return new OrdenResponse(id, 3L, Instant.now(), status,
                 "BOLETA", "Juan Cliente", "12345678",
                 new BigDecimal("5999.80"), BigDecimal.ZERO, new BigDecimal("915.22"),
                 new BigDecimal("5999.80"), List.of(item));
