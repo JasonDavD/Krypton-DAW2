@@ -3,7 +3,7 @@
 > **Documento vivo y DIDÁCTICO.** No solo muestra el código: lo explica **línea por línea**,
 > con el **porqué** de cada decisión y **dónde conecta** con el resto del sistema.
 > La idea es que entiendas, no que copies.
-> **Versión actual: hasta F4 de 12** (Eureka, users, gateway, catalog).
+> **Versión actual: hasta F6 de 12** (Eureka, users, gateway, catalog, order + checkout distribuido, notification + RabbitMQ).
 
 ---
 
@@ -25,22 +25,20 @@ viven en procesos separados.
 Frontend (React, :5173)
       │
       ▼
-┌─────────────────┐
-│  api-gateway    │ ✅ :8080   portón único; rutea por NOMBRE vía Eureka
-└────────┬────────┘
-         │ lb://...
-   ┌─────┴───────────────────────────────────┐
-   ▼                  ▼                        ▼
-┌──────────┐    ┌──────────────┐       ┌──────────────┐
-│ users    │✅  │ catalog      │✅     │ order        │⏳ (F5)
-│ :8081    │    │ :8082        │       │ :8083        │
-│ krypton_ │    │ krypton_     │       │ krypton_     │
-│ users    │    │ catalog      │       │ orders       │
-└──────────┘    └──────────────┘       └──────────────┘
-      │ se registran ▼
-              ┌──────────────┐
-              │ eureka-server│ ✅ :8761   el "registro" (la guía telefónica)
-              └──────────────┘
+  api-gateway ✅ :8080   (portón único; rutea por NOMBRE vía Eureka)
+      │ lb://...
+      ├───────────────┬───────────────┬────────────────────┐
+      ▼               ▼               ▼                     ▼
+  users ✅        catalog ✅       order ✅            notification ✅
+  :8081           :8082           :8083                :8084
+  krypton_users   krypton_catalog krypton_orders       (sin DB)
+                     ▲               │  │                  ▲
+                     │ Feign (sync)  │  │ publica          │ consume
+                     └───────────────┘  └── OrderCreated ─► RabbitMQ
+                  (precio + descontar/                     (evento async)
+                   restaurar stock)
+
+  Todos se registran en  eureka-server ✅ :8761   (el "registro" / guía telefónica)
 ```
 
 Tres ideas que se repiten y conviene tener clavadas desde ya:
@@ -798,41 +796,287 @@ servicios se cuida en código/eventos, no con constraints de la DB.
 
 ---
 
-## 7. Cómo conecta TODO (hasta la F4)
+## 7. F5 — order-service: el checkout DISTRIBUIDO (Feign + saga)
 
+### Concepto (el corazón de la migración)
+
+Hasta acá cada servicio vivía aislado. **F5 es la primera vez que un servicio LLAMA a otro.**
+El carrito y los pedidos viven en `order-service` (base `krypton_orders`), pero el **stock vive en
+catalog**. El checkout tiene que descontar stock... que está en otra base, en otro proceso.
+
+Dos patrones nuevos:
+
+- **Feign** — llamar a otro servicio como si fuera un método Java (síncrono: order **espera** la
+  respuesta de catalog).
+- **Saga + compensación** — como NO hay un `@Transactional` que abarque dos servicios, el "rollback
+  distribuido" se hace **a mano**: si descontaste stock y después algo falla, **deshacés** llamando
+  a un endpoint de compensación.
+
+### Decisión de diseño: identidad por EMAIL
+
+El JWT solo trae `email` + `role` (no el `userId`). Y order **no tiene la tabla users**. Entonces
+keyeamos carrito y órdenes por **`user_email`** (el `sub` del token), no por `user_id`. Así order es
+**autosuficiente** para la identidad: no consulta a users ni necesita cambiar el token. Las FK
+cruzadas se degradan: `product_id` (Long), `user_email` (String), sin constraint.
+
+### Código — el cliente Feign
+
+`client/CatalogClient.java` — una **interfaz**; Feign genera la implementación HTTP:
+
+```java
+@FeignClient(name = "catalog-service")     // 1) "catalog-service" = el nombre en Eureka (igual que lb://)
+public interface CatalogClient {
+
+    @GetMapping("/api/products/{id}")       // 2) Feign arma el GET HTTP y deserializa la respuesta
+    ProductoResponse getProduct(@PathVariable("id") Long id);
+
+    @PostMapping("/api/internal/stock/decrease")  // 3) descontar stock (lo construimos en F4)
+    void decreaseStock(@RequestBody StockMovementRequest request);
+
+    @PostMapping("/api/internal/stock/restore")   // 4) restaurar stock = COMPENSACIÓN
+    void restoreStock(@RequestBody StockMovementRequest request);
+}
 ```
-1. El front (o curl) le pega al GATEWAY en :8080 con Authorization: Bearer <token>.
-2. El gateway mira el PATH y elige el servicio (ruta lb://nombre).
-3. Le pregunta a EUREKA dónde está ese servicio (por nombre) y reenvía.
-4. El servicio destino valida el JWT:
-     - users-service  → contra su DB (es dueño de los usuarios; baja inmediata).
-     - los demás       → STATELESS: verifica la firma con el SECRETO COMPARTIDO + lee el role del token.
-5. Cada servicio trabaja contra SU PROPIA base (krypton_users / krypton_catalog / ...).
+
+1. **`name="catalog-service"`**: Feign le pregunta a Eureka *"¿dónde está catalog-service?"* y
+   balancea — exactamente como el `lb://` del gateway. Cero IPs hardcodeadas.
+2. **Declarativo**: escribís la firma, Feign hace el HTTP. Es el mismo espíritu que un repository de
+   Spring Data, pero contra otro servicio.
+
+`config/FeignAuthInterceptor.java` — reenvía el JWT (sin esto, las llamadas a `/api/internal/**`
+de catalog darían **401**):
+
+```java
+@Component
+public class FeignAuthInterceptor implements RequestInterceptor {
+    @Override
+    public void apply(RequestTemplate template) {
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attrs) {
+            String authorization = attrs.getRequest().getHeader("Authorization");  // 1) token del request entrante
+            if (authorization != null && !authorization.isBlank()) {
+                template.header("Authorization", authorization);                    // 2) lo pega en la llamada Feign
+            }
+        }
+    }
+}
 ```
 
-Los tres "pegamentos" del sistema, hasta acá:
+Feign corre en el **mismo hilo** del request, así que recuperamos el token del usuario que hace el
+checkout y lo **propagamos** a catalog. El token viaja servicio→servicio.
 
-- **Eureka** (nombres ↔ direcciones) — nadie hardcodea hosts.
-- **El gateway** (una puerta, rutea por nombre, CORS).
-- **El secreto JWT compartido** (el contrato: users firma, todos verifican).
+### Código — la SAGA (`OrdenServiceImpl.confirmarCompra`)
 
-Lo que **todavía no** aparece: **Feign** (un servicio llamando a otro — llega en F5 con el checkout)
-y **RabbitMQ** (eventos asíncronos — F6).
+El método clave, anotado (recortado a lo esencial):
+
+```java
+@Transactional
+public OrdenResponse confirmarCompra(String email, CheckoutRequest request) {
+    validarDocumento(request);                                  // 1) FACTURA=RUC(11) / BOLETA=DNI(8) → 422 si no
+    Carrito cart = carritoRepository.findByUserEmail(email)
+            .orElseThrow(() -> new EmptyCartException("..."));   // 2) carrito vacío → 400
+    List<ItemCarrito> items = itemCarritoRepository.findByCart(cart);
+    // ... if (items.isEmpty()) throw EmptyCartException ...
+
+    // 3) por cada ítem: Feign a catalog → precio VIVO; acumular subtotal y SNAPSHOTear la línea
+    for (ItemCarrito ci : items) {
+        ProductoResponse p = catalogClient.getProduct(ci.getProductId());
+        subtotal = subtotal.add(p.price().multiply(BigDecimal.valueOf(ci.getQuantity())));
+        ItemOrden linea = new ItemOrden();
+        linea.setProductName(p.name());   // ← snapshot del nombre  (congelado al comprar)
+        linea.setUnitPrice(p.price());    // ← snapshot del precio  (congelado al comprar)
+        // ...
+    }
+    // 4) envío (gratis si subtotal ≥ S/300), total, IGV desglosado (el precio YA incluye IGV)
+
+    ordenRepository.save(orden);          // 5) guardo la orden PENDIENTE → me da el id
+    String reference = "ORDER-" + orden.getId();
+    var stockReq = new StockMovementRequest(reference, null, stockItems);
+
+    try {
+        catalogClient.decreaseStock(stockReq);          // 6) DESCONTAR stock en catalog (Feign, sync)
+    } catch (FeignException ex) {
+        if (ex.status() == 422)                          //    catalog dijo "no hay stock"
+            throw new InsufficientStockException("...");  //    → la TX local hace rollback. NADA que compensar.
+        throw ex;
+    }
+
+    try {                                                // 7) de acá en más, el stock YA se descontó en catalog
+        // guardar las líneas + vaciar el carrito
+        return ordenMapper.toResponse(orden, lineas);
+    } catch (RuntimeException ex) {
+        catalogClient.restoreStock(stockReq);            // 8) ← COMPENSACIÓN: deshacer el descuento
+        throw ex;                                         //    + la TX local hace rollback de la orden
+    }
+}
+```
+
+Lo que tenés que entender de memoria:
+
+- **Paso 6 (descontar) viene ANTES de terminar la orden.** Si catalog rechaza por falta de stock
+  (422), nada se commiteó allá, y la transacción local revierte la orden. No hay que compensar.
+- **Paso 8 es la COMPENSACIÓN.** Si el descuento YA salió bien (catalog commiteó) pero después algo
+  falla localmente, llamamos a `restoreStock` para **deshacer** lo de catalog. La transacción local
+  no puede tocar la base de catalog → la "deshacés" con otra llamada. **Esa es la saga.**
+- **Snapshot** (paso 3): `product_name` y `unit_price` se **congelan** en `order_items`. Por eso ver
+  una orden vieja NO llama a catalog (es histórica). El carrito sí muestra precio vivo (Feign).
+
+### TDD de la saga
+
+3 unit tests con Mockito (mockeando Feign y los repos): happy path, **stock insuficiente** (422 →
+`InsufficientStockException`, sin compensar) y **compensación** (falla al persistir → se llama
+`restoreStock`). El concepto se prueba sin levantar nada.
+
+### Dónde conecta
+
+El gateway suma rutas `/api/cart/**` y `/api/orders/**` → `lb://order-service`. order llama a
+catalog por Feign (resuelto vía Eureka), reenviando el JWT. catalog descuenta stock en SU
+transacción (lo de F4).
+
+### Verificado (end-to-end por el gateway)
+
+Login → `POST /api/cart/items` (el carrito trae nombre/precio **vía Feign**) → `POST
+/api/orders/checkout` → **201** con la orden; el **stock de catalog bajó** (12→10) y quedó un
+`SALIDA` en su kardex con `reference=ORDER-{id}`. La saga cruzó dos servicios y funcionó.
 
 ---
 
-## 8. Cómo levantar lo implementado
+## 8. F6 — notification-service + RabbitMQ (eventos ASÍNCRONOS)
+
+### Concepto: síncrono vs asíncrono
+
+F5 fue **síncrono**: order llama a catalog y **espera** la respuesta (los necesita acoplados en el
+tiempo). F6 es lo opuesto: cuando se confirma una orden, order **publica un evento** y **sigue de
+largo** — no espera, ni sabe quién lo escucha. notification lo consume **por su cuenta**.
+
+¿Por qué importa? **Desacople total.** Mañana querés mandar también un SMS, actualizar métricas y
+avisar a logística: sumás 3 consumidores **sin tocar order**. order solo grita "¡se creó una orden!"
+al aire (a RabbitMQ); quien quiera, que escuche.
+
+```
+order  ──publica OrderCreated──►  RabbitMQ (exchange)  ──►  cola  ──►  notification (consume)
+  (no espera, no sabe quién hay del otro lado)
+```
+
+### Código — el evento (idéntico en los DOS lados)
+
+`event/OrderCreatedEvent.java` — el mensaje que viaja como JSON:
+
+```java
+public record OrderCreatedEvent(Long orderId, String userEmail, BigDecimal total) {}
+```
+
+> **Gotcha clave:** este record debe tener el **MISMO nombre completo** (`pe.com.krypton.event.
+> OrderCreatedEvent`) en order Y en notification. El converter JSON pone el tipo en un header
+> `__TypeId__` y el consumidor lo usa para saber a qué clase deserializar. Si los paquetes no
+> coinciden, el consumidor no sabe armar el objeto.
+
+### Código — lado PRODUCTOR (order)
+
+`config/RabbitConfig.java`:
+
+```java
+public static final String EXCHANGE = "krypton.events";
+public static final String ROUTING_ORDER_CREATED = "order.created";
+
+@Bean TopicExchange eventsExchange() { return new TopicExchange(EXCHANGE); }  // 1) a dónde publica
+@Bean Jackson2JsonMessageConverter jsonMessageConverter() {                   // 2) serializa a JSON
+    return new Jackson2JsonMessageConverter();
+}
+```
+
+1. **Topic exchange**: order publica acá con una *routing key* (`order.created`). order conoce SOLO
+   el exchange — NO sabe qué colas ni consumidores hay detrás. Ese es el desacople.
+
+`messaging/OrderEventPublisher.java` + el controller publican **después** del checkout:
+
+```java
+// en OrderEventPublisher:
+rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_ORDER_CREATED, event);  // publica y vuelve (fire-and-forget)
+
+// en OrdenController.confirmarCompra:
+OrdenResponse orden = ordenService.confirmarCompra(email, request);     // 1) la orden YA se commiteó
+eventPublisher.publishOrderCreated(new OrderCreatedEvent(...));         // 2) recién ahí publica
+return orden;                                                          //    (si el checkout falla, NO se publica)
+```
+
+Publicamos **después** de que la orden se confirmó (post-commit): así no notificamos una compra que
+terminó revertida.
+
+### Código — lado CONSUMIDOR (notification)
+
+`config/RabbitConfig.java` declara **su propia cola** y la **bindea** al exchange:
+
+```java
+@Bean TopicExchange eventsExchange() { return new TopicExchange("krypton.events"); }   // mismo exchange
+@Bean Queue notificationsQueue()      { return new Queue("order.notifications", true); } // 1) SU cola (durable)
+@Bean Binding orderCreatedBinding(Queue q, TopicExchange e) {
+    return BindingBuilder.bind(q).to(e).with("order.created");                           // 2) "quiero las order.created"
+}
+```
+
+`listener/OrderNotificationListener.java` — consume:
+
+```java
+@RabbitListener(queues = "order.notifications")          // 1) escucha SU cola
+public void onOrderCreated(OrderCreatedEvent event) {     // 2) Spring deserializa el JSON al record
+    log.info("[notification] Orden #{} de {} por S/ {} → enviando confirmación...",
+            event.orderId(), event.userEmail(), event.total());   // 3) acá iría el email real
+}
+```
+
+Al arrancar, notification **crea** el exchange + la cola + el binding en RabbitMQ (si no existen).
+Otro servicio podría bindear OTRA cola al mismo exchange sin que order se entere.
+
+### Dónde conecta
+
+RabbitMQ corre en Docker (`docker-compose`, puerto 5672 + consola en 15672). order publica; la cola
+de notification recibe; el listener procesa. **Nada pasa por el gateway** — es comunicación
+servicio↔broker, no HTTP de cliente.
+
+### Verificado
+
+Un checkout real por el gateway, y en el log de notification aparece:
+`[notification] Orden #2 de admin@krypton.pe por total S/ 2799.00 → enviando confirmación...`.
+order publicó y siguió; notification consumió por su lado. **Async demostrado.**
+
+---
+
+## 9. Cómo conecta TODO (hasta la F6)
+
+```
+1. El front (o curl) le pega al GATEWAY en :8080 con Authorization: Bearer <token>.
+2. El gateway elige el servicio por PATH y lo resuelve por NOMBRE vía Eureka (lb://).
+3. El servicio valida el JWT: users contra su DB; los demás STATELESS (firma + role del token).
+4. SÍNCRONO (Feign): en el checkout, order LLAMA a catalog (precio + descontar stock) y ESPERA.
+     Si falla a la mitad → saga: order COMPENSA (restaura stock).
+5. ASÍNCRONO (RabbitMQ): al confirmar, order PUBLICA un evento y sigue; notification lo consume aparte.
+6. Cada servicio trabaja contra SU PROPIA base (krypton_users / krypton_catalog / krypton_orders).
+```
+
+Los "pegamentos" del sistema, ahora completos:
+
+- **Eureka** (nombres ↔ direcciones) — nadie hardcodea hosts.
+- **El gateway** (una puerta, rutea por nombre, CORS).
+- **El secreto JWT compartido** (el contrato de seguridad: users firma, todos verifican).
+- **Feign** (llamada **síncrona** servicio→servicio, resuelta por Eureka) + **saga/compensación**.
+- **RabbitMQ** (eventos **asíncronos**: publicar sin saber quién escucha).
+
+---
+
+## 10. Cómo levantar lo implementado
 
 Los servicios corren como **jars**; al cerrar la terminal/sesión, se caen. Para relevantarlos:
 
 ```bash
-docker compose up -d                                          # MySQL (desde la raíz del repo) → :3307
+docker compose up -d                                            # MySQL (:3307) + RabbitMQ (:5672, consola :15672)
 cd services
 # Orden: PRIMERO eureka; el resto puede ir en paralelo. Cada uno en su terminal o en background:
-java -jar eureka-server/target/eureka-server-1.0.0.jar        # :8761  (esperar a que responda)
-java -jar users-service/target/users-service-1.0.0.jar        # :8081
-java -jar catalog-service/target/catalog-service-1.0.0.jar    # :8082
-java -jar api-gateway/target/api-gateway-1.0.0.jar            # :8080
+java -jar eureka-server/target/eureka-server-1.0.0.jar          # :8761  (esperar a que responda)
+java -jar users-service/target/users-service-1.0.0.jar          # :8081
+java -jar catalog-service/target/catalog-service-1.0.0.jar      # :8082
+java -jar order-service/target/order-service-1.0.0.jar          # :8083
+java -jar notification-service/target/notification-service-1.0.0.jar  # :8084 (consume eventos)
+java -jar api-gateway/target/api-gateway-1.0.0.jar              # :8080
 ```
 
 Compilar un servicio (en Windows, pararlo antes si está corriendo — jar bloqueado):
@@ -854,13 +1098,15 @@ Login de prueba: `admin@krypton.pe` / `Admin123!`.
 
 ---
 
-## 9. Próximos pasos (se van escribiendo acá)
+## 11. Próximos pasos (se van escribiendo acá)
 
-- **F5** — order-service: carrito + pedidos + **checkout distribuido** (Feign a catalog para
-  descontar stock + **saga/compensación**). El núcleo conceptual: la primera vez que un servicio
-  **llama** a otro de forma síncrona y hay que manejar el "¿y si falla a la mitad?".
-- **F6** — notification-service + RabbitMQ (eventos asíncronos).
-- **F7** — payment-service. **F8** — review-service. **F9** — promo-service.
-- **F10** — Dockerizar todo. **F11** — Frontend de los servicios nuevos. **F12** — Kubernetes.
+Hasta acá (F1–F6) ya están **todos los conceptos distintos** de la migración: descubrimiento
+(Eureka), gateway, JWT stateless, Feign (síncrono) + saga, y RabbitMQ (asíncrono). Lo que queda es
+más dominio + infra:
+
+- **F7** — payment-service (simular pago; transición de estado de la orden).
+- **F8** — review-service. **F9** — promo-service. *(reusan los patrones ya vistos.)*
+- **F10** — Dockerizar todo (un `Dockerfile` por servicio + compose completo).
+- **F11** — Frontend de los servicios nuevos. **F12** — Kubernetes (stretch).
 
 *(Esta guía se actualiza al cerrar cada fase, siempre con el mismo nivel de detalle.)*
