@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import pe.com.krypton.dto.request.CheckoutRequest;
 import pe.com.krypton.dto.response.OrdenResponse;
+import pe.com.krypton.event.OrderCreatedEvent;
+import pe.com.krypton.messaging.OrderEventPublisher;
 import pe.com.krypton.service.OrdenService;
 
 /**
@@ -24,16 +26,23 @@ import pe.com.krypton.service.OrdenService;
 public class OrdenController {
 
     private final OrdenService ordenService;
+    private final OrderEventPublisher eventPublisher;
 
-    public OrdenController(OrdenService ordenService) {
+    public OrdenController(OrdenService ordenService, OrderEventPublisher eventPublisher) {
         this.ordenService = ordenService;
+        this.eventPublisher = eventPublisher;
     }
 
     @PostMapping("/checkout")
     @ResponseStatus(HttpStatus.CREATED)
     public OrdenResponse confirmarCompra(@Valid @RequestBody CheckoutRequest request,
                                          Authentication authentication) {
-        return ordenService.confirmarCompra(authentication.getName(), request);
+        OrdenResponse orden = ordenService.confirmarCompra(authentication.getName(), request);
+        // Evento ASÍNCRONO: la orden YA se confirmó (commiteó). Publicamos y seguimos; si el
+        // checkout hubiera fallado, esta línea no se alcanza (no se notifica nada).
+        eventPublisher.publishOrderCreated(
+                new OrderCreatedEvent(orden.id(), orden.userEmail(), orden.total()));
+        return orden;
     }
 
     @GetMapping

@@ -48,6 +48,12 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
+        <!-- AMQP (RabbitMQ): publica el evento async OrderCreated. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
         <!-- MySQL driver (runtime). -->
         <dependency>
             <groupId>com.mysql</groupId>
