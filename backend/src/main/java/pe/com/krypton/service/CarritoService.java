@@ -6,19 +6,19 @@ import pe.com.krypton.dto.response.CarritoResponse;
 
 public interface CarritoService {
 
-    CarritoResponse getCart(String email);
+    CarritoResponse obtenerCarrito(String email);
 
-    CarritoResponse addItem(String email, ItemCarritoRequest request);
+    CarritoResponse agregarItem(String email, ItemCarritoRequest request);
 
     /** Public so Spring proxy can intercept. Tx1: insert path. */
-    CarritoResponse attemptAddItem(String email, ItemCarritoRequest request);
+    CarritoResponse intentarAgregarItem(String email, ItemCarritoRequest request);
 
     /** Public so Spring proxy can intercept. Tx2: merge path after constraint violation. */
-    CarritoResponse mergeOnConflict(String email, ItemCarritoRequest request);
+    CarritoResponse fusionarEnConflicto(String email, ItemCarritoRequest request);
 
-    CarritoResponse updateItem(String email, Long itemId, UpdateQuantityRequest request);
+    CarritoResponse actualizarItem(String email, Long itemId, UpdateQuantityRequest request);
 
-    void removeItem(String email, Long itemId);
+    void quitarItem(String email, Long itemId);
 
-    void clearCart(String email);
+    void vaciarCarrito(String email);
 }

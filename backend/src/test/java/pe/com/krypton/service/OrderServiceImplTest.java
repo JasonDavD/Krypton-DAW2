@@ -227,7 +227,7 @@ class OrderServiceImplTest {
         assertThat(capturedMov.getQuantity()).isEqualTo(2);
 
         // Verify cart cleared
-        verify(cartService).clearCart(email);
+        verify(cartService).vaciarCarrito(email);
     }
 
     @Test
@@ -245,7 +245,7 @@ class OrderServiceImplTest {
 
         verify(orderRepository, never()).save(any());
         verify(stockMovementRepository, never()).save(any());
-        verify(cartService, never()).clearCart(any());
+        verify(cartService, never()).vaciarCarrito(any());
     }
 
     @Test
@@ -281,7 +281,7 @@ class OrderServiceImplTest {
         // No order, no stock movement persisted
         verify(orderRepository, never()).save(any());
         verify(stockMovementRepository, never()).save(any());
-        verify(cartService, never()).clearCart(any());
+        verify(cartService, never()).vaciarCarrito(any());
     }
 
     @Test

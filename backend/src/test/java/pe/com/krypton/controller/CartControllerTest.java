@@ -68,7 +68,7 @@ class CartControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void get_cart_returns_200_with_items_and_total() throws Exception {
-        when(cartService.getCart(USER_EMAIL)).thenReturn(sampleCart());
+        when(cartService.obtenerCarrito(USER_EMAIL)).thenReturn(sampleCart());
 
         mvc.perform(get("/api/cart"))
                 .andExpect(status().isOk())
@@ -79,7 +79,7 @@ class CartControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void get_cart_returns_200_empty_when_no_cart() throws Exception {
-        when(cartService.getCart(USER_EMAIL)).thenReturn(emptyCart());
+        when(cartService.obtenerCarrito(USER_EMAIL)).thenReturn(emptyCart());
 
         mvc.perform(get("/api/cart"))
                 .andExpect(status().isOk())
@@ -92,7 +92,7 @@ class CartControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void post_item_returns_201_with_cart_response() throws Exception {
-        when(cartService.addItem(eq(USER_EMAIL), any())).thenReturn(sampleCart());
+        when(cartService.agregarItem(eq(USER_EMAIL), any())).thenReturn(sampleCart());
 
         mvc.perform(post("/api/cart/items").contentType(JSON)
                         .content("{\"productId\":12,\"quantity\":2}"))
@@ -107,7 +107,7 @@ class CartControllerTest {
                         .content("{\"productId\":12,\"quantity\":0}"))
                 .andExpect(status().isBadRequest());
 
-        verify(cartService, never()).addItem(any(), any());
+        verify(cartService, never()).agregarItem(any(), any());
     }
 
     @Test
@@ -117,7 +117,7 @@ class CartControllerTest {
                         .content("{\"productId\":1,\"quantity\":-5}"))
                 .andExpect(status().isBadRequest());
 
-        verify(cartService, never()).addItem(any(), any());
+        verify(cartService, never()).agregarItem(any(), any());
     }
 
     @Test
@@ -127,7 +127,7 @@ class CartControllerTest {
                         .content("{\"quantity\":2}"))
                 .andExpect(status().isBadRequest());
 
-        verify(cartService, never()).addItem(any(), any());
+        verify(cartService, never()).agregarItem(any(), any());
     }
 
     @Test
@@ -137,7 +137,7 @@ class CartControllerTest {
                         .content("{\"productId\":12}"))
                 .andExpect(status().isBadRequest());
 
-        verify(cartService, never()).addItem(any(), any());
+        verify(cartService, never()).agregarItem(any(), any());
     }
 
     // ─── PUT /api/cart/items/{itemId} ────────────────────────────────────────────
@@ -145,7 +145,7 @@ class CartControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void put_item_returns_200_with_cart_response() throws Exception {
-        when(cartService.updateItem(eq(USER_EMAIL), eq(5L), any())).thenReturn(sampleCart());
+        when(cartService.actualizarItem(eq(USER_EMAIL), eq(5L), any())).thenReturn(sampleCart());
 
         mvc.perform(put("/api/cart/items/5").contentType(JSON)
                         .content("{\"quantity\":7}"))
@@ -160,7 +160,7 @@ class CartControllerTest {
                         .content("{\"quantity\":0}"))
                 .andExpect(status().isBadRequest());
 
-        verify(cartService, never()).updateItem(any(), any(), any());
+        verify(cartService, never()).actualizarItem(any(), any(), any());
     }
 
     // ─── DELETE /api/cart/items/{itemId} ─────────────────────────────────────────
@@ -168,7 +168,7 @@ class CartControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void delete_item_returns_204() throws Exception {
-        doNothing().when(cartService).removeItem(USER_EMAIL, 5L);
+        doNothing().when(cartService).quitarItem(USER_EMAIL, 5L);
 
         mvc.perform(delete("/api/cart/items/5"))
                 .andExpect(status().isNoContent());
@@ -179,7 +179,7 @@ class CartControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void delete_cart_returns_204() throws Exception {
-        doNothing().when(cartService).clearCart(USER_EMAIL);
+        doNothing().when(cartService).vaciarCarrito(USER_EMAIL);
 
         mvc.perform(delete("/api/cart"))
                 .andExpect(status().isNoContent());
@@ -190,7 +190,7 @@ class CartControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void insufficient_stock_exception_returns_422() throws Exception {
-        when(cartService.addItem(eq(USER_EMAIL), any()))
+        when(cartService.agregarItem(eq(USER_EMAIL), any()))
                 .thenThrow(new InsufficientStockException("Stock insuficiente"));
 
         mvc.perform(post("/api/cart/items").contentType(JSON)
@@ -201,7 +201,7 @@ class CartControllerTest {
     @Test
     @WithMockUser(username = USER_EMAIL)
     void resource_not_found_exception_returns_404() throws Exception {
-        when(cartService.addItem(eq(USER_EMAIL), any()))
+        when(cartService.agregarItem(eq(USER_EMAIL), any()))
                 .thenThrow(new ResourceNotFoundException("Producto no encontrado"));
 
         mvc.perform(post("/api/cart/items").contentType(JSON)

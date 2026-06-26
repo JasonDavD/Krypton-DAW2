@@ -27,34 +27,34 @@ public class CarritoController {
     private final CarritoService cartService;
 
     @GetMapping
-    public CarritoResponse getCart(@AuthenticationPrincipal UserDetails principal) {
-        return cartService.getCart(principal.getUsername());
+    public CarritoResponse obtenerCarrito(@AuthenticationPrincipal UserDetails principal) {
+        return cartService.obtenerCarrito(principal.getUsername());
     }
 
     @PostMapping("/items")
     @ResponseStatus(HttpStatus.CREATED)
-    public CarritoResponse addItem(@AuthenticationPrincipal UserDetails principal,
+    public CarritoResponse agregarItem(@AuthenticationPrincipal UserDetails principal,
                                 @Valid @RequestBody ItemCarritoRequest request) {
-        return cartService.addItem(principal.getUsername(), request);
+        return cartService.agregarItem(principal.getUsername(), request);
     }
 
     @PutMapping("/items/{itemId}")
-    public CarritoResponse updateItem(@AuthenticationPrincipal UserDetails principal,
+    public CarritoResponse actualizarItem(@AuthenticationPrincipal UserDetails principal,
                                    @PathVariable Long itemId,
                                    @Valid @RequestBody UpdateQuantityRequest request) {
-        return cartService.updateItem(principal.getUsername(), itemId, request);
+        return cartService.actualizarItem(principal.getUsername(), itemId, request);
     }
 
     @DeleteMapping("/items/{itemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeItem(@AuthenticationPrincipal UserDetails principal,
+    public void quitarItem(@AuthenticationPrincipal UserDetails principal,
                            @PathVariable Long itemId) {
-        cartService.removeItem(principal.getUsername(), itemId);
+        cartService.quitarItem(principal.getUsername(), itemId);
     }
 
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void clearCart(@AuthenticationPrincipal UserDetails principal) {
-        cartService.clearCart(principal.getUsername());
+    public void vaciarCarrito(@AuthenticationPrincipal UserDetails principal) {
+        cartService.vaciarCarrito(principal.getUsername());
     }
 }

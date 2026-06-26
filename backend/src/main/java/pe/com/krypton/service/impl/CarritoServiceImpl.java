@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.com.krypton.dto.request.ItemCarritoRequest;
@@ -23,7 +24,7 @@ import pe.com.krypton.repository.UsuarioRepository;
 import pe.com.krypton.service.CarritoService;
 
 @Service
-public class CarritoServiceImpl implements CarritoService {
+public class CarritoServiceImpl extends ICRUDImpl<Carrito, Long> implements CarritoService {
 
     private final CarritoRepository cartRepository;
     private final ItemCarritoRepository cartItemRepository;
@@ -46,11 +47,17 @@ public class CarritoServiceImpl implements CarritoService {
         this.self = self;
     }
 
+    /** Repository que usa el CRUD genérico heredado (guardar/listarTodos/...). */
+    @Override
+    protected JpaRepository<Carrito, Long> repo() {
+        return cartRepository;
+    }
+
     // ─── public API ─────────────────────────────────────────────────────────────
 
     @Override
     @Transactional(readOnly = true)
-    public CarritoResponse getCart(String email) {
+    public CarritoResponse obtenerCarrito(String email) {
         Usuario user = resolveUser(email);
         return cartRepository.findByUser(user)
                 .map(this::currentCart)
@@ -59,17 +66,17 @@ public class CarritoServiceImpl implements CarritoService {
 
     /** Non-transactional orchestrator — catches constraint violation from tx1, retries in tx2. */
     @Override
-    public CarritoResponse addItem(String email, ItemCarritoRequest request) {
+    public CarritoResponse agregarItem(String email, ItemCarritoRequest request) {
         try {
-            return self.attemptAddItem(email, request);
+            return self.intentarAgregarItem(email, request);
         } catch (DataIntegrityViolationException ex) {
-            return self.mergeOnConflict(email, request);
+            return self.fusionarEnConflicto(email, request);
         }
     }
 
     @Override
     @Transactional
-    public CarritoResponse attemptAddItem(String email, ItemCarritoRequest request) {
+    public CarritoResponse intentarAgregarItem(String email, ItemCarritoRequest request) {
         Usuario user = resolveUser(email);
         Carrito cart = getOrCreateCart(user);
         Producto product = resolveActiveProduct(request.productId());
@@ -98,7 +105,7 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     @Transactional
-    public CarritoResponse mergeOnConflict(String email, ItemCarritoRequest request) {
+    public CarritoResponse fusionarEnConflicto(String email, ItemCarritoRequest request) {
         Usuario user = resolveUser(email);
         Carrito cart = getOrCreateCart(user);
         Producto product = resolveActiveProduct(request.productId());
@@ -128,7 +135,7 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     @Transactional
-    public CarritoResponse updateItem(String email, Long itemId, UpdateQuantityRequest request) {
+    public CarritoResponse actualizarItem(String email, Long itemId, UpdateQuantityRequest request) {
         Usuario user = resolveUser(email);
         ItemCarrito item = cartItemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item no encontrado: " + itemId));
@@ -145,7 +152,7 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     @Transactional
-    public void removeItem(String email, Long itemId) {
+    public void quitarItem(String email, Long itemId) {
         Usuario user = resolveUser(email);
         ItemCarrito item = cartItemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item no encontrado: " + itemId));
@@ -158,7 +165,7 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     @Transactional
-    public void clearCart(String email) {
+    public void vaciarCarrito(String email) {
         Usuario user = resolveUser(email);
         cartRepository.findByUser(user).ifPresent(cart -> {
             cartItemRepository.deleteByCart(cart);
@@ -204,7 +211,7 @@ public class CarritoServiceImpl implements CarritoService {
 
     private void touch(Carrito cart) {
         cart.setUpdatedAt(Instant.now());
-        cartRepository.save(cart);
+        guardar(cart);   // ← heredado de ICRUDImpl
     }
 
     private ItemCarrito requireOwnedItem(ItemCarrito item, Usuario user) {

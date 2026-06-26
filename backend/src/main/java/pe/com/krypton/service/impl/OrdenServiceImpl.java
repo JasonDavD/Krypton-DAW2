@@ -177,7 +177,7 @@ public class OrdenServiceImpl implements OrdenService {
         }
 
         // Clear cart (joins this tx via PROPAGATION.REQUIRED)
-        cartService.clearCart(email);
+        cartService.vaciarCarrito(email);
 
         return orderMapper.toResponse(savedOrder, savedItems);
     }
