@@ -16,3 +16,19 @@ export interface DiscountResponse {
   discount: number;
   finalAmount: number;
 }
+
+/** Cupón devuelto por el panel admin (GET /api/admin/promos). */
+export interface PromoResponse {
+  id: number;
+  code: string;
+  type: 'PORCENTAJE' | 'MONTO';
+  value: number;
+  active: boolean;
+}
+
+/** Body de POST /api/admin/promos — alta de cupón. */
+export interface CreatePromoRequest {
+  code: string;
+  type: 'PORCENTAJE' | 'MONTO';
+  value: number;
+}

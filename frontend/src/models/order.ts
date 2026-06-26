@@ -36,6 +36,8 @@ export interface OrderResponse {
   customerDoc: string;
   /** Subtotal de productos (IGV incluido). */
   subtotal: number;
+  /** Descuento aplicado por cupón (0 si no hubo). */
+  discount: number;
   shippingCost: number;
   /** IGV desglosado hacia adentro del total. */
   igv: number;

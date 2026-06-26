@@ -1,11 +1,12 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { BarChart3, ClipboardList, Package, Tags, Users } from 'lucide-react';
+import { BarChart3, ClipboardList, Package, Tags, Ticket, Users } from 'lucide-react';
 import './admin-layout.css';
 
 /** Secciones del panel. Las que aún no tienen vista montan un Placeholder (ruta lista). */
 const SECTIONS = [
   { to: '/admin/productos', label: 'Productos', icon: Package },
   { to: '/admin/categorias', label: 'Categorías', icon: Tags },
+  { to: '/admin/cupones', label: 'Cupones', icon: Ticket },
   { to: '/admin/usuarios', label: 'Usuarios', icon: Users },
   { to: '/admin/pedidos', label: 'Pedidos', icon: ClipboardList },
   { to: '/admin/reportes', label: 'Reportes', icon: BarChart3 },

@@ -163,6 +163,9 @@ export function OrderDetailPage() {
           <div className="od-card">
             <h2>Resumen</h2>
             <div className="od-row"><span>Subtotal</span><span>{pen.format(order.subtotal)}</span></div>
+            {order.discount > 0 && (
+              <div className="od-row"><span>Descuento</span><span>−{pen.format(order.discount)}</span></div>
+            )}
             <div className="od-row"><span>Envío</span><span>{order.shippingCost === 0 ? 'Gratis' : pen.format(order.shippingCost)}</span></div>
             {isFactura && (
               <>
