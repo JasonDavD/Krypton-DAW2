@@ -9,7 +9,8 @@ académico **CIBERTEC — EFSRT VI**. Monorepo: **backend** Spring Boot 3 + Java
 ```
 Krypton-Ecommerce
 ├── backend/                            # Spring Boot 3.3.5 + Java 17 (Maven wrapper ./mvnw)
-│   ├── src/main/java/pe/com/krypton/   # model, repository, service, controller, dto, ...
+│   ├── src/main/java/pe/com/krypton/   # entity, repository, service (+impl, base ICRUD),
+│   │                                   #   controller/{store,admin}, dto/{request,response}, mapper, ...
 │   ├── src/main/resources/             # application.yml + db/migration (Flyway)
 │   └── src/test/java/pe/com/krypton/   # tests (unit + web slice + integración)
 ├── frontend/                           # React 19 + Vite + TypeScript (SPA)
