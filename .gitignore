@@ -2,6 +2,11 @@
 backend/target/
 **/*.class
 
+# ===== Microservicios: Java / Maven =====
+services/**/target/
+# Imágenes subidas en runtime por catalog-service (./uploads al correr desde services/).
+services/uploads/
+
 # Imágenes subidas en runtime (galería de productos): no versionar el contenido,
 # pero mantener el directorio para que la app encuentre ./uploads en un clone fresco.
 backend/uploads/*
