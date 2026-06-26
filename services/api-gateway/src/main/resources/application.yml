@@ -50,6 +50,15 @@ spring:
           uri: lb://catalog-service
           predicates:
             - Path=/api/admin/categories/**
+        # --- order-service (carrito + pedidos) ---
+        - id: order-cart
+          uri: lb://order-service
+          predicates:
+            - Path=/api/cart/**
+        - id: order-orders
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
 
 eureka:
   client:
