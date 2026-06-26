@@ -90,7 +90,7 @@ class ProductImageServiceImplTest {
     void upload_throws_IllegalArgumentException_for_invalid_content_type() {
         MockMultipartFile gif = new MockMultipartFile("file", "a.gif", "image/gif", new byte[]{1});
 
-        assertThatThrownBy(() -> service.upload(1L, gif))
+        assertThatThrownBy(() -> service.subir(1L, gif))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Tipo de archivo no permitido");
 
@@ -102,7 +102,7 @@ class ProductImageServiceImplTest {
         byte[] bigFile = new byte[5 * 1024 * 1024 + 1];
         MockMultipartFile huge = new MockMultipartFile("file", "big.jpg", "image/jpeg", bigFile);
 
-        assertThatThrownBy(() -> service.upload(1L, huge))
+        assertThatThrownBy(() -> service.subir(1L, huge))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("5 MB");
 
@@ -113,7 +113,7 @@ class ProductImageServiceImplTest {
     void upload_throws_ResourceNotFoundException_when_product_not_found() {
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.upload(99L, validJpeg("file")))
+        assertThatThrownBy(() -> service.subir(99L, validJpeg("file")))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(storageService, never()).store(any());
@@ -125,7 +125,7 @@ class ProductImageServiceImplTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(p));
         when(productImageRepository.countByProductId(1L)).thenReturn(10L); // already at max
 
-        assertThatThrownBy(() -> service.upload(1L, validJpeg("file")))
+        assertThatThrownBy(() -> service.subir(1L, validJpeg("file")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("10");
 
@@ -147,7 +147,7 @@ class ProductImageServiceImplTest {
         });
         when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.upload(1L, validJpeg("file"));
+        service.subir(1L, validJpeg("file"));
 
         // Verify ImagenProducto saved with isCover=true
         ArgumentCaptor<ImagenProducto> imgCaptor = ArgumentCaptor.forClass(ImagenProducto.class);
@@ -174,7 +174,7 @@ class ProductImageServiceImplTest {
             return img;
         });
 
-        service.upload(1L, validPng("file"));
+        service.subir(1L, validPng("file"));
 
         ArgumentCaptor<ImagenProducto> imgCaptor = ArgumentCaptor.forClass(ImagenProducto.class);
         verify(productImageRepository).save(imgCaptor.capture());
@@ -195,7 +195,7 @@ class ProductImageServiceImplTest {
         when(productImageRepository.findById(10L)).thenReturn(Optional.of(img));
         when(productImageRepository.countByProductId(1L)).thenReturn(2L); // others exist
 
-        service.delete(1L, 10L);
+        service.eliminar(1L, 10L);
 
         verify(storageService).delete("uuid10.jpg");
         verify(productImageRepository).delete(img);
@@ -220,7 +220,7 @@ class ProductImageServiceImplTest {
         when(productImageRepository.save(any(ImagenProducto.class))).thenAnswer(inv -> inv.getArgument(0));
         when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.delete(1L, 10L);
+        service.eliminar(1L, 10L);
 
         // 2 saves: first demotes cover (isCover=false), second promotes candidate (isCover=true)
         ArgumentCaptor<ImagenProducto> imgCaptor = ArgumentCaptor.forClass(ImagenProducto.class);
@@ -257,7 +257,7 @@ class ProductImageServiceImplTest {
         when(productImageRepository.countByProductId(1L)).thenReturn(1L); // only one
         when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.delete(1L, 10L);
+        service.eliminar(1L, 10L);
 
         ArgumentCaptor<Producto> productCaptor = ArgumentCaptor.forClass(Producto.class);
         verify(productRepository).save(productCaptor.capture());
@@ -285,7 +285,7 @@ class ProductImageServiceImplTest {
         // body contains ID 99 which doesn't belong to product 1
         List<Long> foreignIds = List.of(10L, 99L);
 
-        assertThatThrownBy(() -> service.reorder(1L, foreignIds))
+        assertThatThrownBy(() -> service.reordenar(1L, foreignIds))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verify(productImageRepository, never()).save(any());
@@ -305,7 +305,7 @@ class ProductImageServiceImplTest {
         // Only 1 ID given but product has 2 images → partial set
         List<Long> partialIds = List.of(10L);
 
-        assertThatThrownBy(() -> service.reorder(1L, partialIds))
+        assertThatThrownBy(() -> service.reordenar(1L, partialIds))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verify(productImageRepository, never()).save(any());
@@ -324,7 +324,7 @@ class ProductImageServiceImplTest {
         when(productImageRepository.save(any(ImagenProducto.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Reverse the order
-        service.reorder(1L, List.of(11L, 10L));
+        service.reordenar(1L, List.of(11L, 10L));
 
         // img2 (11) should now be displayOrder=0, img1 (10) should be displayOrder=1
         ArgumentCaptor<ImagenProducto> captor = ArgumentCaptor.forClass(ImagenProducto.class);
@@ -352,7 +352,7 @@ class ProductImageServiceImplTest {
         when(productImageRepository.save(any(ImagenProducto.class))).thenAnswer(inv -> inv.getArgument(0));
         when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.setCover(1L, 11L);
+        service.definirPortada(1L, 11L);
 
         // currentCover demoted
         ArgumentCaptor<ImagenProducto> imgCaptor = ArgumentCaptor.forClass(ImagenProducto.class);
@@ -380,7 +380,7 @@ class ProductImageServiceImplTest {
                 .thenReturn(Optional.of(alreadyCover));
 
         // No exception thrown, no extra saves
-        service.setCover(1L, 10L);
+        service.definirPortada(1L, 10L);
 
         verify(productImageRepository, never()).save(any());
         verify(productRepository, never()).save(any());

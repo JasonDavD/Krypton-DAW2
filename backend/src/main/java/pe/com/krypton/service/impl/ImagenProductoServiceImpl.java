@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,7 +31,7 @@ import pe.com.krypton.service.StorageService;
  * - reorder:    STRICT+COMPLETE — body must match product's exact ID set; update displayOrder
  */
 @Service
-public class ImagenProductoServiceImpl implements ImagenProductoService {
+public class ImagenProductoServiceImpl extends ICRUDImpl<ImagenProducto, Long> implements ImagenProductoService {
 
     private static final int MAX_IMAGES_PER_PRODUCT = 10;
     private static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024; // 5 MB
@@ -55,11 +56,17 @@ public class ImagenProductoServiceImpl implements ImagenProductoService {
         this.baseUrl = baseUrl;
     }
 
+    /** Repository que usa el CRUD genérico heredado (guardar/listarTodos/...). */
+    @Override
+    protected JpaRepository<ImagenProducto, Long> repo() {
+        return productImageRepository;
+    }
+
     // ─── upload ──────────────────────────────────────────────────────────────────
 
     @Override
     @Transactional
-    public void upload(Long productId, MultipartFile file) {
+    public void subir(Long productId, MultipartFile file) {
         // 1. Validate content-type
         if (!ALLOWED_TYPES.contains(file.getContentType())) {
             throw new IllegalArgumentException(
@@ -92,7 +99,7 @@ public class ImagenProductoServiceImpl implements ImagenProductoService {
         image.setDisplayOrder((short) count); // next slot
         boolean isFirstImage = (count == 0);
         image.setCover(isFirstImage);
-        productImageRepository.save(image);
+        guardar(image);   // ← heredado de ICRUDImpl
 
         // 7. On first image: sync product.imageUrl
         if (isFirstImage) {
@@ -105,7 +112,7 @@ public class ImagenProductoServiceImpl implements ImagenProductoService {
 
     @Override
     @Transactional
-    public void delete(Long productId, Long imageId) {
+    public void eliminar(Long productId, Long imageId) {
         ImagenProducto image = productImageRepository.findById(imageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Imagen no encontrada: " + imageId));
 
@@ -146,7 +153,7 @@ public class ImagenProductoServiceImpl implements ImagenProductoService {
 
     @Override
     @Transactional
-    public void reorder(Long productId, List<Long> orderedIds) {
+    public void reordenar(Long productId, List<Long> orderedIds) {
         // Strict + Complete: ordered IDs must exactly match the product's images
         productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado: " + productId));
@@ -175,7 +182,7 @@ public class ImagenProductoServiceImpl implements ImagenProductoService {
 
     @Override
     @Transactional
-    public void setCover(Long productId, Long imageId) {
+    public void definirPortada(Long productId, Long imageId) {
         ImagenProducto target = productImageRepository.findById(imageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Imagen no encontrada: " + imageId));
 

@@ -32,17 +32,17 @@ public class AdminImagenProductoController {
     /** Upload a new image for the product. */
     @PostMapping(consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.CREATED)
-    public void upload(@PathVariable Long productId,
+    public void subir(@PathVariable Long productId,
                        @RequestParam("file") MultipartFile file) {
-        productImageService.upload(productId, file);
+        productImageService.subir(productId, file);
     }
 
     /** Delete an image by its ID. */
     @DeleteMapping("/{imageId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long productId,
+    public void eliminar(@PathVariable Long productId,
                        @PathVariable Long imageId) {
-        productImageService.delete(productId, imageId);
+        productImageService.eliminar(productId, imageId);
     }
 
     /**
@@ -50,15 +50,15 @@ public class AdminImagenProductoController {
      * for the product (STRICT + COMPLETE — D1). Partial or foreign IDs → 400.
      */
     @PatchMapping("/reorder")
-    public void reorder(@PathVariable Long productId,
+    public void reordenar(@PathVariable Long productId,
                         @RequestBody List<Long> orderedIds) {
-        productImageService.reorder(productId, orderedIds);
+        productImageService.reordenar(productId, orderedIds);
     }
 
     /** Set an image as the cover (promoted image syncs product.imageUrl). Idempotent. */
     @PatchMapping("/{imageId}/cover")
-    public void setCover(@PathVariable Long productId,
+    public void definirPortada(@PathVariable Long productId,
                          @PathVariable Long imageId) {
-        productImageService.setCover(productId, imageId);
+        productImageService.definirPortada(productId, imageId);
     }
 }

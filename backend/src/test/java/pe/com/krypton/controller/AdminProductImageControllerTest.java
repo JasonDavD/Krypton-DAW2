@@ -46,7 +46,7 @@ class AdminProductImageControllerTest {
 
     @Test
     void should_return_201_when_upload_is_valid() throws Exception {
-        doNothing().when(productImageService).upload(eq(1L), any());
+        doNothing().when(productImageService).subir(eq(1L), any());
 
         MockMultipartFile file = new MockMultipartFile(
                 "file", "photo.jpg", "image/jpeg", "data".getBytes());
@@ -58,7 +58,7 @@ class AdminProductImageControllerTest {
     @Test
     void should_return_400_when_upload_type_is_invalid() throws Exception {
         doThrow(new IllegalArgumentException("Tipo de archivo no permitido"))
-                .when(productImageService).upload(eq(1L), any());
+                .when(productImageService).subir(eq(1L), any());
 
         MockMultipartFile file = new MockMultipartFile(
                 "file", "file.txt", "text/plain", "data".getBytes());
@@ -70,7 +70,7 @@ class AdminProductImageControllerTest {
     @Test
     void should_return_404_when_product_not_found_on_upload() throws Exception {
         doThrow(new ResourceNotFoundException("Producto no encontrado: 1"))
-                .when(productImageService).upload(eq(1L), any());
+                .when(productImageService).subir(eq(1L), any());
 
         MockMultipartFile file = new MockMultipartFile(
                 "file", "photo.jpg", "image/jpeg", "data".getBytes());
@@ -83,7 +83,7 @@ class AdminProductImageControllerTest {
 
     @Test
     void should_return_204_when_delete_image_succeeds() throws Exception {
-        doNothing().when(productImageService).delete(1L, 5L);
+        doNothing().when(productImageService).eliminar(1L, 5L);
 
         mvc.perform(delete(BASE + "/5"))
                 .andExpect(status().isNoContent());
@@ -92,7 +92,7 @@ class AdminProductImageControllerTest {
     @Test
     void should_return_404_when_delete_image_not_found() throws Exception {
         doThrow(new ResourceNotFoundException("Imagen no encontrada: 99"))
-                .when(productImageService).delete(eq(1L), eq(99L));
+                .when(productImageService).eliminar(eq(1L), eq(99L));
 
         mvc.perform(delete(BASE + "/99"))
                 .andExpect(status().isNotFound());
@@ -102,7 +102,7 @@ class AdminProductImageControllerTest {
 
     @Test
     void should_return_200_when_reorder_is_valid() throws Exception {
-        doNothing().when(productImageService).reorder(eq(1L), any());
+        doNothing().when(productImageService).reordenar(eq(1L), any());
 
         mvc.perform(patch(BASE + "/reorder")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -113,7 +113,7 @@ class AdminProductImageControllerTest {
     @Test
     void should_return_400_when_reorder_has_foreign_id() throws Exception {
         doThrow(new IllegalArgumentException("El conjunto de IDs no coincide"))
-                .when(productImageService).reorder(eq(1L), any());
+                .when(productImageService).reordenar(eq(1L), any());
 
         mvc.perform(patch(BASE + "/reorder")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -125,7 +125,7 @@ class AdminProductImageControllerTest {
 
     @Test
     void should_return_200_when_set_cover_succeeds() throws Exception {
-        doNothing().when(productImageService).setCover(1L, 3L);
+        doNothing().when(productImageService).definirPortada(1L, 3L);
 
         mvc.perform(patch(BASE + "/3/cover"))
                 .andExpect(status().isOk());
@@ -134,7 +134,7 @@ class AdminProductImageControllerTest {
     @Test
     void should_return_404_when_set_cover_image_not_found() throws Exception {
         doThrow(new ResourceNotFoundException("Imagen no encontrada: 99"))
-                .when(productImageService).setCover(eq(1L), eq(99L));
+                .when(productImageService).definirPortada(eq(1L), eq(99L));
 
         mvc.perform(patch(BASE + "/99/cover"))
                 .andExpect(status().isNotFound());

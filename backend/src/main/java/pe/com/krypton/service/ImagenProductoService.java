@@ -11,7 +11,7 @@ public interface ImagenProductoService {
      * Validation order: content-type → size → product-exists → max-count → store.
      * The first uploaded image for a product is automatically set as cover.
      */
-    void upload(Long productId, MultipartFile file);
+    void subir(Long productId, MultipartFile file);
 
     /**
      * Deletes an image by ID. Cover-promotion algorithm:
@@ -19,18 +19,18 @@ public interface ImagenProductoService {
      * - cover deleted + others exist → promote next by lowest display_order
      * - last image → products.image_url = null
      */
-    void delete(Long productId, Long imageId);
+    void eliminar(Long productId, Long imageId);
 
     /**
      * Reorders images. STRICT + COMPLETE: the provided IDs must exactly match
      * the product's current image IDs (no foreign, no missing). Throws
      * IllegalArgumentException (→ 400) otherwise.
      */
-    void reorder(Long productId, List<Long> orderedIds);
+    void reordenar(Long productId, List<Long> orderedIds);
 
     /**
      * Sets the cover image. Demotes the current cover, promotes the target.
      * Syncs products.image_url. Idempotent if target is already cover.
      */
-    void setCover(Long productId, Long imageId);
+    void definirPortada(Long productId, Long imageId);
 }
