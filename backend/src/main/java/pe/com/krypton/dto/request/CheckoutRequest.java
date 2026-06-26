@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import pe.com.krypton.entity.enums.DocumentType;
+import pe.com.krypton.entity.enums.TipoDocumento;
 
 /**
  * Datos del comprobante para el checkout. El total NO viene del cliente: lo calcula
@@ -15,7 +15,7 @@ import pe.com.krypton.entity.enums.DocumentType;
  * service; bean validation sólo cubre aquí la forma genérica del documento.
  */
 public record CheckoutRequest(
-        @NotNull DocumentType documentType,
+        @NotNull TipoDocumento documentType,
         @NotBlank @Size(max = 150) String customerName,
         @NotBlank
         @Pattern(regexp = "\\d{8}|\\d{11}",

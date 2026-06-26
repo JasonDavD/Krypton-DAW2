@@ -20,17 +20,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
-import pe.com.krypton.entity.Product;
+import pe.com.krypton.entity.Producto;
 
 /**
- * Unit test para ProductSpecification.
+ * Unit test para ProductoSpecification.
  * Verifica: (a) null-predicate contract cuando el filtro está ausente,
  * (b) que el predicado correcto se construye cuando el filtro está presente.
  */
 @ExtendWith(MockitoExtension.class)
 class ProductSpecificationTest {
 
-    @Mock Root<Product> root;
+    @Mock Root<Producto> root;
     @Mock CriteriaQuery<?> query;
     @Mock CriteriaBuilder cb;
 
@@ -38,13 +38,13 @@ class ProductSpecificationTest {
 
     @Test
     void nameLike_returns_null_when_filter_absent() {
-        Specification<Product> spec = ProductSpecification.nameLike(null);
+        Specification<Producto> spec = ProductoSpecification.nameLike(null);
         assertThat(spec).isNull();
     }
 
     @Test
     void nameLike_returns_null_when_filter_blank() {
-        Specification<Product> spec = ProductSpecification.nameLike("   ");
+        Specification<Producto> spec = ProductoSpecification.nameLike("   ");
         assertThat(spec).isNull();
     }
 
@@ -59,7 +59,7 @@ class ProductSpecificationTest {
         when(cb.lower(namePath)).thenReturn(lowerExpr);
         when(cb.like(eq(lowerExpr), any(String.class))).thenReturn(predicate);
 
-        Specification<Product> spec = ProductSpecification.nameLike("teclado");
+        Specification<Producto> spec = ProductoSpecification.nameLike("teclado");
         assertThat(spec).isNotNull();
 
         Predicate result = spec.toPredicate(root, query, cb);
@@ -72,7 +72,7 @@ class ProductSpecificationTest {
 
     @Test
     void hasCategory_returns_null_when_filter_absent() {
-        Specification<Product> spec = ProductSpecification.hasCategory(null);
+        Specification<Producto> spec = ProductoSpecification.hasCategory(null);
         assertThat(spec).isNull();
     }
 
@@ -87,7 +87,7 @@ class ProductSpecificationTest {
         when(categoryPath.get("id")).thenReturn(categoryIdPath);
         when(cb.equal(categoryIdPath, 5L)).thenReturn(predicate);
 
-        Specification<Product> spec = ProductSpecification.hasCategory(5L);
+        Specification<Producto> spec = ProductoSpecification.hasCategory(5L);
         assertThat(spec).isNotNull();
 
         Predicate result = spec.toPredicate(root, query, cb);
@@ -100,7 +100,7 @@ class ProductSpecificationTest {
 
     @Test
     void priceBetween_returns_null_when_both_absent() {
-        assertThat(ProductSpecification.priceBetween(null, null)).isNull();
+        assertThat(ProductoSpecification.priceBetween(null, null)).isNull();
     }
 
     @Test
@@ -112,7 +112,7 @@ class ProductSpecificationTest {
         when(root.<BigDecimal>get("price")).thenReturn(pricePath);
         when(cb.greaterThanOrEqualTo(pricePath, new BigDecimal("10.00"))).thenReturn(predicate);
 
-        Specification<Product> spec = ProductSpecification.priceBetween(new BigDecimal("10.00"), null);
+        Specification<Producto> spec = ProductoSpecification.priceBetween(new BigDecimal("10.00"), null);
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertThat(result).isEqualTo(predicate);
@@ -127,7 +127,7 @@ class ProductSpecificationTest {
         when(root.<BigDecimal>get("price")).thenReturn(pricePath);
         when(cb.lessThanOrEqualTo(pricePath, new BigDecimal("100.00"))).thenReturn(predicate);
 
-        Specification<Product> spec = ProductSpecification.priceBetween(null, new BigDecimal("100.00"));
+        Specification<Producto> spec = ProductoSpecification.priceBetween(null, new BigDecimal("100.00"));
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertThat(result).isEqualTo(predicate);
@@ -142,7 +142,7 @@ class ProductSpecificationTest {
         when(root.<BigDecimal>get("price")).thenReturn(pricePath);
         when(cb.between(pricePath, new BigDecimal("10.00"), new BigDecimal("100.00"))).thenReturn(predicate);
 
-        Specification<Product> spec = ProductSpecification.priceBetween(new BigDecimal("10.00"), new BigDecimal("100.00"));
+        Specification<Producto> spec = ProductoSpecification.priceBetween(new BigDecimal("10.00"), new BigDecimal("100.00"));
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertThat(result).isEqualTo(predicate);
@@ -152,7 +152,7 @@ class ProductSpecificationTest {
 
     @Test
     void isActive_returns_null_when_filter_absent() {
-        assertThat(ProductSpecification.isActive(null)).isNull();
+        assertThat(ProductoSpecification.isActive(null)).isNull();
     }
 
     @Test
@@ -164,7 +164,7 @@ class ProductSpecificationTest {
         when(root.<Boolean>get("active")).thenReturn(activePath);
         when(cb.equal(activePath, true)).thenReturn(predicate);
 
-        Specification<Product> spec = ProductSpecification.isActive(true);
+        Specification<Producto> spec = ProductoSpecification.isActive(true);
         assertThat(spec).isNotNull();
 
         Predicate result = spec.toPredicate(root, query, cb);

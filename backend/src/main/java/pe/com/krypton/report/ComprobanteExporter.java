@@ -18,16 +18,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
-import pe.com.krypton.entity.Order;
-import pe.com.krypton.entity.OrderItem;
-import pe.com.krypton.entity.enums.DocumentType;
-import pe.com.krypton.entity.enums.PaymentMethod;
+import pe.com.krypton.entity.Orden;
+import pe.com.krypton.entity.ItemOrden;
+import pe.com.krypton.entity.enums.TipoDocumento;
+import pe.com.krypton.entity.enums.MetodoPago;
 
 /**
  * Genera el PDF del comprobante (boleta/factura) de un pedido, usando OpenPDF.
  * A diferencia de {@link PdfExporter} (reportes agregados de admin), esto emite el
  * documento individual del cliente: receptor, líneas, desglose y método de pago.
- * Lee la entidad Order directamente (server-side, no es contrato de API).
+ * Lee la entidad Orden directamente (server-side, no es contrato de API).
  */
 @Component
 public class ComprobanteExporter {
@@ -38,8 +38,8 @@ public class ComprobanteExporter {
     private static final Color HEADER_BG = new Color(180, 180, 180);
 
     /** Renderiza el comprobante a partir del pedido y sus líneas (ya cargadas). */
-    public byte[] export(Order order, List<OrderItem> items) {
-        boolean factura = order.getDocumentType() == DocumentType.FACTURA;
+    public byte[] export(Orden order, List<ItemOrden> items) {
+        boolean factura = order.getDocumentType() == TipoDocumento.FACTURA;
         return render(doc -> {
             doc.add(title("KRYPTON E-COMMERCE"));
             doc.add(subtitle(factura ? "FACTURA ELECTRÓNICA" : "BOLETA DE VENTA ELECTRÓNICA"));
@@ -62,7 +62,7 @@ public class ComprobanteExporter {
             addHeaderCell(table, "Cant.");
             addHeaderCell(table, "P. Unit (S/)");
             addHeaderCell(table, "Subtotal (S/)");
-            for (OrderItem it : items) {
+            for (ItemOrden it : items) {
                 BigDecimal sub = it.getUnitPrice().multiply(BigDecimal.valueOf(it.getQuantity()));
                 table.addCell(it.getProduct().getName());
                 table.addCell(String.valueOf(it.getQuantity()));
@@ -80,7 +80,7 @@ public class ComprobanteExporter {
     }
 
     /** Etiqueta legible del método de pago; null = pedido sin pago registrado. */
-    private String methodLabel(PaymentMethod method) {
+    private String methodLabel(MetodoPago method) {
         if (method == null) {
             return "—";
         }

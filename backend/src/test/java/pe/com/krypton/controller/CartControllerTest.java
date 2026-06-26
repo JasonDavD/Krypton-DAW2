@@ -32,14 +32,14 @@ import pe.com.krypton.dto.response.CartResponse;
 import pe.com.krypton.exception.InsufficientStockException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
-import pe.com.krypton.service.CartService;
+import pe.com.krypton.service.CarritoService;
 
 /**
- * Web slice para CartController. SecurityContext desactivado vía addFilters=false +
+ * Web slice para CarritoController. SecurityContext desactivado vía addFilters=false +
  * exclusión de JwtAuthenticationFilter. Principal inyectado con @WithMockUser.
  * Cubre solo el contrato HTTP: status codes, validación, mapeo de excepciones.
  */
-@WebMvcTest(controllers = CartController.class,
+@WebMvcTest(controllers = CarritoController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
@@ -47,7 +47,7 @@ import pe.com.krypton.service.CartService;
 class CartControllerTest {
 
     @Autowired MockMvc mvc;
-    @MockBean CartService cartService;
+    @MockBean CarritoService cartService;
 
     private static final String JSON = MediaType.APPLICATION_JSON_VALUE;
     private static final String USER_EMAIL = "user@krypton.pe";

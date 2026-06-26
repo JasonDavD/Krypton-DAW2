@@ -4,25 +4,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import pe.com.krypton.repository.CartItemRepository;
-import pe.com.krypton.repository.CartRepository;
-import pe.com.krypton.repository.CategoryRepository;
-import pe.com.krypton.repository.OrderItemRepository;
-import pe.com.krypton.repository.OrderRepository;
-import pe.com.krypton.repository.ProductRepository;
-import pe.com.krypton.repository.StockMovementRepository;
-import pe.com.krypton.repository.UserRepository;
+import pe.com.krypton.repository.ItemCarritoRepository;
+import pe.com.krypton.repository.CarritoRepository;
+import pe.com.krypton.repository.CategoriaRepository;
+import pe.com.krypton.repository.ItemOrdenRepository;
+import pe.com.krypton.repository.OrdenRepository;
+import pe.com.krypton.repository.ProductoRepository;
+import pe.com.krypton.repository.MovimientoStockRepository;
+import pe.com.krypton.repository.UsuarioRepository;
 
 class KryptonApplicationTests extends AbstractIntegrationTest {
 
-    @Autowired UserRepository users;
-    @Autowired CategoryRepository categories;
-    @Autowired ProductRepository products;
-    @Autowired CartRepository carts;
-    @Autowired CartItemRepository cartItems;
-    @Autowired OrderRepository orders;
-    @Autowired OrderItemRepository orderItems;
-    @Autowired StockMovementRepository stockMovements;
+    @Autowired UsuarioRepository users;
+    @Autowired CategoriaRepository categories;
+    @Autowired ProductoRepository products;
+    @Autowired CarritoRepository carts;
+    @Autowired ItemCarritoRepository cartItems;
+    @Autowired OrdenRepository orders;
+    @Autowired ItemOrdenRepository orderItems;
+    @Autowired MovimientoStockRepository stockMovements;
 
     @Test
     void contextLoads() {

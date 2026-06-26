@@ -27,13 +27,13 @@ import pe.com.krypton.exception.CategoryInUseException;
 import pe.com.krypton.exception.DuplicateCategoryNameException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
-import pe.com.krypton.service.CategoryService;
+import pe.com.krypton.service.CategoriaService;
 
 /**
- * Web slice del AdminCategoryController (service mockeado, seguridad desactivada).
+ * Web slice del AdminCategoriaController (service mockeado, seguridad desactivada).
  * El borde de seguridad (401 sin token, 403 no-ADMIN) se prueba en integración (Phase 5).
  */
-@WebMvcTest(controllers = AdminCategoryController.class,
+@WebMvcTest(controllers = AdminCategoriaController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
@@ -41,7 +41,7 @@ import pe.com.krypton.service.CategoryService;
 class AdminCategoryControllerTest {
 
     @Autowired MockMvc mvc;
-    @MockBean CategoryService categoryService;
+    @MockBean CategoriaService categoryService;
 
     private static final String VALID_BODY = """
             {"name":"Electronics","description":"Electronic products"}

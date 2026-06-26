@@ -25,15 +25,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import pe.com.krypton.dto.response.UserResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.LastAdminException;
-import pe.com.krypton.entity.enums.Role;
+import pe.com.krypton.entity.enums.Rol;
 import pe.com.krypton.security.JwtAuthenticationFilter;
-import pe.com.krypton.service.UserService;
+import pe.com.krypton.service.UsuarioService;
 
 /**
- * Web slice del AdminUserController (service mockeado, seguridad desactivada).
+ * Web slice del AdminUsuarioController (service mockeado, seguridad desactivada).
  * El borde de seguridad (401 sin token, 403 CLIENTE) se prueba en integración (Phase 6).
  */
-@WebMvcTest(controllers = AdminUserController.class,
+@WebMvcTest(controllers = AdminUsuarioController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
@@ -41,15 +41,15 @@ import pe.com.krypton.service.UserService;
 class AdminUserControllerTest {
 
     @Autowired MockMvc mvc;
-    @MockBean UserService userService;
+    @MockBean UsuarioService userService;
 
-    private UserResponse sample(Long id, Role role, boolean active) {
+    private UserResponse sample(Long id, Rol role, boolean active) {
         return new UserResponse(id, "U" + id, "u" + id + "@krypton.pe", role, active, Instant.now());
     }
 
     @Test
     void should_return_200_and_list_without_password() throws Exception {
-        when(userService.listAll()).thenReturn(List.of(sample(1L, Role.ADMIN, true), sample(2L, Role.CLIENTE, true)));
+        when(userService.listAll()).thenReturn(List.of(sample(1L, Rol.ADMIN, true), sample(2L, Rol.CLIENTE, true)));
 
         mvc.perform(get("/api/admin/users"))
                 .andExpect(status().isOk())
@@ -59,7 +59,7 @@ class AdminUserControllerTest {
 
     @Test
     void should_return_201_when_admin_creates_user() throws Exception {
-        when(userService.create(any())).thenReturn(sample(9L, Role.ADMIN, true));
+        when(userService.create(any())).thenReturn(sample(9L, Rol.ADMIN, true));
 
         mvc.perform(post("/api/admin/users").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Nuevo\",\"email\":\"nuevo@krypton.pe\",\"password\":\"Secret123\",\"role\":\"ADMIN\"}"))
@@ -78,7 +78,7 @@ class AdminUserControllerTest {
 
     @Test
     void should_return_200_when_change_role() throws Exception {
-        when(userService.changeRole(eq(5L), eq(Role.ADMIN))).thenReturn(sample(5L, Role.ADMIN, true));
+        when(userService.changeRole(eq(5L), eq(Rol.ADMIN))).thenReturn(sample(5L, Rol.ADMIN, true));
 
         mvc.perform(patch("/api/admin/users/5/role").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"role\":\"ADMIN\"}"))
@@ -88,7 +88,7 @@ class AdminUserControllerTest {
 
     @Test
     void should_return_422_when_demoting_last_admin() throws Exception {
-        when(userService.changeRole(eq(1L), eq(Role.CLIENTE)))
+        when(userService.changeRole(eq(1L), eq(Rol.CLIENTE)))
                 .thenThrow(new LastAdminException("No se puede degradar al último administrador activo"));
 
         mvc.perform(patch("/api/admin/users/1/role").contentType(MediaType.APPLICATION_JSON)
@@ -98,7 +98,7 @@ class AdminUserControllerTest {
 
     @Test
     void should_return_200_when_set_status() throws Exception {
-        when(userService.setStatus(eq(7L), eq(false))).thenReturn(sample(7L, Role.CLIENTE, false));
+        when(userService.setStatus(eq(7L), eq(false))).thenReturn(sample(7L, Rol.CLIENTE, false));
 
         mvc.perform(patch("/api/admin/users/7/status").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"active\":false}"))

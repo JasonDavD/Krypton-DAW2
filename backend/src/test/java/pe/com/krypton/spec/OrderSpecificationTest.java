@@ -16,11 +16,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
-import pe.com.krypton.entity.Order;
-import pe.com.krypton.entity.enums.OrderStatus;
+import pe.com.krypton.entity.Orden;
+import pe.com.krypton.entity.enums.EstadoOrden;
 
 /**
- * Unit tests para OrderSpecification.
+ * Unit tests para OrdenSpecification.
  * Verifica: (a) null-predicate contract cuando el filtro está ausente,
  * (b) que el predicado correcto se construye cuando el filtro está presente.
  * Mirrors ProductSpecificationTest — no Spring context needed.
@@ -28,7 +28,7 @@ import pe.com.krypton.entity.enums.OrderStatus;
 @ExtendWith(MockitoExtension.class)
 class OrderSpecificationTest {
 
-    @Mock Root<Order> root;
+    @Mock Root<Orden> root;
     @Mock CriteriaQuery<?> query;
     @Mock CriteriaBuilder cb;
 
@@ -36,33 +36,33 @@ class OrderSpecificationTest {
 
     @Test
     void hasStatus_returns_null_when_status_is_null() {
-        Specification<Order> spec = OrderSpecification.hasStatus(null);
+        Specification<Orden> spec = OrdenSpecification.hasStatus(null);
         assertThat(spec).isNull();
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void hasStatus_builds_equal_predicate_when_status_present() {
-        Path<OrderStatus> statusPath = mock(Path.class);
+        Path<EstadoOrden> statusPath = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
 
-        when(root.<OrderStatus>get("status")).thenReturn(statusPath);
-        when(cb.equal(statusPath, OrderStatus.CONFIRMADA)).thenReturn(predicate);
+        when(root.<EstadoOrden>get("status")).thenReturn(statusPath);
+        when(cb.equal(statusPath, EstadoOrden.CONFIRMADA)).thenReturn(predicate);
 
-        Specification<Order> spec = OrderSpecification.hasStatus(OrderStatus.CONFIRMADA);
+        Specification<Orden> spec = OrdenSpecification.hasStatus(EstadoOrden.CONFIRMADA);
         assertThat(spec).isNotNull();
 
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertThat(result).isEqualTo(predicate);
-        verify(cb).equal(statusPath, OrderStatus.CONFIRMADA);
+        verify(cb).equal(statusPath, EstadoOrden.CONFIRMADA);
     }
 
     // ---- dateBetween ---------------------------------------------------------
 
     @Test
     void dateBetween_returns_null_when_both_bounds_are_null() {
-        Specification<Order> spec = OrderSpecification.dateBetween(null, null);
+        Specification<Orden> spec = OrdenSpecification.dateBetween(null, null);
         assertThat(spec).isNull();
     }
 
@@ -76,7 +76,7 @@ class OrderSpecificationTest {
         when(root.<Instant>get("orderDate")).thenReturn(datePath);
         when(cb.greaterThanOrEqualTo(datePath, start)).thenReturn(predicate);
 
-        Specification<Order> spec = OrderSpecification.dateBetween(start, null);
+        Specification<Orden> spec = OrdenSpecification.dateBetween(start, null);
         assertThat(spec).isNotNull();
 
         Predicate result = spec.toPredicate(root, query, cb);
@@ -95,7 +95,7 @@ class OrderSpecificationTest {
         when(root.<Instant>get("orderDate")).thenReturn(datePath);
         when(cb.lessThan(datePath, end)).thenReturn(predicate);
 
-        Specification<Order> spec = OrderSpecification.dateBetween(null, end);
+        Specification<Orden> spec = OrdenSpecification.dateBetween(null, end);
         assertThat(spec).isNotNull();
 
         Predicate result = spec.toPredicate(root, query, cb);
@@ -119,7 +119,7 @@ class OrderSpecificationTest {
         when(cb.lessThan(datePath, end)).thenReturn(ltPredicate);
         when(cb.and(gePredicate, ltPredicate)).thenReturn(andPredicate);
 
-        Specification<Order> spec = OrderSpecification.dateBetween(start, end);
+        Specification<Orden> spec = OrdenSpecification.dateBetween(start, end);
         assertThat(spec).isNotNull();
 
         Predicate result = spec.toPredicate(root, query, cb);
@@ -133,7 +133,7 @@ class OrderSpecificationTest {
 
     @Test
     void hasUser_returns_null_when_userId_is_null() {
-        Specification<Order> spec = OrderSpecification.hasUser(null);
+        Specification<Orden> spec = OrdenSpecification.hasUser(null);
         assertThat(spec).isNull();
     }
 
@@ -148,7 +148,7 @@ class OrderSpecificationTest {
         when(userPath.get("id")).thenReturn(userIdPath);
         when(cb.equal(userIdPath, 1L)).thenReturn(predicate);
 
-        Specification<Order> spec = OrderSpecification.hasUser(1L);
+        Specification<Orden> spec = OrdenSpecification.hasUser(1L);
         assertThat(spec).isNotNull();
 
         Predicate result = spec.toPredicate(root, query, cb);

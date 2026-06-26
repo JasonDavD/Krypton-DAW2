@@ -1,7 +1,7 @@
 package pe.com.krypton.dto.request;
 
 import jakarta.validation.constraints.NotNull;
-import pe.com.krypton.entity.enums.PaymentMethod;
+import pe.com.krypton.entity.enums.MetodoPago;
 
-public record PaymentRequest(@NotNull PaymentMethod method) {
+public record PaymentRequest(@NotNull MetodoPago method) {
 }

@@ -9,38 +9,38 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pe.com.krypton.dto.response.OrderItemResponse;
 import pe.com.krypton.dto.response.OrderResponse;
-import pe.com.krypton.entity.Order;
-import pe.com.krypton.entity.OrderItem;
-import pe.com.krypton.entity.Product;
-import pe.com.krypton.entity.User;
-import pe.com.krypton.entity.enums.DocumentType;
-import pe.com.krypton.entity.enums.OrderStatus;
+import pe.com.krypton.entity.Orden;
+import pe.com.krypton.entity.ItemOrden;
+import pe.com.krypton.entity.Producto;
+import pe.com.krypton.entity.Usuario;
+import pe.com.krypton.entity.enums.TipoDocumento;
+import pe.com.krypton.entity.enums.EstadoOrden;
 
 /**
- * Unit test for OrderMapper. No Spring context, no DB (pure Java).
+ * Unit test for OrdenMapper. No Spring context, no DB (pure Java).
  * Verifies: subtotal computation, snapshot invariant, total source, status as String, userId.
  * Satisfies REQ-OM-04 / ADR-5.
  */
 class OrderMapperTest {
 
-    OrderMapper mapper;
+    OrdenMapper mapper;
 
     @BeforeEach
     void setUp() {
-        mapper = new OrderMapper();
+        mapper = new OrdenMapper();
     }
 
     // ─── helpers ────────────────────────────────────────────────────────────────
 
-    private User user(Long id) {
-        User u = new User();
+    private Usuario user(Long id) {
+        Usuario u = new Usuario();
         u.setId(id);
         u.setEmail("test@krypton.pe");
         return u;
     }
 
-    private Product product(Long id, String name, BigDecimal currentPrice) {
-        Product p = new Product();
+    private Producto product(Long id, String name, BigDecimal currentPrice) {
+        Producto p = new Producto();
         p.setId(id);
         p.setName(name);
         p.setPrice(currentPrice);
@@ -49,15 +49,15 @@ class OrderMapperTest {
         return p;
     }
 
-    private Order order(Long id, User user, BigDecimal total, OrderStatus status) {
-        Order o = new Order();
+    private Orden order(Long id, Usuario user, BigDecimal total, EstadoOrden status) {
+        Orden o = new Orden();
         o.setId(id);
         o.setUser(user);
         o.setTotal(total);
         o.setStatus(status);
         o.setOrderDate(Instant.now());
         // Comprobante + desglose (el mapper los lee; documentType.name() NPE si es null)
-        o.setDocumentType(DocumentType.BOLETA);
+        o.setDocumentType(TipoDocumento.BOLETA);
         o.setCustomerName("Juan Cliente");
         o.setCustomerDoc("12345678");
         o.setSubtotal(total);
@@ -66,8 +66,8 @@ class OrderMapperTest {
         return o;
     }
 
-    private OrderItem orderItem(Long id, Order order, Product product, int qty, BigDecimal unitPrice) {
-        OrderItem item = new OrderItem();
+    private ItemOrden orderItem(Long id, Orden order, Producto product, int qty, BigDecimal unitPrice) {
+        ItemOrden item = new ItemOrden();
         item.setId(id);
         item.setOrder(order);
         item.setProduct(product);
@@ -80,10 +80,10 @@ class OrderMapperTest {
 
     @Test
     void toItemResponse_subtotal_equals_unitPrice_times_quantity() {
-        User u = user(3L);
-        Order o = order(1L, u, new BigDecimal("5999.80"), OrderStatus.PENDIENTE);
-        Product p = product(12L, "Notebook", new BigDecimal("2999.90"));
-        OrderItem item = orderItem(1L, o, p, 2, new BigDecimal("2999.90"));
+        Usuario u = user(3L);
+        Orden o = order(1L, u, new BigDecimal("5999.80"), EstadoOrden.PENDIENTE);
+        Producto p = product(12L, "Notebook", new BigDecimal("2999.90"));
+        ItemOrden item = orderItem(1L, o, p, 2, new BigDecimal("2999.90"));
 
         OrderItemResponse resp = mapper.toItemResponse(item);
 
@@ -98,10 +98,10 @@ class OrderMapperTest {
     @Test
     void toItemResponse_subtotal_uses_snapshot_not_current_price() {
         // The snapshot unitPrice = 100.00, but the product.price is now 150.00
-        User u = user(3L);
-        Order o = order(1L, u, new BigDecimal("100.00"), OrderStatus.PENDIENTE);
-        Product p = product(12L, "Notebook", new BigDecimal("150.00")); // price updated later
-        OrderItem item = orderItem(1L, o, p, 1, new BigDecimal("100.00")); // snapshot at purchase
+        Usuario u = user(3L);
+        Orden o = order(1L, u, new BigDecimal("100.00"), EstadoOrden.PENDIENTE);
+        Producto p = product(12L, "Notebook", new BigDecimal("150.00")); // price updated later
+        ItemOrden item = orderItem(1L, o, p, 1, new BigDecimal("100.00")); // snapshot at purchase
 
         OrderItemResponse resp = mapper.toItemResponse(item);
 
@@ -114,13 +114,13 @@ class OrderMapperTest {
 
     @Test
     void toResponse_total_comes_from_order_not_recomputed() {
-        User u = user(3L);
+        Usuario u = user(3L);
         // order.total = 999.00 (persisted snapshot)
-        Order o = order(1L, u, new BigDecimal("999.00"), OrderStatus.PENDIENTE);
-        Product p = product(12L, "Notebook", new BigDecimal("500.00"));
+        Orden o = order(1L, u, new BigDecimal("999.00"), EstadoOrden.PENDIENTE);
+        Producto p = product(12L, "Notebook", new BigDecimal("500.00"));
         // two items × 500.00 = 1000.00 — but we want to confirm mapper uses order.total, not recomputed
-        OrderItem item1 = orderItem(1L, o, p, 1, new BigDecimal("499.00"));
-        OrderItem item2 = orderItem(2L, o, p, 1, new BigDecimal("500.00"));
+        ItemOrden item1 = orderItem(1L, o, p, 1, new BigDecimal("499.00"));
+        ItemOrden item2 = orderItem(2L, o, p, 1, new BigDecimal("500.00"));
 
         OrderResponse resp = mapper.toResponse(o, List.of(item1, item2));
 
@@ -130,8 +130,8 @@ class OrderMapperTest {
 
     @Test
     void toResponse_status_is_enum_name_string() {
-        User u = user(3L);
-        Order o = order(1L, u, BigDecimal.TEN, OrderStatus.CONFIRMADA);
+        Usuario u = user(3L);
+        Orden o = order(1L, u, BigDecimal.TEN, EstadoOrden.CONFIRMADA);
 
         OrderResponse resp = mapper.toResponse(o, List.of());
 
@@ -140,8 +140,8 @@ class OrderMapperTest {
 
     @Test
     void toResponse_userId_equals_order_user_id() {
-        User u = user(42L);
-        Order o = order(7L, u, BigDecimal.TEN, OrderStatus.PENDIENTE);
+        Usuario u = user(42L);
+        Orden o = order(7L, u, BigDecimal.TEN, EstadoOrden.PENDIENTE);
 
         OrderResponse resp = mapper.toResponse(o, List.of());
 
@@ -150,12 +150,12 @@ class OrderMapperTest {
 
     @Test
     void toResponse_maps_all_items_and_preserves_order() {
-        User u = user(3L);
-        Order o = order(1L, u, new BigDecimal("350.00"), OrderStatus.PENDIENTE);
-        Product p1 = product(10L, "Laptop", new BigDecimal("300.00"));
-        Product p2 = product(11L, "Mouse", new BigDecimal("50.00"));
-        OrderItem item1 = orderItem(1L, o, p1, 1, new BigDecimal("300.00"));
-        OrderItem item2 = orderItem(2L, o, p2, 1, new BigDecimal("50.00"));
+        Usuario u = user(3L);
+        Orden o = order(1L, u, new BigDecimal("350.00"), EstadoOrden.PENDIENTE);
+        Producto p1 = product(10L, "Laptop", new BigDecimal("300.00"));
+        Producto p2 = product(11L, "Mouse", new BigDecimal("50.00"));
+        ItemOrden item1 = orderItem(1L, o, p1, 1, new BigDecimal("300.00"));
+        ItemOrden item2 = orderItem(2L, o, p2, 1, new BigDecimal("50.00"));
 
         OrderResponse resp = mapper.toResponse(o, List.of(item1, item2));
 
@@ -166,9 +166,9 @@ class OrderMapperTest {
 
     @Test
     void toResponse_maps_comprobante_and_desglose() {
-        User u = user(3L);
-        Order o = order(1L, u, new BigDecimal("120.00"), OrderStatus.PENDIENTE);
-        o.setDocumentType(DocumentType.FACTURA);
+        Usuario u = user(3L);
+        Orden o = order(1L, u, new BigDecimal("120.00"), EstadoOrden.PENDIENTE);
+        o.setDocumentType(TipoDocumento.FACTURA);
         o.setCustomerName("ACME SAC");
         o.setCustomerDoc("20512345678");
         o.setSubtotal(new BigDecimal("100.00"));

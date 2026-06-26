@@ -2,23 +2,23 @@ package pe.com.krypton.policy;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static pe.com.krypton.entity.enums.OrderStatus.CANCELADA;
-import static pe.com.krypton.entity.enums.OrderStatus.CONFIRMADA;
-import static pe.com.krypton.entity.enums.OrderStatus.ENTREGADO;
-import static pe.com.krypton.entity.enums.OrderStatus.ENVIADO;
-import static pe.com.krypton.entity.enums.OrderStatus.PENDIENTE;
+import static pe.com.krypton.entity.enums.EstadoOrden.CANCELADA;
+import static pe.com.krypton.entity.enums.EstadoOrden.CONFIRMADA;
+import static pe.com.krypton.entity.enums.EstadoOrden.ENTREGADO;
+import static pe.com.krypton.entity.enums.EstadoOrden.ENVIADO;
+import static pe.com.krypton.entity.enums.EstadoOrden.PENDIENTE;
 
 import org.junit.jupiter.api.Test;
 import pe.com.krypton.exception.OrderStatusTransitionException;
 
 /**
- * Unit test for OrderStatusPolicy — pure domain rule, no Spring.
- * Cubre la matriz 3×3 de transiciones de OrderStatus.
+ * Unit test for EstadoOrdenPolicy — pure domain rule, no Spring.
+ * Cubre la matriz 3×3 de transiciones de EstadoOrden.
  * Strict TDD: RED → GREEN → REFACTOR.
  */
 class OrderStatusPolicyTest {
 
-    private final OrderStatusPolicy policy = new OrderStatusPolicy();
+    private final EstadoOrdenPolicy policy = new EstadoOrdenPolicy();
 
     // ─── transiciones legales ─────────────────────────────────────────────────────
 

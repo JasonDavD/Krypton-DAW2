@@ -27,16 +27,16 @@ import pe.com.krypton.dto.response.PageResponse;
 import pe.com.krypton.exception.OrderStatusTransitionException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
-import pe.com.krypton.service.OrderService;
+import pe.com.krypton.service.OrdenService;
 
 /**
- * Web slice for AdminOrderController.
+ * Web slice for AdminOrdenController.
  * SecurityContext disabled via addFilters=false + JwtAuthenticationFilter exclusion.
- * OrderService mocked. Role assigned via @WithMockUser(roles = "ADMIN").
+ * OrdenService mocked. Rol assigned via @WithMockUser(roles = "ADMIN").
  * Covers HTTP contract: status codes, JSON shape, validation.
  * Satisfies REQ-OM-10..REQ-OM-13.
  */
-@WebMvcTest(controllers = AdminOrderController.class,
+@WebMvcTest(controllers = AdminOrdenController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
@@ -44,7 +44,7 @@ import pe.com.krypton.service.OrderService;
 class AdminOrderControllerTest {
 
     @Autowired MockMvc mvc;
-    @MockBean OrderService orderService;
+    @MockBean OrdenService orderService;
 
     private static final String JSON = MediaType.APPLICATION_JSON_VALUE;
 

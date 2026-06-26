@@ -21,28 +21,28 @@ import pe.com.krypton.dto.response.UserResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.LastAdminException;
 import pe.com.krypton.exception.ResourceNotFoundException;
-import pe.com.krypton.mapper.UserMapper;
-import pe.com.krypton.entity.User;
-import pe.com.krypton.entity.enums.Role;
-import pe.com.krypton.repository.UserRepository;
-import pe.com.krypton.service.impl.UserServiceImpl;
+import pe.com.krypton.mapper.UsuarioMapper;
+import pe.com.krypton.entity.Usuario;
+import pe.com.krypton.entity.enums.Rol;
+import pe.com.krypton.repository.UsuarioRepository;
+import pe.com.krypton.service.impl.UsuarioServiceImpl;
 
 /** Unit test de la gestión de usuarios. La estrella: el guard del último admin. */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
-    @Mock UserRepository userRepository;
+    @Mock UsuarioRepository userRepository;
     @Mock PasswordEncoder passwordEncoder;
 
-    UserServiceImpl service;
+    UsuarioServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new UserServiceImpl(userRepository, passwordEncoder, new UserMapper());
+        service = new UsuarioServiceImpl(userRepository, passwordEncoder, new UsuarioMapper());
     }
 
-    private User user(Long id, Role role, boolean active) {
-        User u = new User();
+    private Usuario user(Long id, Rol role, boolean active) {
+        Usuario u = new Usuario();
         u.setId(id);
         u.setName("U" + id);
         u.setEmail("u" + id + "@krypton.pe");
@@ -55,7 +55,7 @@ class UserServiceImplTest {
 
     @Test
     void should_list_users() {
-        when(userRepository.findAll()).thenReturn(List.of(user(1L, Role.ADMIN, true), user(2L, Role.CLIENTE, true)));
+        when(userRepository.findAll()).thenReturn(List.of(user(1L, Rol.ADMIN, true), user(2L, Rol.CLIENTE, true)));
 
         List<UserResponse> res = service.listAll();
 
@@ -67,15 +67,15 @@ class UserServiceImplTest {
     void should_create_an_admin_when_email_is_new() {
         when(userRepository.existsByEmail("nuevo@krypton.pe")).thenReturn(false);
         when(passwordEncoder.encode("Secret123")).thenReturn("$2a$hash");
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> {
-            User u = inv.getArgument(0);
+        when(userRepository.save(any(Usuario.class))).thenAnswer(inv -> {
+            Usuario u = inv.getArgument(0);
             u.setId(9L);
             return u;
         });
 
-        UserResponse res = service.create(new CreateUserRequest("Nuevo", "nuevo@krypton.pe", "Secret123", Role.ADMIN));
+        UserResponse res = service.create(new CreateUserRequest("Nuevo", "nuevo@krypton.pe", "Secret123", Rol.ADMIN));
 
-        assertThat(res.role()).isEqualTo(Role.ADMIN);
+        assertThat(res.role()).isEqualTo(Rol.ADMIN);
         assertThat(res.active()).isTrue();
     }
 
@@ -83,37 +83,37 @@ class UserServiceImplTest {
     void should_reject_create_when_email_exists() {
         when(userRepository.existsByEmail("dup@krypton.pe")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.create(new CreateUserRequest("X", "dup@krypton.pe", "x", Role.CLIENTE)))
+        assertThatThrownBy(() -> service.create(new CreateUserRequest("X", "dup@krypton.pe", "x", Rol.CLIENTE)))
                 .isInstanceOf(DuplicateEmailException.class);
         verify(userRepository, never()).save(any());
     }
 
     @Test
     void should_promote_client_to_admin() {
-        User u = user(5L, Role.CLIENTE, true);
+        Usuario u = user(5L, Rol.CLIENTE, true);
         when(userRepository.findById(5L)).thenReturn(Optional.of(u));
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        UserResponse res = service.changeRole(5L, Role.ADMIN);
+        UserResponse res = service.changeRole(5L, Rol.ADMIN);
 
-        assertThat(res.role()).isEqualTo(Role.ADMIN);
+        assertThat(res.role()).isEqualTo(Rol.ADMIN);
     }
 
     @Test
     void should_reject_demoting_the_last_active_admin() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L, Role.ADMIN, true)));
-        when(userRepository.countByRoleAndActiveTrue(Role.ADMIN)).thenReturn(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L, Rol.ADMIN, true)));
+        when(userRepository.countByRoleAndActiveTrue(Rol.ADMIN)).thenReturn(1L);
 
-        assertThatThrownBy(() -> service.changeRole(1L, Role.CLIENTE))
+        assertThatThrownBy(() -> service.changeRole(1L, Rol.CLIENTE))
                 .isInstanceOf(LastAdminException.class);
         verify(userRepository, never()).save(any());
     }
 
     @Test
     void should_deactivate_a_client() {
-        User u = user(7L, Role.CLIENTE, true);
+        Usuario u = user(7L, Rol.CLIENTE, true);
         when(userRepository.findById(7L)).thenReturn(Optional.of(u));
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
 
         UserResponse res = service.setStatus(7L, false);
 
@@ -122,8 +122,8 @@ class UserServiceImplTest {
 
     @Test
     void should_reject_deactivating_the_last_active_admin() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L, Role.ADMIN, true)));
-        when(userRepository.countByRoleAndActiveTrue(Role.ADMIN)).thenReturn(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L, Rol.ADMIN, true)));
+        when(userRepository.countByRoleAndActiveTrue(Rol.ADMIN)).thenReturn(1L);
 
         assertThatThrownBy(() -> service.setStatus(1L, false))
                 .isInstanceOf(LastAdminException.class);
@@ -134,7 +134,7 @@ class UserServiceImplTest {
     void should_throw_not_found_when_user_missing() {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.changeRole(99L, Role.ADMIN))
+        assertThatThrownBy(() -> service.changeRole(99L, Rol.ADMIN))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 }

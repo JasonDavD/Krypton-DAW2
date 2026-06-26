@@ -17,13 +17,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import pe.com.krypton.dto.response.CategoryResponse;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
-import pe.com.krypton.service.CategoryService;
+import pe.com.krypton.service.CategoriaService;
 
 /**
- * Web slice: solo la capa HTTP de CategoryController.
+ * Web slice: solo la capa HTTP de CategoriaController.
  * Seguridad desactivada (addFilters=false) — verificar 401/403 en integración (Phase 5).
  */
-@WebMvcTest(controllers = CategoryController.class,
+@WebMvcTest(controllers = CategoriaController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
@@ -31,10 +31,10 @@ import pe.com.krypton.service.CategoryService;
 class CategoryControllerTest {
 
     @Autowired MockMvc mvc;
-    @MockBean CategoryService categoryService;
+    @MockBean CategoriaService categoryService;
 
     private CategoryResponse sample(Long id) {
-        return new CategoryResponse(id, "Category " + id, "Description " + id);
+        return new CategoryResponse(id, "Categoria " + id, "Description " + id);
     }
 
     @Test
@@ -45,7 +45,7 @@ class CategoryControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3))
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("Category 1"));
+                .andExpect(jsonPath("$[0].name").value("Categoria 1"));
     }
 
     @Test
@@ -55,7 +55,7 @@ class CategoryControllerTest {
         mvc.perform(get("/api/categories/2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(2))
-                .andExpect(jsonPath("$.name").value("Category 2"));
+                .andExpect(jsonPath("$.name").value("Categoria 2"));
     }
 
     @Test

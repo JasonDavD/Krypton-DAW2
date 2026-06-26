@@ -22,7 +22,7 @@ import pe.com.krypton.dto.response.AuthResponse;
 import pe.com.krypton.dto.response.UserResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.InvalidCredentialsException;
-import pe.com.krypton.entity.enums.Role;
+import pe.com.krypton.entity.enums.Rol;
 import pe.com.krypton.security.JwtAuthenticationFilter;
 import pe.com.krypton.service.AuthService;
 
@@ -44,7 +44,7 @@ class AuthControllerTest {
     @Test
     void should_return_201_and_hide_password_when_register_is_valid() throws Exception {
         when(authService.register(any())).thenReturn(
-                new UserResponse(1L, "Ana", "ana@krypton.pe", Role.CLIENTE, true, Instant.now()));
+                new UserResponse(1L, "Ana", "ana@krypton.pe", Rol.CLIENTE, true, Instant.now()));
 
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Ana\",\"email\":\"ana@krypton.pe\",\"password\":\"Secret123\"}"))

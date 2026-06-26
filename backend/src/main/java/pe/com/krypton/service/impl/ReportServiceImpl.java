@@ -19,18 +19,18 @@ import pe.com.krypton.dto.response.report.TopProductosReport;
 import pe.com.krypton.dto.response.report.VentasPeriodoRow;
 import pe.com.krypton.dto.response.report.VentasPorPeriodoReport;
 import pe.com.krypton.exception.ResourceNotFoundException;
-import pe.com.krypton.mapper.OrderMapper;
-import pe.com.krypton.entity.Order;
-import pe.com.krypton.entity.Product;
-import pe.com.krypton.entity.StockMovement;
-import pe.com.krypton.entity.enums.OrderStatus;
-import pe.com.krypton.repository.OrderItemRepository;
-import pe.com.krypton.repository.OrderRepository;
-import pe.com.krypton.repository.ProductRepository;
-import pe.com.krypton.repository.StockMovementRepository;
+import pe.com.krypton.mapper.OrdenMapper;
+import pe.com.krypton.entity.Orden;
+import pe.com.krypton.entity.Producto;
+import pe.com.krypton.entity.MovimientoStock;
+import pe.com.krypton.entity.enums.EstadoOrden;
+import pe.com.krypton.repository.ItemOrdenRepository;
+import pe.com.krypton.repository.OrdenRepository;
+import pe.com.krypton.repository.ProductoRepository;
+import pe.com.krypton.repository.MovimientoStockRepository;
 import pe.com.krypton.repository.VentasTotalesProjection;
 import pe.com.krypton.service.ReportService;
-import pe.com.krypton.spec.OrderSpecification;
+import pe.com.krypton.spec.OrdenSpecification;
 
 @Service
 @Transactional(readOnly = true)
@@ -38,17 +38,17 @@ public class ReportServiceImpl implements ReportService {
 
     private static final ZoneId LIMA = ZoneId.of("America/Lima");
 
-    private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
-    private final StockMovementRepository stockMovementRepository;
-    private final ProductRepository productRepository;
-    private final OrderMapper orderMapper;
+    private final OrdenRepository orderRepository;
+    private final ItemOrdenRepository orderItemRepository;
+    private final MovimientoStockRepository stockMovementRepository;
+    private final ProductoRepository productRepository;
+    private final OrdenMapper orderMapper;
 
-    public ReportServiceImpl(OrderRepository orderRepository,
-                             OrderItemRepository orderItemRepository,
-                             StockMovementRepository stockMovementRepository,
-                             ProductRepository productRepository,
-                             OrderMapper orderMapper) {
+    public ReportServiceImpl(OrdenRepository orderRepository,
+                             ItemOrdenRepository orderItemRepository,
+                             MovimientoStockRepository stockMovementRepository,
+                             ProductoRepository productRepository,
+                             OrdenMapper orderMapper) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.stockMovementRepository = stockMovementRepository;
@@ -111,13 +111,13 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public KardexReport kardexProducto(Long productId, LocalDate desde, LocalDate hasta) {
-        Product product = productRepository.findById(productId)
+        Producto product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Producto no encontrado: " + productId));
 
         validatePartialDateRange(desde, hasta);
 
-        List<StockMovement> movements;
+        List<MovimientoStock> movements;
         Instant startInst = null;
         Instant endInst   = null;
 
@@ -156,17 +156,17 @@ public class ReportServiceImpl implements ReportService {
     public OrdenesListadoReport listadoOrdenes(String status, LocalDate desde, LocalDate hasta, Long userId) {
         validatePartialDateRange(desde, hasta);
 
-        OrderStatus orderStatus = parseStatus(status);
+        EstadoOrden orderStatus = parseStatus(status);
 
         Instant startInst = desde != null ? toStartOfDay(desde) : null;
         Instant endInst   = hasta != null ? toExclusiveEnd(hasta) : null;
 
-        Specification<Order> spec = Specification
-                .where(OrderSpecification.hasStatus(orderStatus))
-                .and(OrderSpecification.dateBetween(startInst, endInst))
-                .and(OrderSpecification.hasUser(userId));
+        Specification<Orden> spec = Specification
+                .where(OrdenSpecification.hasStatus(orderStatus))
+                .and(OrdenSpecification.dateBetween(startInst, endInst))
+                .and(OrdenSpecification.hasUser(userId));
 
-        List<Order> orders = orderRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "orderDate"));
+        List<Orden> orders = orderRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "orderDate"));
 
         List<OrderResponse> responses = orders.stream()
                 .map(o -> orderMapper.toResponse(o, orderItemRepository.findByOrder(o)))
@@ -248,17 +248,17 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
-     * Parses a status string (case-insensitive) to OrderStatus enum.
+     * Parses a status string (case-insensitive) to EstadoOrden enum.
      * Returns null when input is null (no filter). Throws IllegalArgumentException for unknown values.
      */
-    private OrderStatus parseStatus(String status) {
+    private EstadoOrden parseStatus(String status) {
         if (status == null) {
             return null;
         }
         try {
-            return OrderStatus.valueOf(status.toUpperCase());
+            return EstadoOrden.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
-            String valid = Arrays.stream(OrderStatus.values())
+            String valid = Arrays.stream(EstadoOrden.values())
                     .map(Enum::name)
                     .collect(Collectors.joining(", "));
             throw new IllegalArgumentException(

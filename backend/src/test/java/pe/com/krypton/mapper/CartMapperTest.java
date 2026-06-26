@@ -9,28 +9,28 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pe.com.krypton.dto.response.CartItemResponse;
 import pe.com.krypton.dto.response.CartResponse;
-import pe.com.krypton.entity.Cart;
-import pe.com.krypton.entity.CartItem;
-import pe.com.krypton.entity.Product;
-import pe.com.krypton.entity.User;
+import pe.com.krypton.entity.Carrito;
+import pe.com.krypton.entity.ItemCarrito;
+import pe.com.krypton.entity.Producto;
+import pe.com.krypton.entity.Usuario;
 
 /**
- * Unit test de CartMapper. Sin Spring context, sin DB.
- * TDD: RED — escrito antes de que exista CartMapper.
+ * Unit test de CarritoMapper. Sin Spring context, sin DB.
+ * TDD: RED — escrito antes de que exista CarritoMapper.
  */
 class CartMapperTest {
 
-    CartMapper mapper;
+    CarritoMapper mapper;
 
     @BeforeEach
     void setUp() {
-        mapper = new CartMapper();
+        mapper = new CarritoMapper();
     }
 
     // ─── helpers ────────────────────────────────────────────────────────────────
 
-    private Product product(Long id, String sku, String name, BigDecimal price) {
-        Product p = new Product();
+    private Producto product(Long id, String sku, String name, BigDecimal price) {
+        Producto p = new Producto();
         p.setId(id);
         p.setSku(sku);
         p.setName(name);
@@ -40,8 +40,8 @@ class CartMapperTest {
         return p;
     }
 
-    private CartItem cartItem(Long id, Cart cart, Product product, int qty) {
-        CartItem item = new CartItem();
+    private ItemCarrito cartItem(Long id, Carrito cart, Producto product, int qty) {
+        ItemCarrito item = new ItemCarrito();
         item.setId(id);
         item.setCart(cart);
         item.setProduct(product);
@@ -49,10 +49,10 @@ class CartMapperTest {
         return item;
     }
 
-    private Cart cart(Long id) {
-        Cart c = new Cart();
+    private Carrito cart(Long id) {
+        Carrito c = new Carrito();
         c.setId(id);
-        User u = new User();
+        Usuario u = new Usuario();
         u.setId(1L);
         c.setUser(u);
         Instant now = Instant.now();
@@ -65,9 +65,9 @@ class CartMapperTest {
 
     @Test
     void toItemResponse_subtotal_equals_price_times_quantity() {
-        Cart c = cart(1L);
-        Product p = product(10L, "SKU-001", "Laptop Pro", new BigDecimal("999.90"));
-        CartItem item = cartItem(5L, c, p, 2);
+        Carrito c = cart(1L);
+        Producto p = product(10L, "SKU-001", "Laptop Pro", new BigDecimal("999.90"));
+        ItemCarrito item = cartItem(5L, c, p, 2);
 
         CartItemResponse resp = mapper.toItemResponse(item);
 
@@ -84,11 +84,11 @@ class CartMapperTest {
 
     @Test
     void toResponse_total_equals_sum_of_all_subtotals() {
-        Cart c = cart(1L);
-        Product p1 = product(10L, "SKU-001", "Laptop Pro", new BigDecimal("999.90"));
-        Product p2 = product(11L, "SKU-002", "Mouse", new BigDecimal("50.00"));
-        CartItem item1 = cartItem(5L, c, p1, 2);  // subtotal = 1999.80
-        CartItem item2 = cartItem(6L, c, p2, 3);  // subtotal = 150.00
+        Carrito c = cart(1L);
+        Producto p1 = product(10L, "SKU-001", "Laptop Pro", new BigDecimal("999.90"));
+        Producto p2 = product(11L, "SKU-002", "Mouse", new BigDecimal("50.00"));
+        ItemCarrito item1 = cartItem(5L, c, p1, 2);  // subtotal = 1999.80
+        ItemCarrito item2 = cartItem(6L, c, p2, 3);  // subtotal = 150.00
 
         CartResponse resp = mapper.toResponse(c, List.of(item1, item2));
 
@@ -100,7 +100,7 @@ class CartMapperTest {
 
     @Test
     void toResponse_with_empty_items_has_zero_total() {
-        Cart c = cart(1L);
+        Carrito c = cart(1L);
 
         CartResponse resp = mapper.toResponse(c, List.of());
 

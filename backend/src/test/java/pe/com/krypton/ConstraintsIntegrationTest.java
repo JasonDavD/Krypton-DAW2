@@ -9,15 +9,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
-import pe.com.krypton.entity.Cart;
-import pe.com.krypton.entity.Category;
-import pe.com.krypton.entity.Product;
-import pe.com.krypton.entity.User;
-import pe.com.krypton.entity.enums.Role;
-import pe.com.krypton.repository.CartRepository;
-import pe.com.krypton.repository.CategoryRepository;
-import pe.com.krypton.repository.ProductRepository;
-import pe.com.krypton.repository.UserRepository;
+import pe.com.krypton.entity.Carrito;
+import pe.com.krypton.entity.Categoria;
+import pe.com.krypton.entity.Producto;
+import pe.com.krypton.entity.Usuario;
+import pe.com.krypton.entity.enums.Rol;
+import pe.com.krypton.repository.CarritoRepository;
+import pe.com.krypton.repository.CategoriaRepository;
+import pe.com.krypton.repository.ProductoRepository;
+import pe.com.krypton.repository.UsuarioRepository;
 
 /**
  * Cierra los escenarios de rechazo de constraints del spec persistence-schema:
@@ -29,15 +29,15 @@ import pe.com.krypton.repository.UserRepository;
 @Transactional
 class ConstraintsIntegrationTest extends AbstractIntegrationTest {
 
-    @Autowired UserRepository users;
-    @Autowired CategoryRepository categories;
-    @Autowired ProductRepository products;
-    @Autowired CartRepository carts;
+    @Autowired UsuarioRepository users;
+    @Autowired CategoriaRepository categories;
+    @Autowired ProductoRepository products;
+    @Autowired CarritoRepository carts;
     @Autowired JdbcTemplate jdbc;
 
     @Test
     void rejects_duplicate_sku() {
-        Category cat = categories.saveAndFlush(newCategory());
+        Categoria cat = categories.saveAndFlush(newCategory());
         products.saveAndFlush(newProduct("SKU-DUP", cat));
 
         assertThatThrownBy(() -> products.saveAndFlush(newProduct("SKU-DUP", cat)))
@@ -55,7 +55,7 @@ class ConstraintsIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void rejects_second_cart_for_same_user() {
-        User u = users.saveAndFlush(newUser());
+        Usuario u = users.saveAndFlush(newUser());
         carts.saveAndFlush(newCart(u));
 
         assertThatThrownBy(() -> carts.saveAndFlush(newCart(u)))
@@ -64,14 +64,14 @@ class ConstraintsIntegrationTest extends AbstractIntegrationTest {
 
     // ----- helpers -----
 
-    private Category newCategory() {
-        Category c = new Category();
+    private Categoria newCategory() {
+        Categoria c = new Categoria();
         c.setName("Cat-" + System.nanoTime());
         return c;
     }
 
-    private Product newProduct(String sku, Category cat) {
-        Product p = new Product();
+    private Producto newProduct(String sku, Categoria cat) {
+        Producto p = new Producto();
         p.setSku(sku);
         p.setName("Producto");
         p.setPrice(new BigDecimal("10.00"));
@@ -81,18 +81,18 @@ class ConstraintsIntegrationTest extends AbstractIntegrationTest {
         return p;
     }
 
-    private User newUser() {
-        User u = new User();
+    private Usuario newUser() {
+        Usuario u = new Usuario();
         u.setName("Test");
         u.setEmail("user-" + System.nanoTime() + "@krypton.pe");
         u.setPassword("x");
-        u.setRole(Role.CLIENTE);
+        u.setRole(Rol.CLIENTE);
         u.setCreatedAt(Instant.now());
         return u;
     }
 
-    private Cart newCart(User u) {
-        Cart c = new Cart();
+    private Carrito newCart(Usuario u) {
+        Carrito c = new Carrito();
         c.setUser(u);
         c.setCreatedAt(Instant.now());
         c.setUpdatedAt(Instant.now());

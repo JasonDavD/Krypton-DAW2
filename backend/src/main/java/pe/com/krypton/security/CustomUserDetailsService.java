@@ -5,8 +5,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import pe.com.krypton.entity.User;
-import pe.com.krypton.repository.UserRepository;
+import pe.com.krypton.entity.Usuario;
+import pe.com.krypton.repository.UsuarioRepository;
 
 /**
  * Carga el usuario para Spring Security a partir del email.
@@ -16,15 +16,15 @@ import pe.com.krypton.repository.UserRepository;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final UsuarioRepository userRepository;
 
-    public CustomUserDetailsService(UserRepository userRepository) {
+    public CustomUserDetailsService(UsuarioRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) {
-        User user = userRepository.findByEmail(email)
+        Usuario user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())

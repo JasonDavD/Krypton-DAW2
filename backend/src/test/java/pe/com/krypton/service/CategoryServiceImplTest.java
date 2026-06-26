@@ -19,33 +19,33 @@ import pe.com.krypton.dto.response.CategoryResponse;
 import pe.com.krypton.exception.CategoryInUseException;
 import pe.com.krypton.exception.DuplicateCategoryNameException;
 import pe.com.krypton.exception.ResourceNotFoundException;
-import pe.com.krypton.mapper.CategoryMapper;
-import pe.com.krypton.entity.Category;
-import pe.com.krypton.repository.CategoryRepository;
-import pe.com.krypton.repository.ProductRepository;
-import pe.com.krypton.service.impl.CategoryServiceImpl;
+import pe.com.krypton.mapper.CategoriaMapper;
+import pe.com.krypton.entity.Categoria;
+import pe.com.krypton.repository.CategoriaRepository;
+import pe.com.krypton.repository.ProductoRepository;
+import pe.com.krypton.service.impl.CategoriaServiceImpl;
 
 /**
- * Unit test de CategoryServiceImpl. Repos MOCKEADOS, sin Spring context, sin DB.
- * TDD: RED escrito antes de que exista CategoryServiceImpl.
+ * Unit test de CategoriaServiceImpl. Repos MOCKEADOS, sin Spring context, sin DB.
+ * TDD: RED escrito antes de que exista CategoriaServiceImpl.
  */
 @ExtendWith(MockitoExtension.class)
 class CategoryServiceImplTest {
 
-    @Mock CategoryRepository categoryRepository;
-    @Mock ProductRepository productRepository;
+    @Mock CategoriaRepository categoryRepository;
+    @Mock ProductoRepository productRepository;
 
-    CategoryServiceImpl service;
+    CategoriaServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new CategoryServiceImpl(categoryRepository, productRepository, new CategoryMapper());
+        service = new CategoriaServiceImpl(categoryRepository, productRepository, new CategoriaMapper());
     }
 
     // ─── helpers ────────────────────────────────────────────────────────────────
 
-    private Category category(Long id, String name) {
-        Category c = new Category();
+    private Categoria category(Long id, String name) {
+        Categoria c = new Categoria();
         c.setId(id);
         c.setName(name);
         c.setDescription("Desc of " + name);
@@ -91,8 +91,8 @@ class CategoryServiceImplTest {
     void should_create_category_when_name_is_unique() {
         CategoryRequest req = new CategoryRequest("NewCat", "A new category");
         when(categoryRepository.existsByName("NewCat")).thenReturn(false);
-        when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> {
-            Category c = inv.getArgument(0);
+        when(categoryRepository.save(any(Categoria.class))).thenAnswer(inv -> {
+            Categoria c = inv.getArgument(0);
             c.setId(5L);
             return c;
         });
@@ -116,10 +116,10 @@ class CategoryServiceImplTest {
 
     @Test
     void should_update_category_when_new_name_is_unique() {
-        Category existing = category(1L, "OldName");
+        Categoria existing = category(1L, "OldName");
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(categoryRepository.existsByNameAndIdNot("NewName", 1L)).thenReturn(false);
-        when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(categoryRepository.save(any(Categoria.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CategoryResponse result = service.update(1L, new CategoryRequest("NewName", "Updated desc"));
 
@@ -129,10 +129,10 @@ class CategoryServiceImplTest {
     @Test
     void should_allow_update_keeping_same_name() {
         // Updating own name must NOT throw — existsByNameAndIdNot excludes self
-        Category existing = category(1L, "Electronics");
+        Categoria existing = category(1L, "Electronics");
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(categoryRepository.existsByNameAndIdNot("Electronics", 1L)).thenReturn(false);
-        when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(categoryRepository.save(any(Categoria.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CategoryResponse result = service.update(1L, new CategoryRequest("Electronics", "Updated desc"));
 
@@ -141,7 +141,7 @@ class CategoryServiceImplTest {
 
     @Test
     void should_reject_update_when_name_belongs_to_another_category() {
-        Category existing = category(1L, "OldName");
+        Categoria existing = category(1L, "OldName");
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(categoryRepository.existsByNameAndIdNot("TakenName", 1L)).thenReturn(true);
 
@@ -154,7 +154,7 @@ class CategoryServiceImplTest {
 
     @Test
     void should_delete_category_when_no_products_reference_it() {
-        Category existing = category(3L, "Empty");
+        Categoria existing = category(3L, "Empty");
         when(categoryRepository.findById(3L)).thenReturn(Optional.of(existing));
         when(productRepository.existsByCategoryId(3L)).thenReturn(false);
 
@@ -165,13 +165,13 @@ class CategoryServiceImplTest {
 
     @Test
     void should_throw_category_in_use_when_products_exist() {
-        Category existing = category(1L, "Electronics");
+        Categoria existing = category(1L, "Electronics");
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(productRepository.existsByCategoryId(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> service.delete(1L))
                 .isInstanceOf(CategoryInUseException.class);
-        verify(categoryRepository, never()).delete(any(Category.class));
+        verify(categoryRepository, never()).delete(any(Categoria.class));
     }
 
     @Test
@@ -180,6 +180,6 @@ class CategoryServiceImplTest {
 
         assertThatThrownBy(() -> service.delete(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
-        verify(categoryRepository, never()).delete(any(Category.class));
+        verify(categoryRepository, never()).delete(any(Categoria.class));
     }
 }

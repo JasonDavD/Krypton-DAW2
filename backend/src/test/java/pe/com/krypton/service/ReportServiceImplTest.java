@@ -27,16 +27,16 @@ import pe.com.krypton.dto.response.report.TopProductoRow;
 import pe.com.krypton.dto.response.report.TopProductosReport;
 import pe.com.krypton.dto.response.report.VentasPorPeriodoReport;
 import pe.com.krypton.exception.ResourceNotFoundException;
-import pe.com.krypton.mapper.OrderMapper;
-import pe.com.krypton.entity.Order;
-import pe.com.krypton.entity.Product;
-import pe.com.krypton.entity.StockMovement;
-import pe.com.krypton.entity.enums.MovementType;
-import pe.com.krypton.entity.enums.OrderStatus;
-import pe.com.krypton.repository.OrderItemRepository;
-import pe.com.krypton.repository.OrderRepository;
-import pe.com.krypton.repository.ProductRepository;
-import pe.com.krypton.repository.StockMovementRepository;
+import pe.com.krypton.mapper.OrdenMapper;
+import pe.com.krypton.entity.Orden;
+import pe.com.krypton.entity.Producto;
+import pe.com.krypton.entity.MovimientoStock;
+import pe.com.krypton.entity.enums.TipoMovimiento;
+import pe.com.krypton.entity.enums.EstadoOrden;
+import pe.com.krypton.repository.ItemOrdenRepository;
+import pe.com.krypton.repository.OrdenRepository;
+import pe.com.krypton.repository.ProductoRepository;
+import pe.com.krypton.repository.MovimientoStockRepository;
 import pe.com.krypton.repository.VentasPeriodoProjection;
 import pe.com.krypton.repository.VentasTotalesProjection;
 import pe.com.krypton.service.impl.ReportServiceImpl;
@@ -48,17 +48,17 @@ import pe.com.krypton.service.impl.ReportServiceImpl;
 @ExtendWith(MockitoExtension.class)
 class ReportServiceImplTest {
 
-    @Mock OrderRepository orderRepository;
-    @Mock OrderItemRepository orderItemRepository;
-    @Mock StockMovementRepository stockMovementRepository;
-    @Mock ProductRepository productRepository;
+    @Mock OrdenRepository orderRepository;
+    @Mock ItemOrdenRepository orderItemRepository;
+    @Mock MovimientoStockRepository stockMovementRepository;
+    @Mock ProductoRepository productRepository;
 
-    OrderMapper orderMapper;
+    OrdenMapper orderMapper;
     ReportServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        orderMapper = new OrderMapper();
+        orderMapper = new OrdenMapper();
         service = new ReportServiceImpl(
                 orderRepository,
                 orderItemRepository,
@@ -187,7 +187,7 @@ class ReportServiceImplTest {
 
     @Test
     void kardex_partial_date_range_desde_only_throws_illegal_argument() {
-        Product p = stubProduct(1L, "SKU-001", "Prod", 10);
+        Producto p = stubProduct(1L, "SKU-001", "Prod", 10);
         when(productRepository.findById(1L)).thenReturn(Optional.of(p));
 
         assertThatThrownBy(() -> service.kardexProducto(1L, LocalDate.of(2024, 1, 1), null))
@@ -196,7 +196,7 @@ class ReportServiceImplTest {
 
     @Test
     void kardex_partial_date_range_hasta_only_throws_illegal_argument() {
-        Product p = stubProduct(1L, "SKU-001", "Prod", 10);
+        Producto p = stubProduct(1L, "SKU-001", "Prod", 10);
         when(productRepository.findById(1L)).thenReturn(Optional.of(p));
 
         assertThatThrownBy(() -> service.kardexProducto(1L, null, LocalDate.of(2024, 1, 31)))
@@ -285,10 +285,10 @@ class ReportServiceImplTest {
 
     @Test
     void kardex_product_found_no_dates_returns_all_movements() {
-        Product p = stubProduct(1L, "SKU-001", "Prod A", 50);
+        Producto p = stubProduct(1L, "SKU-001", "Prod A", 50);
         when(productRepository.findById(1L)).thenReturn(Optional.of(p));
 
-        StockMovement sm = stubMovement(1L, p, MovementType.ENTRADA, 10);
+        MovimientoStock sm = stubMovement(1L, p, TipoMovimiento.ENTRADA, 10);
         when(stockMovementRepository.findByProduct_IdOrderByCreatedAtAsc(1L))
                 .thenReturn(List.of(sm));
 
@@ -307,7 +307,7 @@ class ReportServiceImplTest {
         LocalDate desde = LocalDate.of(2024, 1, 1);
         LocalDate hasta = LocalDate.of(2024, 1, 31);
 
-        Product p = stubProduct(1L, "SKU-001", "Prod", 20);
+        Producto p = stubProduct(1L, "SKU-001", "Prod", 20);
         when(productRepository.findById(1L)).thenReturn(Optional.of(p));
         when(stockMovementRepository.findByProduct_IdAndCreatedAtBetweenOrderByCreatedAtAsc(
                 eq(1L), any(Instant.class), any(Instant.class)))
@@ -393,8 +393,8 @@ class ReportServiceImplTest {
         };
     }
 
-    private Product stubProduct(Long id, String sku, String name, int stock) {
-        Product p = new Product();
+    private Producto stubProduct(Long id, String sku, String name, int stock) {
+        Producto p = new Producto();
         p.setId(id);
         p.setSku(sku);
         p.setName(name);
@@ -402,8 +402,8 @@ class ReportServiceImplTest {
         return p;
     }
 
-    private StockMovement stubMovement(Long id, Product product, MovementType type, int qty) {
-        StockMovement sm = new StockMovement();
+    private MovimientoStock stubMovement(Long id, Producto product, TipoMovimiento type, int qty) {
+        MovimientoStock sm = new MovimientoStock();
         sm.setId(id);
         sm.setProduct(product);
         sm.setType(type);

@@ -21,17 +21,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
-import pe.com.krypton.repository.CartItemRepository;
-import pe.com.krypton.repository.CartRepository;
-import pe.com.krypton.repository.CategoryRepository;
-import pe.com.krypton.repository.ProductRepository;
-import pe.com.krypton.repository.UserRepository;
+import pe.com.krypton.repository.ItemCarritoRepository;
+import pe.com.krypton.repository.CarritoRepository;
+import pe.com.krypton.repository.CategoriaRepository;
+import pe.com.krypton.repository.ProductoRepository;
+import pe.com.krypton.repository.UsuarioRepository;
 
 /**
  * Integration tests for cart management.
  * Extends AbstractIntegrationTest (singleton Testcontainers Postgres 16, full JWT chain).
  * @AfterEach cleanup in FK order: cart_item -> cart -> products -> categories.
- * Test data prefixed with "IT-CART-" (SKU) and "IT-Cart-" (category name).
+ * Test data prefixed with "IT-CART-" (SKU) and "IT-Carrito-" (category name).
  */
 @AutoConfigureMockMvc
 class CartIntegrationTest extends AbstractIntegrationTest {
@@ -42,11 +42,11 @@ class CartIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper objectMapper;
-    @Autowired CartItemRepository cartItemRepository;
-    @Autowired CartRepository cartRepository;
-    @Autowired ProductRepository productRepository;
-    @Autowired CategoryRepository categoryRepository;
-    @Autowired UserRepository userRepository;
+    @Autowired ItemCarritoRepository cartItemRepository;
+    @Autowired CarritoRepository cartRepository;
+    @Autowired ProductoRepository productRepository;
+    @Autowired CategoriaRepository categoryRepository;
+    @Autowired UsuarioRepository userRepository;
 
     // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -118,13 +118,13 @@ class CartIntegrationTest extends AbstractIntegrationTest {
                 .filter(u -> u.getEmail().startsWith("it-cart-"))
                 .toList()
                 .forEach(userRepository::delete);
-        // Delete IT-CART- products and IT-Cart- categories (FK order)
+        // Delete IT-CART- products and IT-Carrito- categories (FK order)
         productRepository.findAll().stream()
                 .filter(p -> p.getSku() != null && p.getSku().startsWith("IT-CART-"))
                 .toList()
                 .forEach(productRepository::delete);
         categoryRepository.findAll().stream()
-                .filter(c -> c.getName() != null && c.getName().startsWith("IT-Cart-"))
+                .filter(c -> c.getName() != null && c.getName().startsWith("IT-Carrito-"))
                 .toList()
                 .forEach(categoryRepository::delete);
     }
@@ -162,7 +162,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void post_item_creates_cart_lazily_and_shows_item() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-Lazy");
+        long catId = createCategory(adminToken, "IT-Carrito-Lazy");
         long prodId = createProduct(adminToken, "IT-CART-LAZY-01", "IT-Laptop Lazy", catId, 10);
 
         String clientToken = clientToken(uniqueEmail(), "Secret123!");
@@ -188,7 +188,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void post_same_product_twice_merges_quantity() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-Merge");
+        long catId = createCategory(adminToken, "IT-Carrito-Merge");
         long prodId = createProduct(adminToken, "IT-CART-MERGE-01", "IT-Laptop Merge", catId, 10);
 
         String clientToken = clientToken(uniqueEmail(), "Secret123!");
@@ -220,7 +220,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void post_with_qty_exceeding_stock_returns_422() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-Stock");
+        long catId = createCategory(adminToken, "IT-Carrito-Stock");
         long prodId = createProduct(adminToken, "IT-CART-STOCK-01", "IT-Laptop Stock", catId, 5);
 
         String clientToken = clientToken(uniqueEmail(), "Secret123!");
@@ -236,7 +236,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void post_inactive_product_returns_404() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-Inactive");
+        long catId = createCategory(adminToken, "IT-Carrito-Inactive");
         long prodId = createProduct(adminToken, "IT-CART-INACTIVE-01", "IT-Laptop Inactive", catId, 10);
 
         // Soft-delete product
@@ -257,7 +257,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void put_item_replaces_quantity_and_get_confirms() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-Update");
+        long catId = createCategory(adminToken, "IT-Carrito-Update");
         long prodId = createProduct(adminToken, "IT-CART-UPDATE-01", "IT-Laptop Update", catId, 10);
 
         String clientToken = clientToken(uniqueEmail(), "Secret123!");
@@ -288,7 +288,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void put_item_with_quantity_zero_returns_400() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-PutZero");
+        long catId = createCategory(adminToken, "IT-Carrito-PutZero");
         long prodId = createProduct(adminToken, "IT-CART-PUTZERO-01", "IT-Laptop PutZero", catId, 10);
 
         String clientToken = clientToken(uniqueEmail(), "Secret123!");
@@ -313,7 +313,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void put_with_qty_exceeding_stock_returns_422() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-PutStock");
+        long catId = createCategory(adminToken, "IT-Carrito-PutStock");
         long prodId = createProduct(adminToken, "IT-CART-PUTSTOCK-01", "IT-Laptop PutStock", catId, 4);
 
         String clientToken = clientToken(uniqueEmail(), "Secret123!");
@@ -338,13 +338,13 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void anti_idor_user_b_cannot_access_user_a_items() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-IDOR");
+        long catId = createCategory(adminToken, "IT-Carrito-IDOR");
         long prodId = createProduct(adminToken, "IT-CART-IDOR-01", "IT-Laptop IDOR", catId, 10);
 
         String tokenA = clientToken(uniqueEmail(), "Secret123!");
         String tokenB = clientToken(uniqueEmail(), "Secret123!");
 
-        // User A adds item
+        // Usuario A adds item
         MvcResult postResult = mvc.perform(post("/api/cart/items").contentType(JSON)
                         .header(HttpHeaders.AUTHORIZATION, bearer(tokenA))
                         .content("{\"productId\":" + prodId + ",\"quantity\":2}"))
@@ -354,18 +354,18 @@ class CartIntegrationTest extends AbstractIntegrationTest {
         long itemIdA = objectMapper.readTree(postResult.getResponse().getContentAsString())
                 .get("items").get(0).get("itemId").asLong();
 
-        // User B tries PUT on User A's item → 404
+        // Usuario B tries PUT on Usuario A's item → 404
         mvc.perform(put("/api/cart/items/" + itemIdA).contentType(JSON)
                         .header(HttpHeaders.AUTHORIZATION, bearer(tokenB))
                         .content("{\"quantity\":5}"))
                 .andExpect(status().isNotFound());
 
-        // User B tries DELETE on User A's item → 404
+        // Usuario B tries DELETE on Usuario A's item → 404
         mvc.perform(delete("/api/cart/items/" + itemIdA)
                         .header(HttpHeaders.AUTHORIZATION, bearer(tokenB)))
                 .andExpect(status().isNotFound());
 
-        // User B GET shows only their own items (empty)
+        // Usuario B GET shows only their own items (empty)
         mvc.perform(get("/api/cart").header(HttpHeaders.AUTHORIZATION, bearer(tokenB)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(0));
@@ -376,7 +376,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void delete_item_removes_it_and_get_shows_remaining() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-DelItem");
+        long catId = createCategory(adminToken, "IT-Carrito-DelItem");
         long prodId1 = createProduct(adminToken, "IT-CART-DEL-01", "IT-Laptop Del1", catId, 10);
         long prodId2 = createProduct(adminToken, "IT-CART-DEL-02", "IT-Mouse Del2", catId, 10);
 
@@ -414,7 +414,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void delete_cart_removes_all_items_and_get_returns_empty() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-Clear");
+        long catId = createCategory(adminToken, "IT-Carrito-Clear");
         long prodId = createProduct(adminToken, "IT-CART-CLEAR-01", "IT-Laptop Clear", catId, 10);
 
         String clientToken = clientToken(uniqueEmail(), "Secret123!");
@@ -450,7 +450,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void get_cart_does_not_mutate_updated_at() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-NoMutate");
+        long catId = createCategory(adminToken, "IT-Carrito-NoMutate");
         long prodId = createProduct(adminToken, "IT-CART-NOMUTATE-01", "IT-Laptop NoMutate", catId, 10);
 
         String clientToken = clientToken(uniqueEmail(), "Secret123!");
@@ -486,7 +486,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void post_two_distinct_products_both_appear_in_cart() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-TwoProds");
+        long catId = createCategory(adminToken, "IT-Carrito-TwoProds");
         long prodIdA = createProduct(adminToken, "IT-CART-TWOP-A01", "IT-Laptop TwoProds A", catId, 10);
         long prodIdB = createProduct(adminToken, "IT-CART-TWOP-B01", "IT-Mouse TwoProds B", catId, 10);
 
@@ -526,7 +526,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void same_product_can_exist_in_different_users_carts() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-CrossCart");
+        long catId = createCategory(adminToken, "IT-Carrito-CrossCart");
         long prodId = createProduct(adminToken, "IT-CART-CROSS-01", "IT-Laptop CrossCart", catId, 20);
 
         String tokenA = clientToken(uniqueEmail(), "Secret123!");
@@ -560,7 +560,7 @@ class CartIntegrationTest extends AbstractIntegrationTest {
     @Test
     void write_op_advances_updated_at_relative_to_created_at() throws Exception {
         String adminToken = adminToken();
-        long catId = createCategory(adminToken, "IT-Cart-Advance");
+        long catId = createCategory(adminToken, "IT-Carrito-Advance");
         long prodId = createProduct(adminToken, "IT-CART-ADVANCE-01", "IT-Laptop Advance", catId, 10);
 
         String clientToken = clientToken(uniqueEmail(), "Secret123!");

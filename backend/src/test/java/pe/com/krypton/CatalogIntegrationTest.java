@@ -18,8 +18,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import pe.com.krypton.repository.CategoryRepository;
-import pe.com.krypton.repository.ProductRepository;
+import pe.com.krypton.repository.CategoriaRepository;
+import pe.com.krypton.repository.ProductoRepository;
 
 /**
  * Integración end-to-end del catálogo: Postgres real (Testcontainers singleton),
@@ -38,8 +38,8 @@ class CatalogIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper objectMapper;
-    @Autowired ProductRepository productRepository;
-    @Autowired CategoryRepository categoryRepository;
+    @Autowired ProductoRepository productRepository;
+    @Autowired CategoriaRepository categoryRepository;
 
     // ------------------------------------------------------------------ helpers
 

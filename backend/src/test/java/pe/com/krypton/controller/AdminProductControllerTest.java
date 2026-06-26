@@ -27,13 +27,13 @@ import pe.com.krypton.dto.response.ProductResponse;
 import pe.com.krypton.exception.DuplicateSkuException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
-import pe.com.krypton.service.ProductService;
+import pe.com.krypton.service.ProductoService;
 
 /**
- * Web slice del AdminProductController (service mockeado, seguridad desactivada).
+ * Web slice del AdminProductoController (service mockeado, seguridad desactivada).
  * El borde de seguridad (401 sin token, 403 no-ADMIN) se prueba en integración (Phase 5).
  */
-@WebMvcTest(controllers = AdminProductController.class,
+@WebMvcTest(controllers = AdminProductoController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
@@ -41,7 +41,7 @@ import pe.com.krypton.service.ProductService;
 class AdminProductControllerTest {
 
     @Autowired MockMvc mvc;
-    @MockBean ProductService productService;
+    @MockBean ProductoService productService;
 
     private static final String VALID_BODY = """
             {"sku":"SKU-01","name":"Laptop Pro","description":"Desc","price":1500.00,"stock":5,"imageUrl":null,"categoryId":1}

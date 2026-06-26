@@ -43,7 +43,7 @@ public interface ReportService {
     /**
      * R4: Listado de órdenes con filtros opcionales.
      *
-     * @param status  nombre del enum OrderStatus (case-insensitive), o null para sin filtro
+     * @param status  nombre del enum EstadoOrden (case-insensitive), o null para sin filtro
      * @param desde   fecha de inicio opcional
      * @param hasta   fecha de fin opcional
      * @param userId  ID del usuario (opcional)

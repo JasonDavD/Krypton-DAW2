@@ -26,9 +26,9 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import pe.com.krypton.repository.ProductImageRepository;
-import pe.com.krypton.repository.ProductRepository;
-import pe.com.krypton.repository.CategoryRepository;
+import pe.com.krypton.repository.ImagenProductoRepository;
+import pe.com.krypton.repository.ProductoRepository;
+import pe.com.krypton.repository.CategoriaRepository;
 
 /**
  * Full end-to-end integration tests for the product image feature.
@@ -64,9 +64,9 @@ class ProductImageIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper objectMapper;
-    @Autowired ProductImageRepository productImageRepository;
-    @Autowired ProductRepository productRepository;
-    @Autowired CategoryRepository categoryRepository;
+    @Autowired ImagenProductoRepository productImageRepository;
+    @Autowired ProductoRepository productRepository;
+    @Autowired CategoriaRepository categoryRepository;
 
     // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -246,7 +246,7 @@ class ProductImageIntegrationTest extends AbstractIntegrationTest {
         long prodId = createProduct(token, "IMG-P3", "IMG-Product3", catId);
 
         // 5MB + 1 byte — exceeds the service-level MAX_FILE_SIZE_BYTES (5MB).
-        // ProductImageService.upload() throws IllegalArgumentException → 400.
+        // ImagenProductoService.upload() throws IllegalArgumentException → 400.
         byte[] bigData = new byte[5 * 1024 * 1024 + 1];
         MockMultipartFile file = new MockMultipartFile(
                 "file", "big.jpg", "image/jpeg", bigData);

@@ -23,51 +23,51 @@ import pe.com.krypton.dto.request.UpdateQuantityRequest;
 import pe.com.krypton.dto.response.CartResponse;
 import pe.com.krypton.exception.InsufficientStockException;
 import pe.com.krypton.exception.ResourceNotFoundException;
-import pe.com.krypton.mapper.CartMapper;
-import pe.com.krypton.entity.Cart;
-import pe.com.krypton.entity.CartItem;
-import pe.com.krypton.entity.Product;
-import pe.com.krypton.entity.User;
-import pe.com.krypton.repository.CartItemRepository;
-import pe.com.krypton.repository.CartRepository;
-import pe.com.krypton.repository.ProductRepository;
-import pe.com.krypton.repository.UserRepository;
-import pe.com.krypton.service.impl.CartServiceImpl;
+import pe.com.krypton.mapper.CarritoMapper;
+import pe.com.krypton.entity.Carrito;
+import pe.com.krypton.entity.ItemCarrito;
+import pe.com.krypton.entity.Producto;
+import pe.com.krypton.entity.Usuario;
+import pe.com.krypton.repository.ItemCarritoRepository;
+import pe.com.krypton.repository.CarritoRepository;
+import pe.com.krypton.repository.ProductoRepository;
+import pe.com.krypton.repository.UsuarioRepository;
+import pe.com.krypton.service.impl.CarritoServiceImpl;
 
 /**
- * Unit test de CartServiceImpl. Repos MOCKEADOS, CartMapper real, sin Spring, sin DB.
+ * Unit test de CarritoServiceImpl. Repos MOCKEADOS, CarritoMapper real, sin Spring, sin DB.
  * Strict TDD: RED → GREEN → REFACTOR por sub-grupo.
  */
 @ExtendWith(MockitoExtension.class)
 class CartServiceImplTest {
 
-    @Mock CartRepository cartRepository;
-    @Mock CartItemRepository cartItemRepository;
-    @Mock ProductRepository productRepository;
-    @Mock UserRepository userRepository;
-    @Mock CartService selfMock;
+    @Mock CarritoRepository cartRepository;
+    @Mock ItemCarritoRepository cartItemRepository;
+    @Mock ProductoRepository productRepository;
+    @Mock UsuarioRepository userRepository;
+    @Mock CarritoService selfMock;
 
-    CartServiceImpl service;
+    CarritoServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new CartServiceImpl(cartRepository, cartItemRepository,
-                productRepository, userRepository, new CartMapper(), selfMock);
+        service = new CarritoServiceImpl(cartRepository, cartItemRepository,
+                productRepository, userRepository, new CarritoMapper(), selfMock);
     }
 
     // ─── helpers ────────────────────────────────────────────────────────────────
 
-    private User user(Long id, String email) {
-        User u = new User();
+    private Usuario user(Long id, String email) {
+        Usuario u = new Usuario();
         u.setId(id);
-        u.setName("Test User");
+        u.setName("Test Usuario");
         u.setEmail(email);
         u.setPassword("pwd");
         return u;
     }
 
-    private Cart cart(Long id, User user) {
-        Cart c = new Cart();
+    private Carrito cart(Long id, Usuario user) {
+        Carrito c = new Carrito();
         c.setId(id);
         c.setUser(user);
         Instant now = Instant.now();
@@ -76,19 +76,19 @@ class CartServiceImplTest {
         return c;
     }
 
-    private Product product(Long id, String sku, int stock, boolean active) {
-        Product p = new Product();
+    private Producto product(Long id, String sku, int stock, boolean active) {
+        Producto p = new Producto();
         p.setId(id);
         p.setSku(sku);
-        p.setName("Product " + sku);
+        p.setName("Producto " + sku);
         p.setPrice(new BigDecimal("99.90"));
         p.setStock(stock);
         p.setActive(active);
         return p;
     }
 
-    private CartItem cartItem(Long id, Cart cart, Product product, int qty) {
-        CartItem item = new CartItem();
+    private ItemCarrito cartItem(Long id, Carrito cart, Producto product, int qty) {
+        ItemCarrito item = new ItemCarrito();
         item.setId(id);
         item.setCart(cart);
         item.setProduct(product);
@@ -100,7 +100,7 @@ class CartServiceImplTest {
 
     @Test
     void getCart_returns_emptyCart_when_no_cart_exists() {
-        User u = user(1L, "test@krypton.pe");
+        Usuario u = user(1L, "test@krypton.pe");
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.empty());
 
@@ -115,10 +115,10 @@ class CartServiceImplTest {
 
     @Test
     void getCart_returns_mapped_cart_when_present() {
-        User u = user(1L, "test@krypton.pe");
-        Cart c = cart(10L, u);
-        Product p = product(5L, "SKU-001", 10, true);
-        CartItem item = cartItem(100L, c, p, 2);
+        Usuario u = user(1L, "test@krypton.pe");
+        Carrito c = cart(10L, u);
+        Producto p = product(5L, "SKU-001", 10, true);
+        ItemCarrito item = cartItem(100L, c, p, 2);
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.of(c));
@@ -137,50 +137,50 @@ class CartServiceImplTest {
 
     @Test
     void attemptAddItem_inserts_new_item_when_product_not_in_cart() {
-        User u = user(1L, "test@krypton.pe");
-        Cart c = cart(10L, u);
-        Product p = product(5L, "SKU-001", 10, true);
+        Usuario u = user(1L, "test@krypton.pe");
+        Carrito c = cart(10L, u);
+        Producto p = product(5L, "SKU-001", 10, true);
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.of(c));
         when(productRepository.findById(5L)).thenReturn(Optional.of(p));
         when(cartItemRepository.findByCartAndProduct(c, p)).thenReturn(Optional.empty());
-        when(cartItemRepository.saveAndFlush(any(CartItem.class))).thenAnswer(inv -> {
-            CartItem ci = inv.getArgument(0);
+        when(cartItemRepository.saveAndFlush(any(ItemCarrito.class))).thenAnswer(inv -> {
+            ItemCarrito ci = inv.getArgument(0);
             ci.setId(200L);
             return ci;
         });
-        when(cartRepository.save(any(Cart.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(cartRepository.save(any(Carrito.class))).thenAnswer(inv -> inv.getArgument(0));
         when(cartItemRepository.findByCart(c)).thenReturn(List.of());
 
         CartResponse resp = service.attemptAddItem("test@krypton.pe", new CartItemRequest(5L, 3));
 
-        verify(cartItemRepository).saveAndFlush(any(CartItem.class));
-        ArgumentCaptor<Cart> cartCaptor = ArgumentCaptor.forClass(Cart.class);
+        verify(cartItemRepository).saveAndFlush(any(ItemCarrito.class));
+        ArgumentCaptor<Carrito> cartCaptor = ArgumentCaptor.forClass(Carrito.class);
         verify(cartRepository).save(cartCaptor.capture());
         assertThat(cartCaptor.getValue().getUpdatedAt()).isNotNull();
     }
 
     @Test
     void attemptAddItem_merges_when_product_already_in_cart() {
-        User u = user(1L, "test@krypton.pe");
-        Cart c = cart(10L, u);
-        Product p = product(5L, "SKU-001", 10, true);
-        CartItem existing = cartItem(100L, c, p, 2);
+        Usuario u = user(1L, "test@krypton.pe");
+        Carrito c = cart(10L, u);
+        Producto p = product(5L, "SKU-001", 10, true);
+        ItemCarrito existing = cartItem(100L, c, p, 2);
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.of(c));
         when(productRepository.findById(5L)).thenReturn(Optional.of(p));
         when(cartItemRepository.findByCartAndProduct(c, p)).thenReturn(Optional.of(existing));
-        when(cartItemRepository.save(any(CartItem.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(cartRepository.save(any(Cart.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(cartItemRepository.save(any(ItemCarrito.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(cartRepository.save(any(Carrito.class))).thenAnswer(inv -> inv.getArgument(0));
         when(cartItemRepository.findByCart(c)).thenReturn(List.of(existing));
 
         service.attemptAddItem("test@krypton.pe", new CartItemRequest(5L, 3));
 
         // merge path uses save (not saveAndFlush), quantity summed = 2+3=5
         verify(cartItemRepository, never()).saveAndFlush(any());
-        ArgumentCaptor<CartItem> itemCaptor = ArgumentCaptor.forClass(CartItem.class);
+        ArgumentCaptor<ItemCarrito> itemCaptor = ArgumentCaptor.forClass(ItemCarrito.class);
         verify(cartItemRepository).save(itemCaptor.capture());
         assertThat(itemCaptor.getValue().getQuantity()).isEqualTo(5);
     }
@@ -189,10 +189,10 @@ class CartServiceImplTest {
 
     @Test
     void attemptAddItem_throws_InsufficientStockException_when_qty_exceeds_stock() {
-        User u = user(1L, "test@krypton.pe");
-        Cart c = cart(10L, u);
-        Product p = product(5L, "SKU-001", 5, true);  // stock = 5
-        CartItem existing = cartItem(100L, c, p, 3);   // existing qty = 3
+        Usuario u = user(1L, "test@krypton.pe");
+        Carrito c = cart(10L, u);
+        Producto p = product(5L, "SKU-001", 5, true);  // stock = 5
+        ItemCarrito existing = cartItem(100L, c, p, 3);   // existing qty = 3
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.of(c));
@@ -211,9 +211,9 @@ class CartServiceImplTest {
 
     @Test
     void attemptAddItem_throws_ResourceNotFoundException_for_inactive_product() {
-        User u = user(1L, "test@krypton.pe");
-        Cart c = cart(10L, u);
-        Product p = product(5L, "SKU-001", 10, false);  // inactive
+        Usuario u = user(1L, "test@krypton.pe");
+        Carrito c = cart(10L, u);
+        Producto p = product(5L, "SKU-001", 10, false);  // inactive
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.of(c));
@@ -225,8 +225,8 @@ class CartServiceImplTest {
 
     @Test
     void attemptAddItem_throws_ResourceNotFoundException_for_missing_product() {
-        User u = user(1L, "test@krypton.pe");
-        Cart c = cart(10L, u);
+        Usuario u = user(1L, "test@krypton.pe");
+        Carrito c = cart(10L, u);
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.of(c));
@@ -270,32 +270,32 @@ class CartServiceImplTest {
 
     @Test
     void updateItem_replaces_quantity_and_returns_cart() {
-        User u = user(1L, "test@krypton.pe");
-        Cart c = cart(10L, u);
-        Product p = product(5L, "SKU-001", 10, true);
-        CartItem item = cartItem(100L, c, p, 2);
+        Usuario u = user(1L, "test@krypton.pe");
+        Carrito c = cart(10L, u);
+        Producto p = product(5L, "SKU-001", 10, true);
+        ItemCarrito item = cartItem(100L, c, p, 2);
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartItemRepository.findById(100L)).thenReturn(Optional.of(item));
         when(productRepository.findById(5L)).thenReturn(Optional.of(p));
-        when(cartItemRepository.save(any(CartItem.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(cartRepository.save(any(Cart.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(cartItemRepository.save(any(ItemCarrito.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(cartRepository.save(any(Carrito.class))).thenAnswer(inv -> inv.getArgument(0));
         when(cartItemRepository.findByCart(c)).thenReturn(List.of(item));
 
         CartResponse resp = service.updateItem("test@krypton.pe", 100L, new UpdateQuantityRequest(7));
 
-        ArgumentCaptor<CartItem> itemCaptor = ArgumentCaptor.forClass(CartItem.class);
+        ArgumentCaptor<ItemCarrito> itemCaptor = ArgumentCaptor.forClass(ItemCarrito.class);
         verify(cartItemRepository).save(itemCaptor.capture());
         assertThat(itemCaptor.getValue().getQuantity()).isEqualTo(7);
     }
 
     @Test
     void updateItem_throws_ResourceNotFoundException_for_IDOR() {
-        User u = user(1L, "test@krypton.pe");
-        User otherUser = user(2L, "other@krypton.pe");
-        Cart otherCart = cart(20L, otherUser);
-        Product p = product(5L, "SKU-001", 10, true);
-        CartItem item = cartItem(99L, otherCart, p, 2);  // owned by otherUser
+        Usuario u = user(1L, "test@krypton.pe");
+        Usuario otherUser = user(2L, "other@krypton.pe");
+        Carrito otherCart = cart(20L, otherUser);
+        Producto p = product(5L, "SKU-001", 10, true);
+        ItemCarrito item = cartItem(99L, otherCart, p, 2);  // owned by otherUser
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartItemRepository.findById(99L)).thenReturn(Optional.of(item));
@@ -306,7 +306,7 @@ class CartServiceImplTest {
 
     @Test
     void updateItem_throws_404_when_item_not_found() {
-        User u = user(1L, "test@krypton.pe");
+        Usuario u = user(1L, "test@krypton.pe");
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartItemRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -316,10 +316,10 @@ class CartServiceImplTest {
 
     @Test
     void updateItem_throws_404_for_inactive_product() {
-        User u = user(1L, "test@krypton.pe");
-        Cart c = cart(10L, u);
-        Product p = product(5L, "SKU-001", 10, false);  // inactive
-        CartItem item = cartItem(100L, c, p, 2);
+        Usuario u = user(1L, "test@krypton.pe");
+        Carrito c = cart(10L, u);
+        Producto p = product(5L, "SKU-001", 10, false);  // inactive
+        ItemCarrito item = cartItem(100L, c, p, 2);
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartItemRepository.findById(100L)).thenReturn(Optional.of(item));
@@ -331,10 +331,10 @@ class CartServiceImplTest {
 
     @Test
     void updateItem_throws_422_when_qty_exceeds_stock() {
-        User u = user(1L, "test@krypton.pe");
-        Cart c = cart(10L, u);
-        Product p = product(5L, "SKU-001", 4, true);  // stock = 4
-        CartItem item = cartItem(100L, c, p, 2);
+        Usuario u = user(1L, "test@krypton.pe");
+        Carrito c = cart(10L, u);
+        Producto p = product(5L, "SKU-001", 4, true);  // stock = 4
+        ItemCarrito item = cartItem(100L, c, p, 2);
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartItemRepository.findById(100L)).thenReturn(Optional.of(item));
@@ -348,30 +348,30 @@ class CartServiceImplTest {
 
     @Test
     void removeItem_deletes_item_and_touches_cart() {
-        User u = user(1L, "test@krypton.pe");
-        Cart c = cart(10L, u);
-        Product p = product(5L, "SKU-001", 10, true);
-        CartItem item = cartItem(100L, c, p, 2);
+        Usuario u = user(1L, "test@krypton.pe");
+        Carrito c = cart(10L, u);
+        Producto p = product(5L, "SKU-001", 10, true);
+        ItemCarrito item = cartItem(100L, c, p, 2);
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartItemRepository.findById(100L)).thenReturn(Optional.of(item));
-        when(cartRepository.save(any(Cart.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(cartRepository.save(any(Carrito.class))).thenAnswer(inv -> inv.getArgument(0));
 
         service.removeItem("test@krypton.pe", 100L);
 
         verify(cartItemRepository).delete(item);
-        ArgumentCaptor<Cart> cartCaptor = ArgumentCaptor.forClass(Cart.class);
+        ArgumentCaptor<Carrito> cartCaptor = ArgumentCaptor.forClass(Carrito.class);
         verify(cartRepository).save(cartCaptor.capture());
         assertThat(cartCaptor.getValue().getUpdatedAt()).isNotNull();
     }
 
     @Test
     void removeItem_throws_ResourceNotFoundException_for_IDOR() {
-        User u = user(1L, "test@krypton.pe");
-        User otherUser = user(2L, "other@krypton.pe");
-        Cart otherCart = cart(20L, otherUser);
-        Product p = product(5L, "SKU-001", 10, true);
-        CartItem item = cartItem(99L, otherCart, p, 2);
+        Usuario u = user(1L, "test@krypton.pe");
+        Usuario otherUser = user(2L, "other@krypton.pe");
+        Carrito otherCart = cart(20L, otherUser);
+        Producto p = product(5L, "SKU-001", 10, true);
+        ItemCarrito item = cartItem(99L, otherCart, p, 2);
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartItemRepository.findById(99L)).thenReturn(Optional.of(item));
@@ -383,7 +383,7 @@ class CartServiceImplTest {
 
     @Test
     void removeItem_throws_404_when_item_not_found() {
-        User u = user(1L, "test@krypton.pe");
+        Usuario u = user(1L, "test@krypton.pe");
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartItemRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -395,24 +395,24 @@ class CartServiceImplTest {
 
     @Test
     void clearCart_deletes_all_items_and_touches_cart_when_cart_exists() {
-        User u = user(1L, "test@krypton.pe");
-        Cart c = cart(10L, u);
+        Usuario u = user(1L, "test@krypton.pe");
+        Carrito c = cart(10L, u);
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.of(c));
-        when(cartRepository.save(any(Cart.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(cartRepository.save(any(Carrito.class))).thenAnswer(inv -> inv.getArgument(0));
 
         service.clearCart("test@krypton.pe");
 
         verify(cartItemRepository).deleteByCart(c);
-        ArgumentCaptor<Cart> cartCaptor = ArgumentCaptor.forClass(Cart.class);
+        ArgumentCaptor<Carrito> cartCaptor = ArgumentCaptor.forClass(Carrito.class);
         verify(cartRepository).save(cartCaptor.capture());
         assertThat(cartCaptor.getValue().getUpdatedAt()).isNotNull();
     }
 
     @Test
     void clearCart_is_noop_when_no_cart_exists() {
-        User u = user(1L, "test@krypton.pe");
+        Usuario u = user(1L, "test@krypton.pe");
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.empty());
@@ -427,29 +427,29 @@ class CartServiceImplTest {
 
     @Test
     void attemptAddItem_creates_cart_when_no_cart_exists() {
-        User u = user(1L, "test@krypton.pe");
-        Product p = product(5L, "SKU-001", 10, true);
+        Usuario u = user(1L, "test@krypton.pe");
+        Producto p = product(5L, "SKU-001", 10, true);
 
         when(userRepository.findByEmail("test@krypton.pe")).thenReturn(Optional.of(u));
         when(cartRepository.findByUser(u)).thenReturn(Optional.empty());
-        when(cartRepository.saveAndFlush(any(Cart.class))).thenAnswer(inv -> {
-            Cart c = inv.getArgument(0);
+        when(cartRepository.saveAndFlush(any(Carrito.class))).thenAnswer(inv -> {
+            Carrito c = inv.getArgument(0);
             c.setId(10L);
             return c;
         });
         when(productRepository.findById(5L)).thenReturn(Optional.of(p));
-        when(cartItemRepository.findByCartAndProduct(any(Cart.class), any(Product.class)))
+        when(cartItemRepository.findByCartAndProduct(any(Carrito.class), any(Producto.class)))
                 .thenReturn(Optional.empty());
-        when(cartItemRepository.saveAndFlush(any(CartItem.class))).thenAnswer(inv -> {
-            CartItem ci = inv.getArgument(0);
+        when(cartItemRepository.saveAndFlush(any(ItemCarrito.class))).thenAnswer(inv -> {
+            ItemCarrito ci = inv.getArgument(0);
             ci.setId(200L);
             return ci;
         });
-        when(cartRepository.save(any(Cart.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(cartItemRepository.findByCart(any(Cart.class))).thenReturn(List.of());
+        when(cartRepository.save(any(Carrito.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(cartItemRepository.findByCart(any(Carrito.class))).thenReturn(List.of());
 
         service.attemptAddItem("test@krypton.pe", new CartItemRequest(5L, 2));
 
-        verify(cartRepository).saveAndFlush(any(Cart.class));
+        verify(cartRepository).saveAndFlush(any(Carrito.class));
     }
 }

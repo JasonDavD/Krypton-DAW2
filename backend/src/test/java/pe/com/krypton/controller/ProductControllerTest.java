@@ -24,13 +24,13 @@ import pe.com.krypton.dto.response.ProductImageResponse;
 import pe.com.krypton.dto.response.ProductResponse;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
-import pe.com.krypton.service.ProductService;
+import pe.com.krypton.service.ProductoService;
 
 /**
- * Web slice: solo la capa HTTP de ProductController.
+ * Web slice: solo la capa HTTP de ProductoController.
  * Seguridad desactivada (addFilters=false) — verificar 401/403 en integración (Phase 5).
  */
-@WebMvcTest(controllers = ProductController.class,
+@WebMvcTest(controllers = ProductoController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
@@ -38,10 +38,10 @@ import pe.com.krypton.service.ProductService;
 class ProductControllerTest {
 
     @Autowired MockMvc mvc;
-    @MockBean ProductService productService;
+    @MockBean ProductoService productService;
 
     private ProductResponse sampleProduct(Long id) {
-        return new ProductResponse(id, "SKU-" + id, "Product " + id, "Desc",
+        return new ProductResponse(id, "SKU-" + id, "Producto " + id, "Desc",
                 new BigDecimal("99.90"), 10, null, true, 1L, "Electronics", null);
     }
 
@@ -49,7 +49,7 @@ class ProductControllerTest {
         List<ProductImageResponse> images = List.of(
                 new ProductImageResponse(10L, "http://localhost:8080/api/uploads/images/a.jpg", (short) 0, true),
                 new ProductImageResponse(11L, "http://localhost:8080/api/uploads/images/b.jpg", (short) 1, false));
-        return new ProductResponse(id, "SKU-" + id, "Product " + id, "Desc",
+        return new ProductResponse(id, "SKU-" + id, "Producto " + id, "Desc",
                 new BigDecimal("99.90"), 10, "http://localhost:8080/api/uploads/images/a.jpg",
                 true, 1L, "Electronics", images);
     }
@@ -74,7 +74,7 @@ class ProductControllerTest {
         when(productService.search(any(), isNull(), isNull(), isNull(), any()))
                 .thenReturn(PageResponse.of(page));
 
-        mvc.perform(get("/api/products").param("name", "Product"))
+        mvc.perform(get("/api/products").param("name", "Producto"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(3));
     }

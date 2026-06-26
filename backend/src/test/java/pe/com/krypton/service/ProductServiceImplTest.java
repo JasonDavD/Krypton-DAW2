@@ -25,48 +25,48 @@ import pe.com.krypton.dto.request.ProductRequest;
 import pe.com.krypton.dto.response.PageResponse;
 import pe.com.krypton.dto.response.ProductImageResponse;
 import pe.com.krypton.dto.response.ProductResponse;
-import pe.com.krypton.entity.ProductImage;
+import pe.com.krypton.entity.ImagenProducto;
 import pe.com.krypton.exception.DuplicateSkuException;
 import pe.com.krypton.exception.ResourceNotFoundException;
-import pe.com.krypton.mapper.ProductMapper;
-import pe.com.krypton.entity.Category;
-import pe.com.krypton.entity.Product;
-import pe.com.krypton.repository.CategoryRepository;
-import pe.com.krypton.repository.ProductRepository;
-import pe.com.krypton.service.impl.ProductServiceImpl;
+import pe.com.krypton.mapper.ProductoMapper;
+import pe.com.krypton.entity.Categoria;
+import pe.com.krypton.entity.Producto;
+import pe.com.krypton.repository.CategoriaRepository;
+import pe.com.krypton.repository.ProductoRepository;
+import pe.com.krypton.service.impl.ProductoServiceImpl;
 
 /**
- * Unit test de ProductServiceImpl. Repos MOCKEADOS, sin Spring context, sin DB.
- * TDD: RED escrito antes de que exista ProductServiceImpl.
+ * Unit test de ProductoServiceImpl. Repos MOCKEADOS, sin Spring context, sin DB.
+ * TDD: RED escrito antes de que exista ProductoServiceImpl.
  */
 @ExtendWith(MockitoExtension.class)
 class ProductServiceImplTest {
 
-    @Mock ProductRepository productRepository;
-    @Mock CategoryRepository categoryRepository;
+    @Mock ProductoRepository productRepository;
+    @Mock CategoriaRepository categoryRepository;
 
-    ProductServiceImpl service;
+    ProductoServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new ProductServiceImpl(productRepository, categoryRepository, new ProductMapper("http://localhost:8080"));
+        service = new ProductoServiceImpl(productRepository, categoryRepository, new ProductoMapper("http://localhost:8080"));
     }
 
     // ─── helpers ────────────────────────────────────────────────────────────────
 
-    private Category category(Long id) {
-        Category c = new Category();
+    private Categoria category(Long id) {
+        Categoria c = new Categoria();
         c.setId(id);
         c.setName("Electronics");
         c.setDescription("Desc");
         return c;
     }
 
-    private Product product(Long id, String sku, boolean active) {
-        Product p = new Product();
+    private Producto product(Long id, String sku, boolean active) {
+        Producto p = new Producto();
         p.setId(id);
         p.setSku(sku);
-        p.setName("Product " + id);
+        p.setName("Producto " + id);
         p.setDescription("Desc");
         p.setPrice(new BigDecimal("99.99"));
         p.setStock(10);
@@ -77,7 +77,7 @@ class ProductServiceImplTest {
     }
 
     private ProductRequest request(String sku, Long categoryId, Integer stock) {
-        return new ProductRequest(sku, "Some Product", "Desc",
+        return new ProductRequest(sku, "Some Producto", "Desc",
                 new BigDecimal("49.99"), stock, null, categoryId);
     }
 
@@ -87,8 +87,8 @@ class ProductServiceImplTest {
     @SuppressWarnings("unchecked")
     void should_return_page_of_active_products_for_public_search() {
         Pageable pageable = PageRequest.of(0, 10);
-        Product p = product(1L, "SKU-001", true);
-        Page<Product> page = new PageImpl<>(List.of(p), pageable, 1);
+        Producto p = product(1L, "SKU-001", true);
+        Page<Producto> page = new PageImpl<>(List.of(p), pageable, 1);
         when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
         PageResponse<ProductResponse> result = service.search(null, null, null, null, pageable);
@@ -102,7 +102,7 @@ class ProductServiceImplTest {
 
     @Test
     void should_return_product_response_when_product_is_active() {
-        Product p = product(1L, "SKU-001", true);
+        Producto p = product(1L, "SKU-001", true);
         when(productRepository.findById(1L)).thenReturn(Optional.of(p));
 
         ProductResponse result = service.getById(1L);
@@ -113,16 +113,16 @@ class ProductServiceImplTest {
 
     @Test
     void getById_should_return_images_ordered_by_displayOrder() {
-        Product p = product(1L, "SKU-001", true);
+        Producto p = product(1L, "SKU-001", true);
 
-        ProductImage img1 = new ProductImage();
+        ImagenProducto img1 = new ImagenProducto();
         img1.setId(10L);
         img1.setPath("a.jpg");
         img1.setDisplayOrder((short) 0);
         img1.setCover(true);
         img1.setProduct(p);
 
-        ProductImage img2 = new ProductImage();
+        ImagenProducto img2 = new ImagenProducto();
         img2.setId(11L);
         img2.setPath("b.jpg");
         img2.setDisplayOrder((short) 1);
@@ -148,8 +148,8 @@ class ProductServiceImplTest {
     @Test
     void search_should_return_products_without_images_field() {
         Pageable pageable = PageRequest.of(0, 10);
-        Product p = product(1L, "SKU-001", true);
-        Page<Product> page = new PageImpl<>(List.of(p), pageable, 1);
+        Producto p = product(1L, "SKU-001", true);
+        Page<Producto> page = new PageImpl<>(List.of(p), pageable, 1);
         when(productRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
         PageResponse<ProductResponse> result = service.search(null, null, null, null, pageable);
@@ -169,7 +169,7 @@ class ProductServiceImplTest {
 
     @Test
     void should_throw_not_found_when_product_exists_but_is_inactive() {
-        Product p = product(2L, "SKU-002", false);
+        Producto p = product(2L, "SKU-002", false);
         when(productRepository.findById(2L)).thenReturn(Optional.of(p));
 
         assertThatThrownBy(() -> service.getById(2L))
@@ -181,11 +181,11 @@ class ProductServiceImplTest {
     @Test
     void should_create_product_when_sku_is_unique_and_category_exists() {
         ProductRequest req = request("NEW-SKU", 1L, 5);
-        Category cat = category(1L);
+        Categoria cat = category(1L);
         when(productRepository.existsBySku("NEW-SKU")).thenReturn(false);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(cat));
-        when(productRepository.save(any(Product.class))).thenAnswer(inv -> {
-            Product p = inv.getArgument(0);
+        when(productRepository.save(any(Producto.class))).thenAnswer(inv -> {
+            Producto p = inv.getArgument(0);
             p.setId(10L);
             return p;
         });
@@ -220,9 +220,9 @@ class ProductServiceImplTest {
 
     @Test
     void should_update_product_fields_but_never_change_stock() {
-        Product existing = product(1L, "OLD-SKU", true);
+        Producto existing = product(1L, "OLD-SKU", true);
         existing.setStock(42); // stock must stay 42 after update
-        Category cat = category(1L);
+        Categoria cat = category(1L);
 
         ProductRequest req = new ProductRequest("NEW-SKU", "New Name", "New Desc",
                 new BigDecimal("199.99"), 999 /* ignored */, "http://img.png", 1L);
@@ -230,7 +230,7 @@ class ProductServiceImplTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(productRepository.existsBySkuAndIdNot("NEW-SKU", 1L)).thenReturn(false);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(cat));
-        when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ProductResponse result = service.update(1L, req);
 
@@ -238,14 +238,14 @@ class ProductServiceImplTest {
         assertThat(result.sku()).isEqualTo("NEW-SKU");
         assertThat(result.stock()).isEqualTo(42); // unchanged — stock is READ-ONLY after create
 
-        ArgumentCaptor<Product> saved = ArgumentCaptor.forClass(Product.class);
+        ArgumentCaptor<Producto> saved = ArgumentCaptor.forClass(Producto.class);
         verify(productRepository).save(saved.capture());
         assertThat(saved.getValue().getStock()).isEqualTo(42);
     }
 
     @Test
     void should_reject_update_when_new_sku_belongs_to_another_product() {
-        Product existing = product(1L, "OLD-SKU", true);
+        Producto existing = product(1L, "OLD-SKU", true);
         when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(productRepository.existsBySkuAndIdNot("TAKEN-SKU", 1L)).thenReturn(true);
 
@@ -256,14 +256,14 @@ class ProductServiceImplTest {
 
     @Test
     void should_allow_update_keeping_same_sku() {
-        Product existing = product(1L, "SAME-SKU", true);
-        Category cat = category(1L);
+        Producto existing = product(1L, "SAME-SKU", true);
+        Categoria cat = category(1L);
 
         ProductRequest req = request("SAME-SKU", 1L, 0);
         when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(productRepository.existsBySkuAndIdNot("SAME-SKU", 1L)).thenReturn(false);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(cat));
-        when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ProductResponse result = service.update(1L, req);
 
@@ -274,13 +274,13 @@ class ProductServiceImplTest {
 
     @Test
     void should_soft_delete_product_by_setting_active_false() {
-        Product existing = product(1L, "SKU-001", true);
+        Producto existing = product(1L, "SKU-001", true);
         when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(productRepository.save(any(Producto.class))).thenAnswer(inv -> inv.getArgument(0));
 
         service.delete(1L);
 
-        ArgumentCaptor<Product> saved = ArgumentCaptor.forClass(Product.class);
+        ArgumentCaptor<Producto> saved = ArgumentCaptor.forClass(Producto.class);
         verify(productRepository).save(saved.capture());
         assertThat(saved.getValue().isActive()).isFalse(); // soft delete = active=false
     }

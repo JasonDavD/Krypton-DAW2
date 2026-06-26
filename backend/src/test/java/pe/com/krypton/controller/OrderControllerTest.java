@@ -31,16 +31,16 @@ import pe.com.krypton.exception.InvalidDocumentException;
 import pe.com.krypton.exception.OrderStatusTransitionException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
-import pe.com.krypton.service.OrderService;
+import pe.com.krypton.service.OrdenService;
 
 /**
- * Web slice for OrderController.
+ * Web slice for OrdenController.
  * SecurityContext disabled via addFilters=false + JwtAuthenticationFilter exclusion.
- * Principal injected with @WithMockUser. OrderService is mocked.
+ * Principal injected with @WithMockUser. OrdenService is mocked.
  * Covers HTTP contract: status codes, JSON shape, validation, exception mapping.
  * Satisfies REQ-OM-01..REQ-OM-09, REQ-OM-13.
  */
-@WebMvcTest(controllers = OrderController.class,
+@WebMvcTest(controllers = OrdenController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
@@ -48,7 +48,7 @@ import pe.com.krypton.service.OrderService;
 class OrderControllerTest {
 
     @Autowired MockMvc mvc;
-    @MockBean OrderService orderService;
+    @MockBean OrdenService orderService;
 
     private static final String JSON = MediaType.APPLICATION_JSON_VALUE;
     private static final String USER_EMAIL = "client@krypton.pe";

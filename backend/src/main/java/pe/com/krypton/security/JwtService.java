@@ -10,7 +10,7 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import pe.com.krypton.entity.User;
+import pe.com.krypton.entity.Usuario;
 
 /**
  * Genera y valida JWT HS256 (firma simétrica). El secreto se lee de config
@@ -29,7 +29,7 @@ public class JwtService {
         this.expirationMs = expirationMs;
     }
 
-    public String generateToken(User user) {
+    public String generateToken(Usuario user) {
         Date now = new Date();
         return Jwts.builder()
                 .subject(user.getEmail())

@@ -15,25 +15,25 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import pe.com.krypton.dto.response.report.TopProductoRow;
-import pe.com.krypton.entity.Category;
-import pe.com.krypton.entity.Order;
-import pe.com.krypton.entity.OrderItem;
-import pe.com.krypton.entity.Product;
-import pe.com.krypton.entity.StockMovement;
-import pe.com.krypton.entity.User;
-import pe.com.krypton.entity.enums.DocumentType;
-import pe.com.krypton.entity.enums.MovementType;
-import pe.com.krypton.entity.enums.OrderStatus;
-import pe.com.krypton.entity.enums.Role;
-import pe.com.krypton.repository.CategoryRepository;
-import pe.com.krypton.repository.OrderItemRepository;
-import pe.com.krypton.repository.OrderRepository;
-import pe.com.krypton.repository.ProductRepository;
-import pe.com.krypton.repository.StockMovementRepository;
+import pe.com.krypton.entity.Categoria;
+import pe.com.krypton.entity.Orden;
+import pe.com.krypton.entity.ItemOrden;
+import pe.com.krypton.entity.Producto;
+import pe.com.krypton.entity.MovimientoStock;
+import pe.com.krypton.entity.Usuario;
+import pe.com.krypton.entity.enums.TipoDocumento;
+import pe.com.krypton.entity.enums.TipoMovimiento;
+import pe.com.krypton.entity.enums.EstadoOrden;
+import pe.com.krypton.entity.enums.Rol;
+import pe.com.krypton.repository.CategoriaRepository;
+import pe.com.krypton.repository.ItemOrdenRepository;
+import pe.com.krypton.repository.OrdenRepository;
+import pe.com.krypton.repository.ProductoRepository;
+import pe.com.krypton.repository.MovimientoStockRepository;
 import pe.com.krypton.repository.VentasPeriodoProjection;
 import pe.com.krypton.repository.VentasTotalesProjection;
-import pe.com.krypton.repository.UserRepository;
-import pe.com.krypton.spec.OrderSpecification;
+import pe.com.krypton.repository.UsuarioRepository;
+import pe.com.krypton.spec.OrdenSpecification;
 
 /**
  * Integration tests for the report repository layer.
@@ -66,34 +66,34 @@ class ReportRepositoryIntegrationTest extends AbstractIntegrationTest {
     // D3 exclusive end = start of 2024-03-03 Lima
     private static final Instant D3_LIMA_START = D2.plusDays(1).atStartOfDay(LIMA).toInstant();
 
-    @Autowired UserRepository userRepository;
-    @Autowired CategoryRepository categoryRepository;
-    @Autowired ProductRepository productRepository;
-    @Autowired OrderRepository orderRepository;
-    @Autowired OrderItemRepository orderItemRepository;
-    @Autowired StockMovementRepository stockMovementRepository;
+    @Autowired UsuarioRepository userRepository;
+    @Autowired CategoriaRepository categoryRepository;
+    @Autowired ProductoRepository productRepository;
+    @Autowired OrdenRepository orderRepository;
+    @Autowired ItemOrdenRepository orderItemRepository;
+    @Autowired MovimientoStockRepository stockMovementRepository;
 
-    private Category category;
-    private Product product1;
-    private Product product2;
-    private User user;
+    private Categoria category;
+    private Producto product1;
+    private Producto product2;
+    private Usuario user;
 
     // Seeded entities tracked for cleanup
-    private Order orderD1a;
-    private Order orderD1b;
-    private Order orderD2;
-    private Order orderCancelada;
-    private Order orderPendiente;
+    private Orden orderD1a;
+    private Orden orderD1b;
+    private Orden orderD2;
+    private Orden orderCancelada;
+    private Orden orderPendiente;
 
     @BeforeEach
     void seed() {
-        // Category
-        category = new Category();
+        // Categoria
+        category = new Categoria();
         category.setName("IT-Rpt-Cat-" + System.nanoTime());
         category = categoryRepository.save(category);
 
         // Products
-        product1 = new Product();
+        product1 = new Producto();
         product1.setSku("IT-RPT-P1-" + System.nanoTime());
         product1.setName("Prod Rpt 1");
         product1.setPrice(new BigDecimal("100.00"));
@@ -102,7 +102,7 @@ class ReportRepositoryIntegrationTest extends AbstractIntegrationTest {
         product1.setCategory(category);
         product1 = productRepository.save(product1);
 
-        product2 = new Product();
+        product2 = new Producto();
         product2.setSku("IT-RPT-P2-" + System.nanoTime());
         product2.setName("Prod Rpt 2");
         product2.setPrice(new BigDecimal("200.00"));
@@ -111,61 +111,61 @@ class ReportRepositoryIntegrationTest extends AbstractIntegrationTest {
         product2.setCategory(category);
         product2 = productRepository.save(product2);
 
-        // User
-        user = new User();
-        user.setName("IT Rpt User");
+        // Usuario
+        user = new Usuario();
+        user.setName("IT Rpt Usuario");
         user.setEmail("it-rpt-" + System.nanoTime() + "@krypton.pe");
         user.setPassword("hashed");
-        user.setRole(Role.CLIENTE);
+        user.setRole(Rol.CLIENTE);
         user.setActive(true);
         user.setCreatedAt(Instant.now());
         user = userRepository.save(user);
 
         // CONFIRMADA order on D1 Lima (2024-03-01T06:00:00Z = 01:00 Lima D1)
-        orderD1a = saveOrder(OrderStatus.CONFIRMADA,
+        orderD1a = saveOrder(EstadoOrden.CONFIRMADA,
                 Instant.parse("2024-03-01T06:00:00Z"),
                 new BigDecimal("300.00"));
         saveItem(orderD1a, product1, 3, new BigDecimal("100.00"));
 
         // CONFIRMADA order also on D1 Lima (2024-03-01T20:00:00Z = 15:00 Lima D1)
-        orderD1b = saveOrder(OrderStatus.CONFIRMADA,
+        orderD1b = saveOrder(EstadoOrden.CONFIRMADA,
                 Instant.parse("2024-03-01T20:00:00Z"),
                 new BigDecimal("200.00"));
         saveItem(orderD1b, product2, 1, new BigDecimal("200.00"));
 
         // CONFIRMADA order on D2 Lima (2024-03-02T10:00:00Z = 05:00 Lima D2)
         // 2024-03-02T05:00:00Z is midnight Lima D2 — this instant is exactly at start, included
-        orderD2 = saveOrder(OrderStatus.CONFIRMADA,
+        orderD2 = saveOrder(EstadoOrden.CONFIRMADA,
                 Instant.parse("2024-03-02T10:00:00Z"),
                 new BigDecimal("400.00"));
         saveItem(orderD2, product1, 4, new BigDecimal("100.00"));
 
         // CANCELADA — must be excluded
-        orderCancelada = saveOrder(OrderStatus.CANCELADA,
+        orderCancelada = saveOrder(EstadoOrden.CANCELADA,
                 Instant.parse("2024-03-01T12:00:00Z"),
                 new BigDecimal("150.00"));
         saveItem(orderCancelada, product1, 1, new BigDecimal("100.00"));
 
         // PENDIENTE — must be excluded
-        orderPendiente = saveOrder(OrderStatus.PENDIENTE,
+        orderPendiente = saveOrder(EstadoOrden.PENDIENTE,
                 Instant.parse("2024-03-02T08:00:00Z"),
                 new BigDecimal("250.00"));
         saveItem(orderPendiente, product2, 1, new BigDecimal("200.00"));
 
         // Stock movements for R3 (product1)
         // Movement inside window [D1_LIMA_START, D2_LIMA_START)
-        StockMovement mvInside = new StockMovement();
+        MovimientoStock mvInside = new MovimientoStock();
         mvInside.setProduct(product1);
-        mvInside.setType(MovementType.ENTRADA);
+        mvInside.setType(TipoMovimiento.ENTRADA);
         mvInside.setQuantity(10);
         mvInside.setReason("compra");
         mvInside.setCreatedAt(Instant.parse("2024-03-01T08:00:00Z"));
         stockMovementRepository.save(mvInside);
 
         // Movement outside window (before D1)
-        StockMovement mvOutside = new StockMovement();
+        MovimientoStock mvOutside = new MovimientoStock();
         mvOutside.setProduct(product1);
-        mvOutside.setType(MovementType.SALIDA);
+        mvOutside.setType(TipoMovimiento.SALIDA);
         mvOutside.setQuantity(5);
         mvOutside.setReason("venta");
         mvOutside.setCreatedAt(Instant.parse("2024-02-28T10:00:00Z"));
@@ -290,49 +290,49 @@ class ReportRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void r3_findByProduct_IdAndCreatedAtBetween_returns_only_movements_in_window() {
-        List<StockMovement> inside = stockMovementRepository
+        List<MovimientoStock> inside = stockMovementRepository
                 .findByProduct_IdAndCreatedAtBetweenOrderByCreatedAtAsc(
                         product1.getId(), D1_LIMA_START, D2_LIMA_START);
 
         assertThat(inside).hasSize(1);
-        assertThat(inside.get(0).getType()).isEqualTo(MovementType.ENTRADA);
+        assertThat(inside.get(0).getType()).isEqualTo(TipoMovimiento.ENTRADA);
         assertThat(inside.get(0).getQuantity()).isEqualTo(10);
     }
 
     @Test
     void r3_findByProduct_IdOrderByCreatedAtAsc_returns_all_movements() {
-        List<StockMovement> all = stockMovementRepository
+        List<MovimientoStock> all = stockMovementRepository
                 .findByProduct_IdOrderByCreatedAtAsc(product1.getId());
 
         assertThat(all).hasSize(2);
         // Ordered by created_at ASC: outside (Feb 28) first, inside (Mar 1) second
-        assertThat(all.get(0).getType()).isEqualTo(MovementType.SALIDA);
-        assertThat(all.get(1).getType()).isEqualTo(MovementType.ENTRADA);
+        assertThat(all.get(0).getType()).isEqualTo(TipoMovimiento.SALIDA);
+        assertThat(all.get(1).getType()).isEqualTo(TipoMovimiento.ENTRADA);
     }
 
-    // ---- R4: OrderSpecification composition --------------------------------
+    // ---- R4: OrdenSpecification composition --------------------------------
 
     @Test
     void r4_spec_filters_by_status() {
-        Specification<Order> spec = Specification.where(OrderSpecification.hasStatus(OrderStatus.CONFIRMADA));
+        Specification<Orden> spec = Specification.where(OrdenSpecification.hasStatus(EstadoOrden.CONFIRMADA));
 
-        List<Order> results = orderRepository.findAll(spec);
+        List<Orden> results = orderRepository.findAll(spec);
 
         // All CONFIRMADA orders — at minimum our 3 seeded ones
         boolean allConfirmada = results.stream()
-                .allMatch(o -> o.getStatus() == OrderStatus.CONFIRMADA);
+                .allMatch(o -> o.getStatus() == EstadoOrden.CONFIRMADA);
         assertThat(allConfirmada).isTrue();
         assertThat(results.size()).isGreaterThanOrEqualTo(3);
     }
 
     @Test
     void r4_spec_filters_by_status_and_date_and_userId() {
-        Specification<Order> spec = Specification
-                .where(OrderSpecification.hasStatus(OrderStatus.CONFIRMADA))
-                .and(OrderSpecification.dateBetween(D1_LIMA_START, D3_LIMA_START))
-                .and(OrderSpecification.hasUser(user.getId()));
+        Specification<Orden> spec = Specification
+                .where(OrdenSpecification.hasStatus(EstadoOrden.CONFIRMADA))
+                .and(OrdenSpecification.dateBetween(D1_LIMA_START, D3_LIMA_START))
+                .and(OrdenSpecification.hasUser(user.getId()));
 
-        List<Order> results = orderRepository.findAll(
+        List<Orden> results = orderRepository.findAll(
                 spec, Sort.by(Sort.Direction.DESC, "orderDate"));
 
         // All 3 CONFIRMADA orders belong to our seeded user
@@ -344,26 +344,26 @@ class ReportRepositoryIntegrationTest extends AbstractIntegrationTest {
     @Test
     void r4_spec_null_predicates_return_all_confirmada() {
         // All null → no filter → returns everything
-        Specification<Order> spec = Specification
-                .where(OrderSpecification.hasStatus(null))
-                .and(OrderSpecification.dateBetween(null, null))
-                .and(OrderSpecification.hasUser(null));
+        Specification<Orden> spec = Specification
+                .where(OrdenSpecification.hasStatus(null))
+                .and(OrdenSpecification.dateBetween(null, null))
+                .and(OrdenSpecification.hasUser(null));
 
         // Should not throw — Specification.where(null) is valid in Spring Data
-        List<Order> all = orderRepository.findAll(spec);
+        List<Orden> all = orderRepository.findAll(spec);
         assertThat(all).isNotNull();
     }
 
     // ---- helpers ------------------------------------------------------------
 
-    private Order saveOrder(OrderStatus status, Instant orderDate, BigDecimal total) {
-        Order o = new Order();
+    private Orden saveOrder(EstadoOrden status, Instant orderDate, BigDecimal total) {
+        Orden o = new Orden();
         o.setUser(user);
         o.setStatus(status);
         o.setOrderDate(orderDate);
         o.setTotal(total);
         // Comprobante (NOT NULL desde V7) — valores dummy, irrelevantes para estos reportes.
-        o.setDocumentType(DocumentType.BOLETA);
+        o.setDocumentType(TipoDocumento.BOLETA);
         o.setCustomerName("Cliente Test");
         o.setCustomerDoc("12345678");
         o.setSubtotal(total);
@@ -372,8 +372,8 @@ class ReportRepositoryIntegrationTest extends AbstractIntegrationTest {
         return orderRepository.save(o);
     }
 
-    private void saveItem(Order order, Product product, int qty, BigDecimal unitPrice) {
-        OrderItem item = new OrderItem();
+    private void saveItem(Orden order, Producto product, int qty, BigDecimal unitPrice) {
+        ItemOrden item = new ItemOrden();
         item.setOrder(order);
         item.setProduct(product);
         item.setQuantity(qty);

@@ -3,8 +3,8 @@ package pe.com.krypton.security;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
-import pe.com.krypton.entity.User;
-import pe.com.krypton.entity.enums.Role;
+import pe.com.krypton.entity.Usuario;
+import pe.com.krypton.entity.enums.Rol;
 
 /**
  * Unit test puro: JwtService no tiene dependencias mockeables (firma simétrica),
@@ -17,8 +17,8 @@ class JwtServiceTest {
 
     private final JwtService jwt = new JwtService(SECRET, ONE_DAY);
 
-    private User user(String email, Role role) {
-        User u = new User();
+    private Usuario user(String email, Rol role) {
+        Usuario u = new Usuario();
         u.setName("Test");
         u.setEmail(email);
         u.setPassword("hash");
@@ -28,14 +28,14 @@ class JwtServiceTest {
 
     @Test
     void should_generate_a_valid_token_when_user_is_given() {
-        String token = jwt.generateToken(user("ana@krypton.pe", Role.CLIENTE));
+        String token = jwt.generateToken(user("ana@krypton.pe", Rol.CLIENTE));
 
         assertThat(jwt.isValid(token)).isTrue();
     }
 
     @Test
     void should_extract_email_from_a_generated_token() {
-        String token = jwt.generateToken(user("ana@krypton.pe", Role.ADMIN));
+        String token = jwt.generateToken(user("ana@krypton.pe", Rol.ADMIN));
 
         assertThat(jwt.extractEmail(token)).isEqualTo("ana@krypton.pe");
     }
@@ -43,7 +43,7 @@ class JwtServiceTest {
     @Test
     void should_reject_an_expired_token() {
         JwtService expiredIssuer = new JwtService(SECRET, -1000L); // exp en el pasado
-        String token = expiredIssuer.generateToken(user("ana@krypton.pe", Role.CLIENTE));
+        String token = expiredIssuer.generateToken(user("ana@krypton.pe", Rol.CLIENTE));
 
         assertThat(jwt.isValid(token)).isFalse();
     }
@@ -51,7 +51,7 @@ class JwtServiceTest {
     @Test
     void should_reject_a_token_signed_with_another_secret() {
         JwtService other = new JwtService("another-totally-different-secret-key-987654321", ONE_DAY);
-        String token = other.generateToken(user("ana@krypton.pe", Role.CLIENTE));
+        String token = other.generateToken(user("ana@krypton.pe", Rol.CLIENTE));
 
         assertThat(jwt.isValid(token)).isFalse();
     }

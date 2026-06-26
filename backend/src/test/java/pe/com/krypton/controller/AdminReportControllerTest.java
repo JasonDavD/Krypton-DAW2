@@ -39,7 +39,7 @@ import pe.com.krypton.service.ReportService;
  * Web slice for AdminReportController.
  * SecurityContext disabled via addFilters=false + JwtAuthenticationFilter exclusion.
  * ReportService, ExcelExporter, PdfExporter all mocked.
- * Role assigned via @WithMockUser(roles = "ADMIN").
+ * Rol assigned via @WithMockUser(roles = "ADMIN").
  * Covers HTTP contract: status codes, Content-Type, Content-Disposition, 400 validation.
  * Satisfies REQ-RPT-05, REQ-RPT-06, REQ-RPT-07.
  */
@@ -76,7 +76,7 @@ class AdminReportControllerTest {
     }
 
     private KardexReport stubKardexReport() {
-        return new KardexReport(1L, "SKU-001", "Test Product", 5, null, null, List.of());
+        return new KardexReport(1L, "SKU-001", "Test Producto", 5, null, null, List.of());
     }
 
     private OrdenesListadoReport stubOrdenesReport() {

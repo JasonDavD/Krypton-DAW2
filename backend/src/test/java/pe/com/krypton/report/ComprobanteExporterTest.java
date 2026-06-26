@@ -7,12 +7,12 @@ import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import pe.com.krypton.entity.Order;
-import pe.com.krypton.entity.OrderItem;
-import pe.com.krypton.entity.Product;
-import pe.com.krypton.entity.enums.DocumentType;
-import pe.com.krypton.entity.enums.OrderStatus;
-import pe.com.krypton.entity.enums.PaymentMethod;
+import pe.com.krypton.entity.Orden;
+import pe.com.krypton.entity.ItemOrden;
+import pe.com.krypton.entity.Producto;
+import pe.com.krypton.entity.enums.TipoDocumento;
+import pe.com.krypton.entity.enums.EstadoOrden;
+import pe.com.krypton.entity.enums.MetodoPago;
 
 /**
  * Pure-Java unit tests for ComprobanteExporter. No Spring context.
@@ -31,21 +31,21 @@ class ComprobanteExporterTest {
 
     @Test
     void boleta_with_items_produces_pdf_magic() {
-        Order order = order(DocumentType.BOLETA, "Juan Cliente", "12345678", PaymentMethod.YAPE);
+        Orden order = order(TipoDocumento.BOLETA, "Juan Cliente", "12345678", MetodoPago.YAPE);
         byte[] bytes = exporter.export(order, List.of(item("Laptop", 1, new BigDecimal("2999.90"))));
         assertPdf(bytes);
     }
 
     @Test
     void factura_with_items_produces_pdf_magic() {
-        Order order = order(DocumentType.FACTURA, "ACME S.A.C.", "20123456789", PaymentMethod.CREDIT_CARD);
+        Orden order = order(TipoDocumento.FACTURA, "ACME S.A.C.", "20123456789", MetodoPago.CREDIT_CARD);
         byte[] bytes = exporter.export(order, List.of(item("Mouse", 2, new BigDecimal("99.90"))));
         assertPdf(bytes);
     }
 
     @Test
     void no_payment_method_and_no_items_still_valid_pdf() {
-        Order order = order(DocumentType.BOLETA, "Juan", "12345678", null);
+        Orden order = order(TipoDocumento.BOLETA, "Juan", "12345678", null);
         byte[] bytes = exporter.export(order, List.of());
         assertPdf(bytes);
     }
@@ -59,11 +59,11 @@ class ComprobanteExporterTest {
         assertThat(bytes[3]).isEqualTo(PDF_MAGIC[3]);
     }
 
-    private Order order(DocumentType type, String name, String doc, PaymentMethod method) {
-        Order o = new Order();
+    private Orden order(TipoDocumento type, String name, String doc, MetodoPago method) {
+        Orden o = new Orden();
         o.setId(1L);
         o.setOrderDate(Instant.now());
-        o.setStatus(OrderStatus.CONFIRMADA);
+        o.setStatus(EstadoOrden.CONFIRMADA);
         o.setDocumentType(type);
         o.setCustomerName(name);
         o.setCustomerDoc(doc);
@@ -75,10 +75,10 @@ class ComprobanteExporterTest {
         return o;
     }
 
-    private OrderItem item(String name, int qty, BigDecimal unitPrice) {
-        Product p = new Product();
+    private ItemOrden item(String name, int qty, BigDecimal unitPrice) {
+        Producto p = new Producto();
         p.setName(name);
-        OrderItem oi = new OrderItem();
+        ItemOrden oi = new ItemOrden();
         oi.setProduct(p);
         oi.setQuantity(qty);
         oi.setUnitPrice(unitPrice);

@@ -18,17 +18,17 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import pe.com.krypton.repository.CartItemRepository;
-import pe.com.krypton.repository.CartRepository;
-import pe.com.krypton.repository.CategoryRepository;
-import pe.com.krypton.repository.OrderItemRepository;
-import pe.com.krypton.repository.OrderRepository;
-import pe.com.krypton.repository.ProductRepository;
-import pe.com.krypton.repository.StockMovementRepository;
-import pe.com.krypton.repository.UserRepository;
+import pe.com.krypton.repository.ItemCarritoRepository;
+import pe.com.krypton.repository.CarritoRepository;
+import pe.com.krypton.repository.CategoriaRepository;
+import pe.com.krypton.repository.ItemOrdenRepository;
+import pe.com.krypton.repository.OrdenRepository;
+import pe.com.krypton.repository.ProductoRepository;
+import pe.com.krypton.repository.MovimientoStockRepository;
+import pe.com.krypton.repository.UsuarioRepository;
 
 /**
- * Integration tests for Order management (checkout, pay, admin).
+ * Integration tests for Orden management (checkout, pay, admin).
  * Extends AbstractIntegrationTest (singleton Testcontainers Postgres 16, full JWT chain).
  *
  * FK cleanup order in @AfterEach: stock_movement → order_items → orders → cart_item → cart
@@ -48,14 +48,14 @@ class OrderIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper objectMapper;
-    @Autowired OrderRepository orderRepository;
-    @Autowired OrderItemRepository orderItemRepository;
-    @Autowired StockMovementRepository stockMovementRepository;
-    @Autowired CartItemRepository cartItemRepository;
-    @Autowired CartRepository cartRepository;
-    @Autowired ProductRepository productRepository;
-    @Autowired CategoryRepository categoryRepository;
-    @Autowired UserRepository userRepository;
+    @Autowired OrdenRepository orderRepository;
+    @Autowired ItemOrdenRepository orderItemRepository;
+    @Autowired MovimientoStockRepository stockMovementRepository;
+    @Autowired ItemCarritoRepository cartItemRepository;
+    @Autowired CarritoRepository cartRepository;
+    @Autowired ProductoRepository productRepository;
+    @Autowired CategoriaRepository categoryRepository;
+    @Autowired UsuarioRepository userRepository;
 
     // ─── helpers ────────────────────────────────────────────────────────────────
 

@@ -11,26 +11,26 @@ import pe.com.krypton.dto.response.AuthResponse;
 import pe.com.krypton.dto.response.UserResponse;
 import pe.com.krypton.exception.DuplicateEmailException;
 import pe.com.krypton.exception.InvalidCredentialsException;
-import pe.com.krypton.mapper.UserMapper;
-import pe.com.krypton.entity.User;
-import pe.com.krypton.entity.enums.Role;
-import pe.com.krypton.repository.UserRepository;
+import pe.com.krypton.mapper.UsuarioMapper;
+import pe.com.krypton.entity.Usuario;
+import pe.com.krypton.entity.enums.Rol;
+import pe.com.krypton.repository.UsuarioRepository;
 import pe.com.krypton.security.JwtService;
 import pe.com.krypton.service.AuthService;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
+    private final UsuarioRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final UserMapper userMapper;
+    private final UsuarioMapper userMapper;
     private final long expirationMs;
 
-    public AuthServiceImpl(UserRepository userRepository,
+    public AuthServiceImpl(UsuarioRepository userRepository,
                            PasswordEncoder passwordEncoder,
                            JwtService jwtService,
-                           UserMapper userMapper,
+                           UsuarioMapper userMapper,
                            @Value("${app.jwt.expiration}") long expirationMs) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -45,11 +45,11 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateEmailException("El email ya está registrado");
         }
-        User user = new User();
+        Usuario user = new Usuario();
         user.setName(request.name());
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password())); // hash, nunca plano
-        user.setRole(Role.CLIENTE);                                   // rol fijo desde el registro público
+        user.setRole(Rol.CLIENTE);                                   // rol fijo desde el registro público
         user.setActive(true);
         user.setCreatedAt(Instant.now());
         return userMapper.toResponse(userRepository.save(user));
@@ -60,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse login(LoginRequest request) {
         // Mismo error para email inexistente / password incorrecto / inactivo:
         // no filtrar qué emails existen.
-        User user = userRepository.findByEmail(request.email())
+        Usuario user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new InvalidCredentialsException("Credenciales inválidas"));
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new InvalidCredentialsException("Credenciales inválidas");

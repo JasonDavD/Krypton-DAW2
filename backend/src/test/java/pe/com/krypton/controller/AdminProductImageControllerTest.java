@@ -22,15 +22,15 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.security.JwtAuthenticationFilter;
-import pe.com.krypton.service.ProductImageService;
+import pe.com.krypton.service.ImagenProductoService;
 
 /**
- * Web slice for AdminProductImageController.
+ * Web slice for AdminImagenProductoController.
  * Security is disabled (addFilters=false) — 401/403 is tested in integration (Phase 5).
  * ADR-D6: 413 (oversize) is NOT testable in the web slice — only in integration.
  * The slice asserts the service-level 400 for invalid type only.
  */
-@WebMvcTest(controllers = AdminProductImageController.class,
+@WebMvcTest(controllers = AdminImagenProductoController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
@@ -38,7 +38,7 @@ import pe.com.krypton.service.ProductImageService;
 class AdminProductImageControllerTest {
 
     @Autowired MockMvc mvc;
-    @MockBean ProductImageService productImageService;
+    @MockBean ImagenProductoService productImageService;
 
     private static final String BASE = "/api/admin/products/1/images";
 
