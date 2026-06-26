@@ -3,7 +3,7 @@
 > **Documento vivo y DIDÁCTICO.** No solo muestra el código: lo explica **línea por línea**,
 > con el **porqué** de cada decisión y **dónde conecta** con el resto del sistema.
 > La idea es que entiendas, no que copies.
-> **Versión actual: hasta F6 de 12** (Eureka, users, gateway, catalog, order + checkout distribuido, notification + RabbitMQ).
+> **Versión actual: hasta F11 de 12** (Eureka, users, gateway, catalog, order + checkout distribuido, notification + RabbitMQ, payment + máquina de estados, review, promo, Docker, frontend).
 
 ---
 
@@ -27,16 +27,20 @@ Frontend (React, :5173)
       ▼
   api-gateway ✅ :8080   (portón único; rutea por NOMBRE vía Eureka)
       │ lb://...
-      ├───────────────┬───────────────┬────────────────────┐
-      ▼               ▼               ▼                     ▼
-  users ✅        catalog ✅       order ✅            notification ✅
-  :8081           :8082           :8083                :8084
-  krypton_users   krypton_catalog krypton_orders       (sin DB)
-                     ▲               │  │                  ▲
-                     │ Feign (sync)  │  │ publica          │ consume
-                     └───────────────┘  └── OrderCreated ─► RabbitMQ
-                  (precio + descontar/                     (evento async)
-                   restaurar stock)
+      ├──────────┬──────────┬──────────┬──────────┬──────────┐
+      ▼          ▼          ▼          ▼          ▼          ▼
+  users ✅   catalog ✅  order ✅   review ✅  promo ✅   notification ✅
+  :8081      :8082      :8083      :8086      :8087      :8084
+  krypton_   krypton_   krypton_   krypton_   krypton_   (sin DB)
+  users      catalog    orders     reviews    promos        ▲
+                ▲         │ │ │        │          │          │ consume
+                │ Feign   │ │ │        │ Feign     │          │
+                └─────────┘ │ │        └───────────┘   ┌─OrderCreated─► RabbitMQ
+            (precio +       │ │      (validar producto) │   (evento async)
+             stock)         │ │                         │
+                            │ └── Feign ─► payment ✅ :8085  krypton_payments
+                            │            (cobro del checkout)
+                            └── Feign ─► promo ✅  (descuento del cupón en el checkout)
 
   Todos se registran en  eureka-server ✅ :8761   (el "registro" / guía telefónica)
 ```
@@ -1041,16 +1045,478 @@ order publicó y siguió; notification consumió por su lado. **Async demostrado
 
 ---
 
-## 9. Cómo conecta TODO (hasta la F6)
+## 9. F7 — payment-service: pago + máquina de estados
+
+### Concepto
+
+Una orden recién confirmada (checkout, F5) nace **PENDIENTE**: existe, descontó stock, pero
+**todavía no está paga**. F7 agrega el pago. Y acá hay una decisión de diseño que conviene
+entender bien: **¿dónde vive el endpoint de pago?**
+
+El pago es **parte del ciclo de vida de la orden** (una orden se paga, cambia de estado), así que
+el endpoint `POST /api/orders/{id}/pay` vive en **order**, no en payment. Pero order **no procesa
+cobros**: eso es responsabilidad de payment. Entonces order **delega** el cobro a payment-service
+por **Feign** (otra llamada síncrona, como la de F5 a catalog). Si payment aprueba, order
+**transiciona** la orden `PENDIENTE → CONFIRMADA`.
+
+El concepto NUEVO de esta fase es la **máquina de estados** (`EstadoOrdenPolicy`): no cualquier
+cambio de estado es válido. Una orden PENDIENTE puede ir a CONFIRMADA o CANCELADA, pero una
+CONFIRMADA **no puede volver** a CONFIRMADA (no se paga dos veces) ni saltar a ENTREGADO. Las
+transiciones válidas se declaran en un **mapa**, y un guardia las valida antes de tocar nada.
+
+### Código — la máquina de estados
+
+`policy/EstadoOrdenPolicy.java` — solo valida, **no produce efectos** (responsabilidad única):
+
+```java
+@Component
+public class EstadoOrdenPolicy {
+
+    // El grafo de transiciones VÁLIDAS. Lo que no está acá, está prohibido.
+    private static final Map<EstadoOrden, Set<EstadoOrden>> ALLOWED = Map.of(
+            EstadoOrden.PENDIENTE,  EnumSet.of(EstadoOrden.CONFIRMADA, EstadoOrden.CANCELADA), // 1)
+            EstadoOrden.CONFIRMADA, EnumSet.of(EstadoOrden.ENVIADO, EstadoOrden.CANCELADA),
+            EstadoOrden.ENVIADO,    EnumSet.of(EstadoOrden.ENTREGADO),
+            EstadoOrden.ENTREGADO,  EnumSet.noneOf(EstadoOrden.class),                          // 2) terminal
+            EstadoOrden.CANCELADA,  EnumSet.noneOf(EstadoOrden.class));                         // 2) terminal
+
+    public void assertCanTransition(EstadoOrden from, EstadoOrden to) {
+        if (!ALLOWED.getOrDefault(from, EnumSet.noneOf(EstadoOrden.class)).contains(to)) {
+            throw new OrderStatusTransitionException("Transición de estado inválida: " + from + " -> " + to); // 3) 422
+        }
+    }
+}
+```
+
+1. **PENDIENTE → {CONFIRMADA, CANCELADA}**: pagás (confirma) o la abandonás (cancela). El pago
+   apunta justo a la flecha PENDIENTE → CONFIRMADA.
+2. **ENTREGADO y CANCELADA son terminales** (`noneOf` = ningún destino): de ahí no se sale.
+3. Si la transición no está en el mapa → `OrderStatusTransitionException` → **422**. Es lo que
+   bloquea pagar dos veces la misma orden.
+
+### Código — el pago (`OrdenServiceImpl.pagar`)
+
+```java
+@Transactional
+public OrdenResponse pagar(String email, Long orderId, PaymentRequest request) {
+    Orden orden = ordenRepository.findByIdAndUserEmail(orderId, email)
+            .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada: " + orderId));
+
+    // 1) ¿la orden admite pasar a CONFIRMADA desde su estado actual? (la máquina de estados)
+    estadoOrdenPolicy.assertCanTransition(orden.getStatus(), EstadoOrden.CONFIRMADA);
+
+    // 2) cobrar vía Feign a payment-service (otra llamada SÍNCRONA, como F5 a catalog)
+    PaymentResponse pago = paymentClient.charge(
+            new ChargeRequest(orden.getId(), orden.getTotal(), request.method().name()));
+    if (!"APPROVED".equals(pago.status())) {
+        throw new PaymentDeclinedException("El pago fue rechazado");   // 3) 402; la TX revierte
+    }
+
+    // 4) pago aprobado → confirmar la orden y registrar el método de pago
+    orden.setStatus(EstadoOrden.CONFIRMADA);
+    orden.setPaymentMethod(request.method());
+    ordenRepository.save(orden);
+    return ordenMapper.toResponse(orden, itemOrdenRepository.findByOrder(orden));
+}
+```
+
+1. **Primero la máquina**: si la orden ya está CONFIRMADA, `assertCanTransition(CONFIRMADA,
+   CONFIRMADA)` no está en el mapa → 422, y **ni siquiera llamamos a payment** (no cobramos de
+   gusto). El guardia va ANTES del efecto.
+2. **`paymentClient.charge`**: Feign hacia payment, reenviando el JWT (el mismo
+   `FeignAuthInterceptor` de F5). order le pasa el id de la orden, el total y el método.
+3. **Rechazado → `PaymentDeclinedException` (402)**: la transacción local revierte, la orden sigue
+   PENDIENTE. (En el demo el cobro siempre se aprueba, pero el camino del rechazo está cableado.)
+
+`payment-service` es chico a propósito: `POST /api/payments/charge` crea un `Pago` en
+`krypton_payments` con `status = APPROVED` (**simulado** — acá iría la pasarela real Niubiz/Culqi):
+
+```java
+@Transactional
+public PaymentResponse cobrar(ChargeRequest request) {
+    Pago pago = new Pago();
+    pago.setOrderId(request.orderId());      // FK lógica → order-service (sin constraint cruzada)
+    pago.setAmount(request.amount());
+    pago.setMethod(request.method());
+    pago.setStatus(PaymentStatus.APPROVED);  // SIMULAMOS: siempre aprueba en el demo
+    pago.setCreatedAt(Instant.now());
+    pagoRepository.save(pago);
+    return new PaymentResponse(pago.getId(), pago.getStatus().name());
+}
+```
+
+### Dónde conecta
+
+order → payment por **Feign** (resuelto por Eureka, JWT reenviado). **No hay ruta nueva en el
+gateway**: `/api/orders/**` ya rutea a order, y `POST /api/orders/{id}/pay` cuelga de ahí. El
+endpoint de payment (`/api/payments/charge`) es **interno** — lo invoca order, nunca el front.
+
+### Verificado
+
+- Checkout → la orden nace **PENDIENTE**. ✅
+- `POST /api/orders/{id}/pay` con `{ "method": "YAPE" }` → **200 CONFIRMADA** + una fila en
+  `krypton_payments` (status APPROVED). ✅
+- Re-pagar **la misma** orden → **422** ← la máquina bloquea CONFIRMADA → CONFIRMADA: no se paga
+  dos veces. Y como el guardia corre primero, payment ni se entera.
+
+---
+
+## 10. F8 — review-service: reseñas de productos
+
+### Concepto
+
+Un servicio de dominio **nuevo**: reseñas (rating 1–5 + comentario) por producto. Lo importante
+didácticamente es que **REUSA todo lo que ya viste**: su propia base (`krypton_reviews`), JWT
+stateless con el secreto compartido, registro en Eureka, ruta en el gateway. Es el "pattern-repeat"
+de un microservicio de dominio: ya sabés armarlo.
+
+Lo nuevo, dos cosas chicas: **agregación** (calcular el promedio de estrellas con una query) y
+**validación cruzada por Feign** (antes de aceptar una reseña, preguntarle a catalog si el producto
+existe).
+
+> **Ojo de ruteo (importante):** las reseñas van bajo **`/api/reviews`**, NO bajo
+> `/api/products/{id}/reviews`. ¿Por qué? Porque `/api/products/**` **ya rutea a catalog** en el
+> gateway. Si colgáramos las reseñas de ahí, el gateway las mandaría a catalog, que no sabe nada de
+> reseñas. El producto viaja como **query param** (`?productId=`), no en el path.
+
+### Código — el repository (la agregación)
+
+```java
+public interface ResenaRepository extends JpaRepository<Resena, Long> {
+
+    List<Resena> findByProductIdOrderByCreatedAtDesc(Long productId);          // listado del producto
+
+    boolean existsByUserEmailAndProductId(String userEmail, Long productId);   // ← un usuario reseña 1 vez
+
+    @Query("SELECT AVG(r.rating) FROM Resena r WHERE r.productId = :productId") // ← la AGREGACIÓN
+    Double promedioByProductId(@Param("productId") Long productId);            //   null si no hay reseñas
+}
+```
+
+- **`promedioByProductId`**: `AVG(r.rating)` lo calcula la **base**, no Java. Devuelve `Double` (no
+  primitivo) **a propósito**: si el producto no tiene reseñas, `AVG` es `NULL`, y el service lo
+  traduce a `0.0`.
+- **`existsByUserEmailAndProductId`**: respalda en código el `UNIQUE(user_email, product_id)` de la
+  tabla — un usuario, una reseña por producto.
+
+### Código — el service (validación cruzada por Feign)
+
+```java
+@Transactional
+public ResenaResponse crear(String email, CreateResenaRequest request) {
+    // 1) el producto debe existir en catalog → Feign. Si catalog responde 404, el handler lo propaga.
+    catalogClient.getProduct(request.productId());
+
+    // 2) un usuario reseña un producto UNA sola vez
+    if (resenaRepository.existsByUserEmailAndProductId(email, request.productId())) {
+        throw new DuplicateReviewException("Ya reseñaste este producto");      // → 409
+    }
+
+    // 3) crear y persistir (la identidad es el email del JWT)
+    Resena resena = new Resena();
+    resena.setProductId(request.productId());
+    resena.setUserEmail(email);
+    resena.setRating(request.rating());
+    resena.setComment(request.comment());
+    resena.setCreatedAt(Instant.now());
+    return resenaMapper.toResponse(resenaRepository.save(resena));
+}
+```
+
+1. **`catalogClient.getProduct`**: review **no tiene la tabla products**, así que pregunta. Si el
+   id no existe, catalog tira 404 y la reseña ni se intenta. Misma idea que F5: dato ajeno → lo pedís.
+2. **Duplicado → 409** (`DuplicateReviewException`): el código chequea antes de chocar con el UNIQUE.
+
+Endpoints (`ResenaController`): `GET /api/reviews?productId=…` (**público** — cualquiera ve las
+reseñas) y `POST /api/reviews` (**autenticado** — para opinar hay que estar logueado; la identidad
+sale de `authentication.getName()`).
+
+### Dónde conecta
+
+review → catalog por **Feign** (validar producto). Gateway: `/api/reviews/**` → `lb://review-service`.
+review se registra en Eureka como `REVIEW-SERVICE` y valida el JWT statelessly (igual que catalog).
+
+### Verificado
+
+- `POST /api/reviews` (logueado) → **201** con la reseña. ✅
+- `GET /api/reviews?productId=1` → **promedio + total + listado** (el AVG sale de la query). ✅
+- Reseñar dos veces el mismo producto → **409**. ✅
+- Reseñar un producto inexistente → **404** (lo dice catalog, vía Feign). ✅
+
+---
+
+## 11. F9 — promo-service: cupones de descuento
+
+### Concepto
+
+Otro servicio de dominio (pattern-repeat puro): **cupones de descuento**. Dos tipos: `PORCENTAJE`
+(ej. 10% off) o `MONTO` (ej. S/50 fijos). Tiene un CRUD de **admin** (crear/listar cupones) y un
+endpoint para **aplicar** uno sobre un monto. La integración real con el checkout llega en F11; acá
+construimos el servicio y su cálculo.
+
+### Código — el cálculo del descuento
+
+```java
+public enum DescuentoTipo { PORCENTAJE, MONTO }   // persistido como STRING (nunca ORDINAL)
+```
+
+```java
+@Transactional(readOnly = true)
+public DescuentoResponse aplicar(AplicarPromoRequest req) {
+    Promo p = promoRepository.findByCode(req.code())
+            .orElseThrow(() -> new PromoInvalidaException("Código inválido"));    // 1) no existe → 422
+    if (!p.isActive()) {
+        throw new PromoInvalidaException("Código inactivo");                       // 1) desactivado → 422
+    }
+    BigDecimal discount;
+    if (p.getType() == DescuentoTipo.PORCENTAJE) {
+        discount = req.amount().multiply(p.getValue())
+                .divide(CIEN, 2, RoundingMode.HALF_UP);                            // 2) amount * value / 100
+    } else {
+        discount = p.getValue().min(req.amount());                                 // 3) MONTO: nunca más que el total
+    }
+    BigDecimal finalAmount = req.amount().subtract(discount);
+    return new DescuentoResponse(p.getCode(), discount, finalAmount);
+}
+```
+
+1. **Inválido/inactivo → `PromoInvalidaException` (422)**: no existe el código, o existe pero está
+   apagado. El cliente recibe un error claro, no un descuento fantasma.
+2. **PORCENTAJE**: `amount * value / 100`, redondeado HALF_UP a 2 decimales (plata, siempre 2
+   decimales). Un 10% sobre 100 → 10.
+3. **MONTO**: `min(value, amount)` — un cupón de S/50 sobre una compra de S/30 descuenta 30, no 50
+   (no regalamos plata). Detalle de negocio fácil de olvidar.
+
+Endpoints: `POST /api/admin/promos` y `GET /api/admin/promos` (**solo ADMIN**, caen bajo
+`/api/admin/**` → `hasRole("ADMIN")`); `POST /api/promos/apply` (autenticado). Crear con un código
+repetido → **409** (`DuplicatePromoCodeException`).
+
+### Dónde conecta
+
+Gateway: `/api/admin/promos/**` y `/api/promos/**` → `lb://promo-service`. promo se registra en
+Eureka y valida el JWT statelessly. **La integración real con el checkout (que order le pida el
+descuento) llega en F11** — por ahora promo vive solo.
+
+### Verificado
+
+- `POST /api/admin/promos` (ADMIN) → **201** con el cupón. ✅
+- `POST /api/promos/apply` 10% sobre 100 → `discount 10` / `finalAmount 90`. ✅
+- Cupón inexistente o inactivo → **422**. ✅
+- Crear un código repetido → **409**. ✅
+
+---
+
+## 12. F10 — Dockerizar todo
+
+### Concepto
+
+Hasta acá levantábamos cada servicio a mano (`java -jar …`, una terminal por servicio). F10
+**empaqueta cada servicio en una imagen** y levanta TODO con **un solo** `docker compose up`.
+
+El desafío central: **dentro de Docker, `localhost` no sirve**. Cuando order corría como jar y le
+pegaba a `http://localhost:8761`, "localhost" era tu máquina. Dentro de un contenedor, `localhost`
+es **el propio contenedor** — no hay nadie ahí. En la red de compose, los servicios se hablan por
+**nombre de contenedor** (`eureka-server`, `krypton-db`, `rabbitmq`). Hay que parametrizar las URLs.
+
+### Código — parametrizar por env (sin romper el modo jar local)
+
+La clave es usar `${VAR:default}` con el default en `localhost`: **así el mismo jar sirve para los
+dos mundos** — local (sin env, usa el default) y Docker (con env, usa el nombre de contenedor):
+
+```yaml
+# en CADA servicio (application.yml):
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}   # local: localhost; Docker: eureka-server
+  instance:
+    prefer-ip-address: ${EUREKA_PREFER_IP:false}                # ← clave en Docker (ver abajo)
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/krypton_orders   # local :3307; Docker krypton-db:3306
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}                            # local: localhost; Docker: rabbitmq
+```
+
+El detalle fino es **`prefer-ip-address`**. Por default Eureka registra a cada servicio por su
+**hostname**; en Docker ese hostname es el id del contenedor, que los demás no saben resolver. Con
+`EUREKA_PREFER_IP=true`, cada servicio se registra por **su IP en la red de compose**, que sí es
+alcanzable. En local lo dejamos en `false` (localhost anda).
+
+**Un `Dockerfile` por servicio** (mínimo — solo empaqueta el jar ya construido):
+
+```dockerfile
+FROM eclipse-temurin:21-jre          # JRE liviano, sin Maven adentro
+WORKDIR /app
+COPY target/order-service-1.0.0.jar app.jar
+EXPOSE 8083
+ENTRYPOINT ["java","-jar","app.jar"]
+```
+
+**`docker-compose.full.yml`** ata todo. En Docker se inyectan los nombres de contenedor:
+
+```yaml
+order-service:
+  build: ./services/order-service
+  environment:
+    EUREKA_URL: http://eureka-server:8761/eureka   # nombre del contenedor, no localhost
+    EUREKA_PREFER_IP: "true"                        # registrarse por IP de la red de compose
+    DB_HOST: krypton-db
+    DB_PORT: "3306"                                 # puerto INTERNO de MySQL (no el 3307 del host)
+    RABBITMQ_HOST: rabbitmq
+  depends_on:
+    krypton-db:     { condition: service_healthy }  # esperar a que MySQL esté SANO
+    rabbitmq:       { condition: service_healthy }
+    eureka-server:  { condition: service_started }
+```
+
+Dos cosas más que importan:
+
+- **`DB_PORT: 3306`** (no 3307): adentro de la red, MySQL escucha en su puerto **interno** 3306. El
+  3307 era el mapeo al host para que no chocara con un MySQL nativo — irrelevante entre contenedores.
+- **Un init SQL** (`docker/mysql-init/01-init.sql`, montado en
+  `/docker-entrypoint-initdb.d`) crea las **6 bases por servicio** (`krypton_users`,
+  `krypton_catalog`, …, `krypton_promos`) antes de que arranque cualquier Flyway. Las **tablas** las
+  sigue creando el Flyway de cada servicio; el init solo deja las bases vacías.
+- **`depends_on` con `condition`**: DB y rabbit con `service_healthy` (esperan al healthcheck, no
+  solo a que el proceso exista); eureka con `service_started`. Sin esto, los servicios arrancan
+  antes que su base y mueren.
+
+### Gotcha real (Docker Desktop en Windows)
+
+`rabbitmq:3-management` **fallaba al arrancar** con un `eacces` leyendo
+`/var/lib/rabbitmq/.erlang.cookie` (permisos del volumen en Docker Desktop Windows). El fix: darle
+un **volumen propio** (`krypton_rabbitdata_full`) y un **hostname estable** (`hostname:
+krypton-rabbit`) para que el cookie y el estado de Mnesia sean consistentes entre reinicios.
+
+Y en Windows, antes de `mvn package`: **parar los jars locales** que estén corriendo — bloquean el
+`.jar` y el build no puede sobrescribirlo (mismo gotcha del gateway en F3).
+
+### Verificado
+
+`docker compose -f docker-compose.full.yml up -d --build` levanta **11 contenedores** (MySQL,
+RabbitMQ, Eureka, gateway + los 7 de negocio). El checkout completo + el pago + el evento RabbitMQ a
+notification funcionan **entre contenedores**, todo entrando por el gateway en `:8080`. La misma
+demo de antes, ahora 100% containerizada.
+
+---
+
+## 13. F11 — Frontend: reseñas + cupón (con integración real)
+
+### Concepto
+
+La última fase de features: conectar el **React** a los servicios nuevos. Pero hay una asimetría
+importante que conviene tener clara:
+
+- **Reseñas = puro frontend.** El backend (F8) ya está completo. El front solo consume
+  `/api/reviews`: lista, muestra el promedio, deja opinar. No toca el backend.
+- **Cupón = NO es solo frontend.** Para que el descuento sea **REAL** (que baje el total que se
+  cobra y se guarda), no alcanza con mostrarlo en pantalla: **order tiene que aplicarlo en el
+  checkout**, llamando a promo por Feign. Si el descuento viviera solo en el front, cualquiera lo
+  falsificaría. **La plata la decide el backend.**
+
+### Código — reseñas (lado front)
+
+El patrón de siempre: un `*.api.ts` por feature + un componente que lo consume.
+
+```ts
+// features/catalog/reviews.api.ts
+export async function getByProduct(productId: number): Promise<ReviewListResponse> {
+  const { data } = await api.get<ReviewListResponse>('/api/reviews', { params: { productId } }); // ?productId=
+  return data;
+}
+export async function create(req: CreateReviewRequest): Promise<ReviewResponse> {
+  const { data } = await api.post<ReviewResponse>('/api/reviews', req);   // el token lo adjunta el interceptor
+  return data;
+}
+```
+
+El componente `ProductReviews` (en la página de producto) usa `getByProduct` para pintar promedio +
+lista, y `create` para enviar una reseña nueva. Cero lógica de negocio en el front: pega al gateway
+y muestra.
+
+### Código — cupón (lo IMPORTANTE está en el backend)
+
+`CheckoutRequest` suma un campo opcional `couponCode`:
+
+```java
+public record CheckoutRequest(
+        @NotNull TipoDocumento documentType,
+        @NotBlank @Size(max = 150) String customerName,
+        @NotBlank @Pattern(regexp = "\\d{8}|\\d{11}") String customerDoc,
+        String couponCode) {}                       // ← NUEVO: el cupón (opcional)
+```
+
+Y `confirmarCompra` (el checkout de F5) ahora pide el descuento a promo por **Feign** y lo mete en
+el total:
+
+```java
+// dentro de confirmarCompra, ya con el subtotal calculado:
+BigDecimal discount = aplicarCupon(request.couponCode(), subtotal);      // 1) Feign a promo (0 si no hay)
+BigDecimal shipping = subtotal.compareTo(FREE_SHIPPING_THRESHOLD) >= 0
+        ? BigDecimal.ZERO : SHIPPING_COST;
+BigDecimal total = subtotal.subtract(discount).add(shipping);            // 2) total = subtotal − descuento + envío
+// ... orden.setDiscount(discount);  ← se persiste (columna nueva, Flyway V2)
+
+private BigDecimal aplicarCupon(String couponCode, BigDecimal subtotal) {
+    if (couponCode == null || couponCode.isBlank()) return BigDecimal.ZERO;   // sin cupón → 0
+    try {
+        return promoClient.applyPromo(new ApplyPromoRequest(couponCode, subtotal)).discount();
+    } catch (FeignException ex) {
+        if (ex.status() == 422 || ex.status() == 404)
+            throw new InvalidCouponException("Cupón inválido: " + couponCode); // 3) → 422
+        throw ex;
+    }
+}
+```
+
+1. **`aplicarCupon`**: si no vino cupón, descuento 0 (no llama a promo). Si vino, **Feign a promo**
+   con el subtotal; promo devuelve el descuento **autoritativo** (el del front era solo preview).
+2. **`total = subtotal − discount + envío`**: el descuento entra en la cuenta real que se cobra y
+   se guarda en la orden.
+3. **Cupón inválido → `InvalidCouponException` (422)**: order traduce el 422/404 de promo a un error
+   claro y la transacción del checkout revierte.
+
+La columna `discount` se agrega con una migración **Flyway V2** (nunca se edita la V1 ya aplicada):
+
+```sql
+-- V2__add_order_discount.sql
+ALTER TABLE orders ADD COLUMN discount DECIMAL(12,2) NOT NULL DEFAULT 0.00 AFTER subtotal;
+```
+
+Del lado front, el modelo `promo.ts` deja explícito que **el descuento real lo calcula el BACKEND**;
+el front manda `couponCode` en el checkout y muestra el descuento que vuelve.
+
+### Dónde conecta
+
+- **front → gateway**: reseñas (`/api/reviews`) y preview del cupón (`/api/promos/apply`).
+- **order → promo por Feign EN el checkout**: el descuento **autoritativo**, el que de verdad baja
+  el total. Esta es la diferencia clave: el cupón no es cosmético, atraviesa el backend.
+- **Flyway V2** agrega la columna `discount` a `orders`.
+
+### Verificado
+
+- Checkout con cupón 10% sobre un subtotal de **S/2799** → `discount 279.90`, `total 2519.10`
+  (+ envío gratis por superar S/300). ✅
+- Cupón inválido/inactivo → **422** y el checkout revierte. ✅
+- Sin cupón → `discount 0`, total normal. ✅
+
+---
+
+## 14. Cómo conecta TODO (hasta la F11)
 
 ```
 1. El front (o curl) le pega al GATEWAY en :8080 con Authorization: Bearer <token>.
 2. El gateway elige el servicio por PATH y lo resuelve por NOMBRE vía Eureka (lb://).
 3. El servicio valida el JWT: users contra su DB; los demás STATELESS (firma + role del token).
-4. SÍNCRONO (Feign): en el checkout, order LLAMA a catalog (precio + descontar stock) y ESPERA.
-     Si falla a la mitad → saga: order COMPENSA (restaura stock).
+4. SÍNCRONO (Feign), varias llamadas servicio→servicio que ESPERAN respuesta:
+     - checkout: order → catalog (precio + descontar stock) → promo (descuento del cupón).
+       Si falla a la mitad → saga: order COMPENSA (restaura stock).
+     - pago:     order → payment (cobro); si aprueba, la MÁQUINA DE ESTADOS confirma la orden.
+     - reseña:   review → catalog (validar que el producto existe).
 5. ASÍNCRONO (RabbitMQ): al confirmar, order PUBLICA un evento y sigue; notification lo consume aparte.
-6. Cada servicio trabaja contra SU PROPIA base (krypton_users / krypton_catalog / krypton_orders).
+6. Cada servicio trabaja contra SU PROPIA base (krypton_users / _catalog / _orders / _payments / _reviews / _promos).
+7. TODO esto puede correr containerizado (docker-compose.full.yml): 11 contenedores, una sola puerta (:8080).
 ```
 
 Los "pegamentos" del sistema, ahora completos:
@@ -1059,11 +1525,21 @@ Los "pegamentos" del sistema, ahora completos:
 - **El gateway** (una puerta, rutea por nombre, CORS).
 - **El secreto JWT compartido** (el contrato de seguridad: users firma, todos verifican).
 - **Feign** (llamada **síncrona** servicio→servicio, resuelta por Eureka) + **saga/compensación**.
+  Lo usan order→catalog, order→payment, order→promo y review→catalog.
+- **Máquina de estados** (`EstadoOrdenPolicy`): qué transiciones de la orden son válidas — el pago
+  la dispara PENDIENTE → CONFIRMADA.
 - **RabbitMQ** (eventos **asíncronos**: publicar sin saber quién escucha).
+- **review / promo**: servicios de dominio nuevos que **reusan** los mismos patrones (base propia,
+  JWT stateless, ruta en el gateway).
+- **Docker** (`docker-compose.full.yml`): empaqueta cada servicio y lo levanta todo de una.
 
 ---
 
-## 10. Cómo levantar lo implementado
+## 15. Cómo levantar lo implementado
+
+Hay **dos formas**: jars sueltos (modo dev, una terminal por servicio) o todo en Docker (un comando).
+
+### Opción A: jars locales (modo desarrollo)
 
 Los servicios corren como **jars**; al cerrar la terminal/sesión, se caen. Para relevantarlos:
 
@@ -1076,11 +1552,27 @@ java -jar users-service/target/users-service-1.0.0.jar          # :8081
 java -jar catalog-service/target/catalog-service-1.0.0.jar      # :8082
 java -jar order-service/target/order-service-1.0.0.jar          # :8083
 java -jar notification-service/target/notification-service-1.0.0.jar  # :8084 (consume eventos)
+java -jar payment-service/target/payment-service-1.0.0.jar      # :8085 (cobro del checkout)
+java -jar review-service/target/review-service-1.0.0.jar        # :8086 (reseñas)
+java -jar promo-service/target/promo-service-1.0.0.jar          # :8087 (cupones)
 java -jar api-gateway/target/api-gateway-1.0.0.jar              # :8080
 ```
 
 Compilar un servicio (en Windows, pararlo antes si está corriendo — jar bloqueado):
 `cd services && mvn -q -pl <servicio> -am package -DskipTests`.
+
+### Opción B: todo en Docker (un solo comando)
+
+Empaquetá los jars (`cd services && mvn -q package -DskipTests`, con los jars locales **parados** en
+Windows) y después:
+
+```bash
+docker compose -f docker-compose.full.yml up -d --build    # 11 contenedores: infra + los 9 servicios
+```
+
+Un solo comando levanta MySQL (con las 6 bases ya creadas por el init SQL), RabbitMQ, Eureka, el
+gateway y los 7 servicios de negocio, todos hablándose por nombre de contenedor. La única puerta
+pública sigue siendo el gateway en `:8080` — el front no cambia.
 
 Verificación rápida end-to-end:
 
@@ -1098,15 +1590,17 @@ Login de prueba: `admin@krypton.pe` / `Admin123!`.
 
 ---
 
-## 11. Próximos pasos (se van escribiendo acá)
+## 16. Próximos pasos (se van escribiendo acá)
 
-Hasta acá (F1–F6) ya están **todos los conceptos distintos** de la migración: descubrimiento
-(Eureka), gateway, JWT stateless, Feign (síncrono) + saga, y RabbitMQ (asíncrono). Lo que queda es
-más dominio + infra:
+Con F1–F11 ya están **todos los conceptos** de la migración: descubrimiento (Eureka), gateway, JWT
+stateless, Feign (síncrono) + saga, máquina de estados, RabbitMQ (asíncrono), tres servicios de
+dominio nuevos (payment, review, promo) y el stack entero **containerizado**. El frontend ya consume
+los servicios nuevos, con el cupón integrado de verdad en el checkout.
 
-- **F7** — payment-service (simular pago; transición de estado de la orden).
-- **F8** — review-service. **F9** — promo-service. *(reusan los patrones ya vistos.)*
-- **F10** — Dockerizar todo (un `Dockerfile` por servicio + compose completo).
-- **F11** — Frontend de los servicios nuevos. **F12** — Kubernetes (stretch).
+Queda **una sola fase**, de pura infra y opcional:
+
+- **F12** — **Kubernetes** (*stretch*): llevar el `docker-compose.full.yml` a manifiestos de K8s
+  (Deployments, Services, ConfigMaps/Secrets para el JWT y la DB). Es el salto de "todo en mi
+  máquina con compose" a "orquestado en un clúster". No agrega conceptos de dominio: es despliegue.
 
 *(Esta guía se actualiza al cerrar cada fase, siempre con el mismo nivel de detalle.)*
