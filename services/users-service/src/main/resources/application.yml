@@ -1,0 +1,27 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: users-service
+  datasource:
+    url: jdbc:mysql://localhost:3307/krypton_users
+    username: krypton
+    password: krypton
+  jpa:
+    hibernate:
+      ddl-auto: validate          # Flyway es dueño del schema; Hibernate solo valida
+    open-in-view: false
+  flyway:
+    enabled: true
+
+# Configuración de la app (JWT). El secreto real va por env JWT_SECRET en prod.
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-change-me-krypton-secret-key-1234567890}
+    expiration: 86400000          # 24h en milisegundos
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka

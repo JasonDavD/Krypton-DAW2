@@ -1,0 +1,57 @@
+server:
+  port: 8080                       # donde apunta el frontend → no cambia nada del front
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # Evita el header CORS duplicado (lo pone el gateway Y el servicio): deja uno solo.
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_UNIQUE
+      # CORS centralizado: el navegador solo habla con el gateway (:8080).
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+            allowedMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            allowedHeaders: [Authorization, Content-Type]
+            exposedHeaders: [Content-Disposition]
+            allowCredentials: true
+      # Rutas: por ahora solo users-service. Se suman a medida que creamos servicios.
+      routes:
+        - id: users-auth
+          uri: lb://users-service          # lb:// = resolver por Eureka + balancear
+          predicates:
+            - Path=/api/auth/**
+        - id: users-admin
+          uri: lb://users-service
+          predicates:
+            - Path=/api/admin/users/**
+        # --- catalog-service ---
+        - id: catalog-products
+          uri: lb://catalog-service
+          predicates:
+            - Path=/api/products/**
+        - id: catalog-categories
+          uri: lb://catalog-service
+          predicates:
+            - Path=/api/categories/**
+        - id: catalog-uploads
+          uri: lb://catalog-service
+          predicates:
+            - Path=/api/uploads/**
+        - id: catalog-admin-products
+          uri: lb://catalog-service
+          predicates:
+            - Path=/api/admin/products/**
+        - id: catalog-admin-categories
+          uri: lb://catalog-service
+          predicates:
+            - Path=/api/admin/categories/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka

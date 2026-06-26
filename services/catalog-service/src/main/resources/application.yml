@@ -1,0 +1,39 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: catalog-service
+  datasource:
+    url: jdbc:mysql://localhost:3307/krypton_catalog
+    username: krypton
+    password: krypton
+  jpa:
+    hibernate:
+      ddl-auto: validate            # Flyway es dueño del schema; Hibernate solo valida
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+# Configuración de la app. El secreto real va por env JWT_SECRET en prod;
+# DEBE coincidir con el de users-service (mismo secreto = misma firma HMAC).
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-change-me-krypton-secret-key-1234567890}
+  uploads:
+    dir: ${APP_UPLOADS_DIR:./uploads}
+    # base-url apunta al api-gateway (:8080): las URLs de imágenes salen por el gateway.
+    base-url: ${APP_UPLOADS_BASE_URL:http://localhost:8080}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka

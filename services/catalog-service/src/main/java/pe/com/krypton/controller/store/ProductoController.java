@@ -1,0 +1,39 @@
+package pe.com.krypton.controller.store;
+
+import java.math.BigDecimal;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import pe.com.krypton.dto.response.PageResponse;
+import pe.com.krypton.dto.response.ProductoResponse;
+import pe.com.krypton.service.ProductoService;
+
+/** Endpoints públicos de catálogo — solo lectura. Seguridad: GET permitAll en SecurityConfig. */
+@RestController
+@RequestMapping("/api/products")
+public class ProductoController {
+
+    private final ProductoService productService;
+
+    public ProductoController(ProductoService productService) {
+        this.productService = productService;
+    }
+
+    @GetMapping
+    public PageResponse<ProductoResponse> buscar(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal priceMin,
+            @RequestParam(required = false) BigDecimal priceMax,
+            Pageable pageable) {
+        return productService.buscar(name, categoryId, priceMin, priceMax, pageable);
+    }
+
+    @GetMapping("/{id}")
+    public ProductoResponse buscarPorId(@PathVariable Long id) {
+        return productService.buscarPorId(id);
+    }
+}

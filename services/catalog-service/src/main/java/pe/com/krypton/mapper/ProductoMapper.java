@@ -1,0 +1,79 @@
+package pe.com.krypton.mapper;
+
+import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import pe.com.krypton.dto.response.ImagenProductoResponse;
+import pe.com.krypton.dto.response.ProductoResponse;
+import pe.com.krypton.entity.Producto;
+import pe.com.krypton.entity.ImagenProducto;
+
+/**
+ * Translates the Producto entity to its output DTO. Never exposes the entity outside the service.
+ *
+ * Two mapping modes:
+ * - toResponse()           lean (images = null, omitted by @JsonInclude NON_NULL) — for list/search.
+ * - toResponseWithImages() full (images populated, ordered by displayOrder ASC, id ASC) — for getById.
+ *
+ * The constructor receives the base-url so image URLs are fully qualified.
+ */
+@Component
+public class ProductoMapper {
+
+    private final String baseUrl;
+
+    public ProductoMapper(
+            @Value("${app.uploads.base-url:http://localhost:8080}") String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
+
+    /** Lean mapping: images field is null (omitted from JSON via @JsonInclude NON_NULL). */
+    public ProductoResponse toResponse(Producto product) {
+        return new ProductoResponse(
+                product.getId(),
+                product.getSku(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getStock(),
+                product.getImageUrl(),
+                product.isActive(),
+                product.getCategory().getId(),
+                product.getCategory().getName(),
+                null);
+    }
+
+    /**
+     * Full mapping: images collection is loaded (caller must be inside @Transactional(readOnly=true)
+     * because the collection is LAZY). The list is already ordered by @OrderBy on Producto.images.
+     */
+    public ProductoResponse toResponseWithImages(Producto product) {
+        List<ImagenProductoResponse> imageResponses = product.getImages().stream()
+                .map(this::toImageResponse)
+                .toList();
+
+        return new ProductoResponse(
+                product.getId(),
+                product.getSku(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getStock(),
+                product.getImageUrl(),
+                product.isActive(),
+                product.getCategory().getId(),
+                product.getCategory().getName(),
+                imageResponses);
+    }
+
+    // ─── private helpers ─────────────────────────────────────────────────────────
+
+    private ImagenProductoResponse toImageResponse(ImagenProducto image) {
+        String url = baseUrl + "/api/uploads/images/" + image.getPath();
+        return new ImagenProductoResponse(
+                image.getId(),
+                url,
+                image.getDisplayOrder(),
+                image.isCover());
+    }
+}

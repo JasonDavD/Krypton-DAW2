@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Heredamos de Spring Boot: nos da versiones de starters, plugin, etc. -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>pe.com.krypton</groupId>
+    <artifactId>krypton-services</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>                <!-- proyecto agregador (solo orquesta módulos) -->
+    <name>krypton-services</name>
+    <description>Krypton E-commerce - Microservicios</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <!-- GOTCHA #1 de la guía: Spring Cloud va ATADA a la versión de Spring Boot.
+             Boot 3.3.x ↔ Spring Cloud 2023.0.x. Se fija UNA vez acá, vía el BOM. -->
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+    </properties>
+
+    <!-- Cada microservicio es un módulo. Se van sumando a medida que los creamos. -->
+    <modules>
+        <module>eureka-server</module>
+        <module>users-service</module>
+        <module>api-gateway</module>
+        <module>catalog-service</module>
+    </modules>
+
+    <!-- El BOM de Spring Cloud: gestiona las versiones de TODOS los starters de cloud.
+         Por eso en cada módulo el starter de cloud va SIN <version>. -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
