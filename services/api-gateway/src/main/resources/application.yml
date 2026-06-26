@@ -64,6 +64,15 @@ spring:
           uri: lb://review-service
           predicates:
             - Path=/api/reviews/**
+        # --- promo-service (cupones de descuento) ---
+        - id: promo-admin
+          uri: lb://promo-service
+          predicates:
+            - Path=/api/admin/promos/**
+        - id: promo-apply
+          uri: lb://promo-service
+          predicates:
+            - Path=/api/promos/**
 
 eureka:
   client:
