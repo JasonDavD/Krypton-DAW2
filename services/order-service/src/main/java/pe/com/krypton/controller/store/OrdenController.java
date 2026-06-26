@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import pe.com.krypton.dto.request.CheckoutRequest;
+import pe.com.krypton.dto.request.PaymentRequest;
 import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.event.OrderCreatedEvent;
 import pe.com.krypton.messaging.OrderEventPublisher;
@@ -53,5 +54,12 @@ public class OrdenController {
     @GetMapping("/{id}")
     public OrdenResponse miOrden(@PathVariable Long id, Authentication authentication) {
         return ordenService.miOrden(authentication.getName(), id);
+    }
+
+    @PostMapping("/{id}/pay")
+    public OrdenResponse pagar(@PathVariable Long id,
+                               @Valid @RequestBody PaymentRequest request,
+                               Authentication authentication) {
+        return ordenService.pagar(authentication.getName(), id, request);
     }
 }

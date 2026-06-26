@@ -20,16 +20,24 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pe.com.krypton.client.CatalogClient;
+import pe.com.krypton.client.PaymentClient;
+import pe.com.krypton.client.dto.ChargeRequest;
+import pe.com.krypton.client.dto.PaymentResponse;
 import pe.com.krypton.client.dto.ProductoResponse;
 import pe.com.krypton.client.dto.StockMovementRequest;
 import pe.com.krypton.dto.request.CheckoutRequest;
+import pe.com.krypton.dto.request.PaymentRequest;
 import pe.com.krypton.entity.Carrito;
 import pe.com.krypton.entity.ItemCarrito;
 import pe.com.krypton.entity.Orden;
 import pe.com.krypton.entity.enums.EstadoOrden;
+import pe.com.krypton.entity.enums.MetodoPago;
 import pe.com.krypton.entity.enums.TipoDocumento;
 import pe.com.krypton.exception.InsufficientStockException;
+import pe.com.krypton.exception.OrderStatusTransitionException;
+import pe.com.krypton.exception.PaymentDeclinedException;
 import pe.com.krypton.mapper.OrdenMapper;
+import pe.com.krypton.policy.EstadoOrdenPolicy;
 import pe.com.krypton.repository.CarritoRepository;
 import pe.com.krypton.repository.ItemCarritoRepository;
 import pe.com.krypton.repository.ItemOrdenRepository;
@@ -51,6 +59,8 @@ class OrdenServiceImplTest {
     @Mock private ItemCarritoRepository itemCarritoRepository;
     @Mock private OrdenMapper ordenMapper;
     @Mock private CatalogClient catalogClient;
+    @Mock private PaymentClient paymentClient;
+    @Mock private EstadoOrdenPolicy estadoOrdenPolicy;
 
     @InjectMocks private OrdenServiceImpl ordenService;
 
@@ -149,5 +159,65 @@ class OrdenServiceImplTest {
         ArgumentCaptor<StockMovementRequest> restoreCap = ArgumentCaptor.forClass(StockMovementRequest.class);
         verify(catalogClient).restoreStock(restoreCap.capture());
         assertThat(restoreCap.getValue().reference()).isEqualTo("ORDER-52");
+    }
+
+    // ---------------------------------------------------------------------
+    // F7: pagar (Feign a payment-service + máquina de estados)
+    // ---------------------------------------------------------------------
+
+    private Orden ordenPendiente(long id) {
+        Orden orden = new Orden();
+        orden.setId(id);
+        orden.setUserEmail(EMAIL);
+        orden.setStatus(EstadoOrden.PENDIENTE);
+        orden.setTotal(new BigDecimal("100.00"));
+        when(ordenRepository.findByIdAndUserEmail(id, EMAIL)).thenReturn(Optional.of(orden));
+        return orden;
+    }
+
+    @Test
+    void should_confirm_order_when_payment_is_approved() {
+        Orden orden = ordenPendiente(10L);
+        when(paymentClient.charge(any())).thenReturn(new PaymentResponse(5L, "APPROVED"));
+
+        ordenService.pagar(EMAIL, 10L, new PaymentRequest(MetodoPago.YAPE));
+
+        // la orden pasa a CONFIRMADA y guarda el método
+        assertThat(orden.getStatus()).isEqualTo(EstadoOrden.CONFIRMADA);
+        assertThat(orden.getPaymentMethod()).isEqualTo(MetodoPago.YAPE);
+        verify(ordenRepository).save(orden);
+        // se cobró el total por el método elegido
+        ArgumentCaptor<ChargeRequest> cap = ArgumentCaptor.forClass(ChargeRequest.class);
+        verify(paymentClient).charge(cap.capture());
+        assertThat(cap.getValue().amount()).isEqualByComparingTo("100.00");
+        assertThat(cap.getValue().method()).isEqualTo("YAPE");
+    }
+
+    @Test
+    void should_throw_payment_declined_and_keep_pendiente_when_not_approved() {
+        Orden orden = ordenPendiente(11L);
+        when(paymentClient.charge(any())).thenReturn(new PaymentResponse(6L, "DECLINED"));
+
+        assertThatThrownBy(() -> ordenService.pagar(EMAIL, 11L, new PaymentRequest(MetodoPago.CREDIT_CARD)))
+                .isInstanceOf(PaymentDeclinedException.class);
+
+        assertThat(orden.getStatus()).isEqualTo(EstadoOrden.PENDIENTE); // no se confirma
+        verify(ordenRepository, never()).save(orden);
+    }
+
+    @Test
+    void should_reject_pay_and_not_charge_when_transition_is_invalid() {
+        Orden orden = new Orden();
+        orden.setId(12L);
+        orden.setUserEmail(EMAIL);
+        orden.setStatus(EstadoOrden.CONFIRMADA); // ya pagada → no se puede re-pagar
+        when(ordenRepository.findByIdAndUserEmail(12L, EMAIL)).thenReturn(Optional.of(orden));
+        doThrow(new OrderStatusTransitionException("inválida"))
+                .when(estadoOrdenPolicy).assertCanTransition(EstadoOrden.CONFIRMADA, EstadoOrden.CONFIRMADA);
+
+        assertThatThrownBy(() -> ordenService.pagar(EMAIL, 12L, new PaymentRequest(MetodoPago.YAPE)))
+                .isInstanceOf(OrderStatusTransitionException.class);
+
+        verify(paymentClient, never()).charge(any()); // ni se intentó cobrar
     }
 }

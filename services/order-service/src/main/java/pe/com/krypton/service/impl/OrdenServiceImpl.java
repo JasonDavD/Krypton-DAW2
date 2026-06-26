@@ -9,10 +9,14 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.com.krypton.client.CatalogClient;
+import pe.com.krypton.client.PaymentClient;
+import pe.com.krypton.client.dto.ChargeRequest;
+import pe.com.krypton.client.dto.PaymentResponse;
 import pe.com.krypton.client.dto.ProductoResponse;
 import pe.com.krypton.client.dto.StockItemRequest;
 import pe.com.krypton.client.dto.StockMovementRequest;
 import pe.com.krypton.dto.request.CheckoutRequest;
+import pe.com.krypton.dto.request.PaymentRequest;
 import pe.com.krypton.dto.response.OrdenResponse;
 import pe.com.krypton.entity.Carrito;
 import pe.com.krypton.entity.ItemCarrito;
@@ -23,8 +27,10 @@ import pe.com.krypton.entity.enums.TipoDocumento;
 import pe.com.krypton.exception.EmptyCartException;
 import pe.com.krypton.exception.InsufficientStockException;
 import pe.com.krypton.exception.InvalidDocumentException;
+import pe.com.krypton.exception.PaymentDeclinedException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.mapper.OrdenMapper;
+import pe.com.krypton.policy.EstadoOrdenPolicy;
 import pe.com.krypton.repository.CarritoRepository;
 import pe.com.krypton.repository.ItemCarritoRepository;
 import pe.com.krypton.repository.ItemOrdenRepository;
@@ -54,19 +60,25 @@ public class OrdenServiceImpl implements OrdenService {
     private final ItemCarritoRepository itemCarritoRepository;
     private final OrdenMapper ordenMapper;
     private final CatalogClient catalogClient;
+    private final PaymentClient paymentClient;
+    private final EstadoOrdenPolicy estadoOrdenPolicy;
 
     public OrdenServiceImpl(OrdenRepository ordenRepository,
                             ItemOrdenRepository itemOrdenRepository,
                             CarritoRepository carritoRepository,
                             ItemCarritoRepository itemCarritoRepository,
                             OrdenMapper ordenMapper,
-                            CatalogClient catalogClient) {
+                            CatalogClient catalogClient,
+                            PaymentClient paymentClient,
+                            EstadoOrdenPolicy estadoOrdenPolicy) {
         this.ordenRepository = ordenRepository;
         this.itemOrdenRepository = itemOrdenRepository;
         this.carritoRepository = carritoRepository;
         this.itemCarritoRepository = itemCarritoRepository;
         this.ordenMapper = ordenMapper;
         this.catalogClient = catalogClient;
+        this.paymentClient = paymentClient;
+        this.estadoOrdenPolicy = estadoOrdenPolicy;
     }
 
     @Override
@@ -167,6 +179,29 @@ public class OrdenServiceImpl implements OrdenService {
     public OrdenResponse miOrden(String email, Long id) {
         Orden orden = ordenRepository.findByIdAndUserEmail(id, email)
                 .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada: " + id));
+        return ordenMapper.toResponse(orden, itemOrdenRepository.findByOrder(orden));
+    }
+
+    @Override
+    @Transactional
+    public OrdenResponse pagar(String email, Long orderId, PaymentRequest request) {
+        Orden orden = ordenRepository.findByIdAndUserEmail(orderId, email)
+                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada: " + orderId));
+
+        // 1) ¿la orden admite pasar a CONFIRMADA desde su estado actual? (máquina de estados)
+        estadoOrdenPolicy.assertCanTransition(orden.getStatus(), EstadoOrden.CONFIRMADA);
+
+        // 2) cobrar vía Feign a payment-service (otra llamada SÍNCRONA entre servicios)
+        PaymentResponse pago = paymentClient.charge(
+                new ChargeRequest(orden.getId(), orden.getTotal(), request.method().name()));
+        if (!"APPROVED".equals(pago.status())) {
+            throw new PaymentDeclinedException("El pago fue rechazado"); // 402; la TX revierte
+        }
+
+        // 3) pago aprobado → confirmar la orden y registrar el método de pago
+        orden.setStatus(EstadoOrden.CONFIRMADA);
+        orden.setPaymentMethod(request.method());
+        ordenRepository.save(orden);
         return ordenMapper.toResponse(orden, itemOrdenRepository.findByOrder(orden));
     }
 
