@@ -25,8 +25,13 @@ frontend/.env.*
 .DS_Store
 Thumbs.db
 
-# ===== Claude Code (config local de cada máquina) =====
+# ===== Claude Code / tooling de agentes (local, no se publica) =====
 .claude/settings.local.json
+/.claude/skills/
+/.atl/
+/CLAUDE.md
+/AGENTS.md
+/GUIA-Buenas-Practicas-API-REST.md
 
 # ===== Logs =====
 *.log
