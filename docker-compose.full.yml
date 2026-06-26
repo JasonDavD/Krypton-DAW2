@@ -1,0 +1,168 @@
+# Stack COMPLETO de Krypton containerizado: infra (MySQL + RabbitMQ) + los 9 servicios.
+# A diferencia de docker-compose.yml (solo infra, para el modo `java -jar` local), aca
+# TODO corre en contenedores y se resuelve por nombre de servicio en la red de compose.
+#
+# Build: requiere el jar YA construido en cada services/<svc>/target/ (mvn package antes).
+# La unica puerta publica es el api-gateway (:8080). Eureka (:8761) y RabbitMQ (:15672)
+# se exponen solo para inspeccion.
+
+services:
+  # --- Infra ---------------------------------------------------------------
+  krypton-db:
+    image: mysql:8
+    container_name: krypton-db-full
+    environment:
+      MYSQL_DATABASE: krypton
+      MYSQL_USER: krypton
+      MYSQL_PASSWORD: krypton
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      # Volumen propio: NO choca con el de docker-compose.yml (krypton_mysqldata).
+      - krypton_mysqldata_full:/var/lib/mysql
+      # Crea las 6 bases por servicio antes de que arranque cualquier Flyway.
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d:ro
+    # No exponemos puerto al host: evita chocar con el MySQL de dev (3307).
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u krypton -pkrypton --silent || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: krypton-rabbit-full
+    hostname: krypton-rabbit
+    ports:
+      - "15672:15672"   # consola web (http://localhost:15672, guest/guest)
+    volumes:
+      - krypton_rabbitdata_full:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Service discovery ---------------------------------------------------
+  eureka-server:
+    build: ./services/eureka-server
+    container_name: krypton-eureka
+    ports:
+      - "8761:8761"     # consola de Eureka (solo inspeccion)
+
+  # --- Gateway (unica puerta publica) --------------------------------------
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: krypton-gateway
+    ports:
+      - "8080:8080"     # aca apunta el frontend
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      EUREKA_PREFER_IP: "true"
+    depends_on:
+      eureka-server:
+        condition: service_started
+
+  # --- Servicios de negocio ------------------------------------------------
+  users-service:
+    build: ./services/users-service
+    container_name: krypton-users
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      EUREKA_PREFER_IP: "true"
+      DB_HOST: krypton-db
+      DB_PORT: "3306"
+    depends_on:
+      krypton-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
+  catalog-service:
+    build: ./services/catalog-service
+    container_name: krypton-catalog
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      EUREKA_PREFER_IP: "true"
+      DB_HOST: krypton-db
+      DB_PORT: "3306"
+    depends_on:
+      krypton-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
+  order-service:
+    build: ./services/order-service
+    container_name: krypton-order
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      EUREKA_PREFER_IP: "true"
+      DB_HOST: krypton-db
+      DB_PORT: "3306"
+      RABBITMQ_HOST: rabbitmq
+    depends_on:
+      krypton-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: krypton-notification
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      EUREKA_PREFER_IP: "true"
+      RABBITMQ_HOST: rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
+  payment-service:
+    build: ./services/payment-service
+    container_name: krypton-payment
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      EUREKA_PREFER_IP: "true"
+      DB_HOST: krypton-db
+      DB_PORT: "3306"
+    depends_on:
+      krypton-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
+  review-service:
+    build: ./services/review-service
+    container_name: krypton-review
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      EUREKA_PREFER_IP: "true"
+      DB_HOST: krypton-db
+      DB_PORT: "3306"
+    depends_on:
+      krypton-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
+  promo-service:
+    build: ./services/promo-service
+    container_name: krypton-promo
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+      EUREKA_PREFER_IP: "true"
+      DB_HOST: krypton-db
+      DB_PORT: "3306"
+    depends_on:
+      krypton-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
+volumes:
+  krypton_mysqldata_full:
+  krypton_rabbitdata_full:
