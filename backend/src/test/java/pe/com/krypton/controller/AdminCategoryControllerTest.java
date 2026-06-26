@@ -53,7 +53,7 @@ class AdminCategoryControllerTest {
 
     @Test
     void should_return_201_when_create_is_valid() throws Exception {
-        when(categoryService.create(any())).thenReturn(sample(5L));
+        when(categoryService.registrar(any())).thenReturn(sample(5L));
 
         mvc.perform(post("/api/admin/categories")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -65,7 +65,7 @@ class AdminCategoryControllerTest {
 
     @Test
     void should_return_409_when_create_has_duplicate_name() throws Exception {
-        when(categoryService.create(any()))
+        when(categoryService.registrar(any()))
                 .thenThrow(new DuplicateCategoryNameException("Nombre ya registrado"));
 
         mvc.perform(post("/api/admin/categories")
@@ -82,12 +82,12 @@ class AdminCategoryControllerTest {
                         .content("{\"name\":\"\",\"description\":\"desc\"}"))
                 .andExpect(status().isBadRequest());
 
-        verify(categoryService, never()).create(any());
+        verify(categoryService, never()).registrar(any());
     }
 
     @Test
     void should_return_200_when_update_is_valid() throws Exception {
-        when(categoryService.update(eq(5L), any())).thenReturn(sample(5L));
+        when(categoryService.actualizar(eq(5L), any())).thenReturn(sample(5L));
 
         mvc.perform(put("/api/admin/categories/5")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -98,7 +98,7 @@ class AdminCategoryControllerTest {
 
     @Test
     void should_return_404_when_update_category_not_found() throws Exception {
-        when(categoryService.update(eq(99L), any()))
+        when(categoryService.actualizar(eq(99L), any()))
                 .thenThrow(new ResourceNotFoundException("Categoría no encontrada"));
 
         mvc.perform(put("/api/admin/categories/99")
@@ -109,7 +109,7 @@ class AdminCategoryControllerTest {
 
     @Test
     void should_return_409_when_update_has_duplicate_name() throws Exception {
-        when(categoryService.update(eq(5L), any()))
+        when(categoryService.actualizar(eq(5L), any()))
                 .thenThrow(new DuplicateCategoryNameException("Nombre ya usado"));
 
         mvc.perform(put("/api/admin/categories/5")
@@ -120,7 +120,7 @@ class AdminCategoryControllerTest {
 
     @Test
     void should_return_204_when_delete_succeeds() throws Exception {
-        doNothing().when(categoryService).delete(5L);
+        doNothing().when(categoryService).eliminar(5L);
 
         mvc.perform(delete("/api/admin/categories/5"))
                 .andExpect(status().isNoContent());
@@ -129,7 +129,7 @@ class AdminCategoryControllerTest {
     @Test
     void should_return_409_when_delete_category_in_use() throws Exception {
         doThrow(new CategoryInUseException("Categoría tiene productos asociados"))
-                .when(categoryService).delete(5L);
+                .when(categoryService).eliminar(5L);
 
         mvc.perform(delete("/api/admin/categories/5"))
                 .andExpect(status().isConflict());
@@ -138,7 +138,7 @@ class AdminCategoryControllerTest {
     @Test
     void should_return_404_when_delete_category_not_found() throws Exception {
         doThrow(new ResourceNotFoundException("Categoría no encontrada"))
-                .when(categoryService).delete(99L);
+                .when(categoryService).eliminar(99L);
 
         mvc.perform(delete("/api/admin/categories/99"))
                 .andExpect(status().isNotFound());

@@ -18,17 +18,12 @@ public abstract class ICRUDImpl<T, ID> implements ICRUD<T, ID> {
     protected abstract JpaRepository<T, ID> repo();
 
     @Override
-    public T registrar(T entidad) {
+    public T guardar(T entidad) {
         return repo().save(entidad);
     }
 
     @Override
-    public T actualizar(T entidad) {
-        return repo().save(entidad);
-    }
-
-    @Override
-    public void eliminar(ID id) {
+    public void borrar(ID id) {
         if (!repo().existsById(id)) {
             throw new ResourceNotFoundException("Registro con id " + id + " no existe");
         }
@@ -36,12 +31,12 @@ public abstract class ICRUDImpl<T, ID> implements ICRUD<T, ID> {
     }
 
     @Override
-    public List<T> listar() {
+    public List<T> listarTodos() {
         return repo().findAll();
     }
 
     @Override
-    public T buscarPorId(ID id) {
+    public T obtenerPorId(ID id) {
         return repo().findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro con id " + id + " no existe"));
     }

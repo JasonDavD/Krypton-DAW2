@@ -8,24 +8,24 @@ import pe.com.krypton.dto.response.CategoriaResponse;
 public interface CategoriaService {
 
     /** Lista todas las categorías disponibles. */
-    List<CategoriaResponse> list();
+    List<CategoriaResponse> listar();
 
     /** Retorna la categoría o lanza ResourceNotFoundException (404). */
-    CategoriaResponse getById(Long id);
+    CategoriaResponse buscarPorId(Long id);
 
     /** Crea una categoría. Nombre único → DuplicateCategoryNameException (409). */
-    CategoriaResponse create(CategoriaRequest request);
+    CategoriaResponse registrar(CategoriaRequest request);
 
     /**
      * Actualiza una categoría. La unicidad del nombre excluye el propio id
      * (permite que el mismo nombre se reenvíe sin rechazo).
      */
-    CategoriaResponse update(Long id, CategoriaRequest request);
+    CategoriaResponse actualizar(Long id, CategoriaRequest request);
 
     /**
      * Elimina la categoría (hard delete).
      * Guard: si hay productos que la referencian → CategoryInUseException (409).
      * El guard se evalúa ANTES de cualquier operación de escritura.
      */
-    void delete(Long id);
+    void eliminar(Long id);
 }

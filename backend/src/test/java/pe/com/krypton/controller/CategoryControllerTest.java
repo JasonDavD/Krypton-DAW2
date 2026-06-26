@@ -39,7 +39,7 @@ class CategoryControllerTest {
 
     @Test
     void should_return_200_and_list_when_listing_categories() throws Exception {
-        when(categoryService.list()).thenReturn(List.of(sample(1L), sample(2L), sample(3L)));
+        when(categoryService.listar()).thenReturn(List.of(sample(1L), sample(2L), sample(3L)));
 
         mvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
@@ -50,7 +50,7 @@ class CategoryControllerTest {
 
     @Test
     void should_return_200_when_get_category_by_id() throws Exception {
-        when(categoryService.getById(2L)).thenReturn(sample(2L));
+        when(categoryService.buscarPorId(2L)).thenReturn(sample(2L));
 
         mvc.perform(get("/api/categories/2"))
                 .andExpect(status().isOk())
@@ -60,7 +60,7 @@ class CategoryControllerTest {
 
     @Test
     void should_return_404_when_category_not_found() throws Exception {
-        when(categoryService.getById(99L))
+        when(categoryService.buscarPorId(99L))
                 .thenThrow(new ResourceNotFoundException("Categoría no encontrada"));
 
         mvc.perform(get("/api/categories/99"))

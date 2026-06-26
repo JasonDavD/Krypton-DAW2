@@ -27,18 +27,18 @@ public class AdminCategoriaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CategoriaResponse create(@Valid @RequestBody CategoriaRequest request) {
-        return categoryService.create(request);
+    public CategoriaResponse registrar(@Valid @RequestBody CategoriaRequest request) {
+        return categoryService.registrar(request);
     }
 
     @PutMapping("/{id}")
-    public CategoriaResponse update(@PathVariable Long id, @Valid @RequestBody CategoriaRequest request) {
-        return categoryService.update(id, request);
+    public CategoriaResponse actualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequest request) {
+        return categoryService.actualizar(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        categoryService.delete(id);
+    public void eliminar(@PathVariable Long id) {
+        categoryService.eliminar(id);
     }
 }

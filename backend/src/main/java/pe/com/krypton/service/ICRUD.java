@@ -5,18 +5,19 @@ import java.util.List;
 /**
  * Contrato CRUD genérico reutilizable. {@code T} = entidad, {@code ID} = tipo de la PK.
  *
- * <p>Trabaja a nivel de ENTIDAD. Cada service concreto lo extiende para heredar las
- * operaciones de persistencia y mapea Entity ↔ DTO dentro de su propia implementación.
+ * <p>Trabaja a nivel de ENTIDAD (no DTO). Cada service concreto lo extiende para heredar
+ * estas operaciones de persistencia y las usa INTERNAMENTE; hacia afuera expone sus
+ * métodos de dominio (que reciben/devuelven DTOs y hacen el mapeo). Los nombres acá
+ * (guardar/borrar/...) se eligen para no chocar con la API pública en DTOs
+ * (registrar/eliminar/listar/buscarPorId).
  */
 public interface ICRUD<T, ID> {
 
-    T registrar(T entidad);
+    T guardar(T entidad);
 
-    T actualizar(T entidad);
+    void borrar(ID id);
 
-    void eliminar(ID id);
+    List<T> listarTodos();
 
-    List<T> listar();
-
-    T buscarPorId(ID id);
+    T obtenerPorId(ID id);
 }

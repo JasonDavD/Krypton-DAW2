@@ -1,6 +1,7 @@
 package pe.com.krypton.service.impl;
 
 import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.com.krypton.dto.request.CategoriaRequest;
@@ -15,7 +16,7 @@ import pe.com.krypton.repository.ProductoRepository;
 import pe.com.krypton.service.CategoriaService;
 
 @Service
-public class CategoriaServiceImpl implements CategoriaService {
+public class CategoriaServiceImpl extends ICRUDImpl<Categoria, Long> implements CategoriaService {
 
     private final CategoriaRepository categoryRepository;
     private final ProductoRepository productRepository;
@@ -29,35 +30,41 @@ public class CategoriaServiceImpl implements CategoriaService {
         this.categoryMapper = categoryMapper;
     }
 
+    /** Repository que usa el CRUD genérico heredado (guardar/listarTodos/...). */
+    @Override
+    protected JpaRepository<Categoria, Long> repo() {
+        return categoryRepository;
+    }
+
     @Override
     @Transactional(readOnly = true)
-    public List<CategoriaResponse> list() {
-        return categoryRepository.findAll().stream()
+    public List<CategoriaResponse> listar() {
+        return listarTodos().stream()          // ← heredado de ICRUDImpl
                 .map(categoryMapper::toResponse)
                 .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CategoriaResponse getById(Long id) {
+    public CategoriaResponse buscarPorId(Long id) {
         return categoryMapper.toResponse(findOrThrow(id));
     }
 
     @Override
     @Transactional
-    public CategoriaResponse create(CategoriaRequest request) {
+    public CategoriaResponse registrar(CategoriaRequest request) {
         if (categoryRepository.existsByName(request.name())) {
             throw new DuplicateCategoryNameException("El nombre de categoría ya está registrado: " + request.name());
         }
         Categoria category = new Categoria();
         category.setName(request.name());
         category.setDescription(request.description());
-        return categoryMapper.toResponse(categoryRepository.save(category));
+        return categoryMapper.toResponse(guardar(category));   // ← heredado de ICRUDImpl
     }
 
     @Override
     @Transactional
-    public CategoriaResponse update(Long id, CategoriaRequest request) {
+    public CategoriaResponse actualizar(Long id, CategoriaRequest request) {
         Categoria category = findOrThrow(id);
 
         if (categoryRepository.existsByNameAndIdNot(request.name(), id)) {
@@ -66,15 +73,16 @@ public class CategoriaServiceImpl implements CategoriaService {
         }
         category.setName(request.name());
         category.setDescription(request.description());
-        return categoryMapper.toResponse(categoryRepository.save(category));
+        return categoryMapper.toResponse(guardar(category));   // ← heredado de ICRUDImpl
     }
 
     @Override
     @Transactional
-    public void delete(Long id) {
+    public void eliminar(Long id) {
         Categoria category = findOrThrow(id);
 
-        // Guard: evaluar ANTES de cualquier escritura (diseño: regla de negocio en service)
+        // Guard: evaluar ANTES de cualquier escritura (diseño: regla de negocio en service).
+        // No usamos el borrar() genérico porque necesitamos el guard + delete por entidad.
         if (productRepository.existsByCategoryId(id)) {
             throw new CategoryInUseException(
                     "La categoría tiene productos asociados y no puede eliminarse: " + id);

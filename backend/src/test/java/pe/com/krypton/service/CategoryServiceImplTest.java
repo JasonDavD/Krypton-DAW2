@@ -59,7 +59,7 @@ class CategoryServiceImplTest {
         when(categoryRepository.findAll())
                 .thenReturn(List.of(category(1L, "Electronics"), category(2L, "Books")));
 
-        List<CategoriaResponse> result = service.list();
+        List<CategoriaResponse> result = service.listar();
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).name()).isEqualTo("Electronics");
@@ -71,7 +71,7 @@ class CategoryServiceImplTest {
     void should_return_category_when_found() {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category(1L, "Electronics")));
 
-        CategoriaResponse result = service.getById(1L);
+        CategoriaResponse result = service.buscarPorId(1L);
 
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.name()).isEqualTo("Electronics");
@@ -81,7 +81,7 @@ class CategoryServiceImplTest {
     void should_throw_not_found_when_category_missing() {
         when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getById(99L))
+        assertThatThrownBy(() -> service.buscarPorId(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -97,7 +97,7 @@ class CategoryServiceImplTest {
             return c;
         });
 
-        CategoriaResponse result = service.create(req);
+        CategoriaResponse result = service.registrar(req);
 
         assertThat(result.id()).isEqualTo(5L);
         assertThat(result.name()).isEqualTo("NewCat");
@@ -107,7 +107,7 @@ class CategoryServiceImplTest {
     void should_reject_create_when_name_already_exists() {
         when(categoryRepository.existsByName("Electronics")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.create(new CategoriaRequest("Electronics", "Desc")))
+        assertThatThrownBy(() -> service.registrar(new CategoriaRequest("Electronics", "Desc")))
                 .isInstanceOf(DuplicateCategoryNameException.class);
         verify(categoryRepository, never()).save(any());
     }
@@ -121,7 +121,7 @@ class CategoryServiceImplTest {
         when(categoryRepository.existsByNameAndIdNot("NewName", 1L)).thenReturn(false);
         when(categoryRepository.save(any(Categoria.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        CategoriaResponse result = service.update(1L, new CategoriaRequest("NewName", "Updated desc"));
+        CategoriaResponse result = service.actualizar(1L, new CategoriaRequest("NewName", "Updated desc"));
 
         assertThat(result.name()).isEqualTo("NewName");
     }
@@ -134,7 +134,7 @@ class CategoryServiceImplTest {
         when(categoryRepository.existsByNameAndIdNot("Electronics", 1L)).thenReturn(false);
         when(categoryRepository.save(any(Categoria.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        CategoriaResponse result = service.update(1L, new CategoriaRequest("Electronics", "Updated desc"));
+        CategoriaResponse result = service.actualizar(1L, new CategoriaRequest("Electronics", "Updated desc"));
 
         assertThat(result.name()).isEqualTo("Electronics");
     }
@@ -145,7 +145,7 @@ class CategoryServiceImplTest {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(categoryRepository.existsByNameAndIdNot("TakenName", 1L)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.update(1L, new CategoriaRequest("TakenName", "Desc")))
+        assertThatThrownBy(() -> service.actualizar(1L, new CategoriaRequest("TakenName", "Desc")))
                 .isInstanceOf(DuplicateCategoryNameException.class);
         verify(categoryRepository, never()).save(any());
     }
@@ -158,7 +158,7 @@ class CategoryServiceImplTest {
         when(categoryRepository.findById(3L)).thenReturn(Optional.of(existing));
         when(productRepository.existsByCategoryId(3L)).thenReturn(false);
 
-        service.delete(3L);
+        service.eliminar(3L);
 
         verify(categoryRepository).delete(existing);
     }
@@ -169,7 +169,7 @@ class CategoryServiceImplTest {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(productRepository.existsByCategoryId(1L)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.delete(1L))
+        assertThatThrownBy(() -> service.eliminar(1L))
                 .isInstanceOf(CategoryInUseException.class);
         verify(categoryRepository, never()).delete(any(Categoria.class));
     }
@@ -178,7 +178,7 @@ class CategoryServiceImplTest {
     void should_throw_not_found_on_delete_when_category_missing() {
         when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.delete(99L))
+        assertThatThrownBy(() -> service.eliminar(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
         verify(categoryRepository, never()).delete(any(Categoria.class));
     }

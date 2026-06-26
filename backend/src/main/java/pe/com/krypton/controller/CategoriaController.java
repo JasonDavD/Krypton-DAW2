@@ -20,12 +20,12 @@ public class CategoriaController {
     }
 
     @GetMapping
-    public List<CategoriaResponse> list() {
-        return categoryService.list();
+    public List<CategoriaResponse> listar() {
+        return categoryService.listar();
     }
 
     @GetMapping("/{id}")
-    public CategoriaResponse getById(@PathVariable Long id) {
-        return categoryService.getById(id);
+    public CategoriaResponse buscarPorId(@PathVariable Long id) {
+        return categoryService.buscarPorId(id);
     }
 }
