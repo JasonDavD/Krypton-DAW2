@@ -136,6 +136,29 @@ a correr el script.
 Verificá `java -version`. Necesitás **17 o superior**. Si tenés varias versiones,
 asegurate de que `JAVA_HOME` apunte a un JDK 17+.
 
+### `docker compose -f docker-compose.full.yml` falla con `target/<svc>-1.0.0.jar: not found`
+
+Pasa al levantar el **stack completo de microservicios** sin haber construido los jars antes.
+Los Dockerfiles de `services/` no compilan: solo **copian** un jar ya hecho
+(`COPY target/<svc>-1.0.0.jar`). Un clon o ZIP recién bajado **no** trae los `target/`
+(van en `.gitignore`), así que el `COPY` no encuentra nada y falla en los 9 servicios.
+
+**Solución:** construí los jars y reintentá:
+
+```bash
+cd services
+mvn package -DskipTests      # sin Maven instalado: ..\backend\mvnw.cmd -f pom.xml package -DskipTests
+cd ..
+docker compose -f docker-compose.full.yml up -d --build
+```
+
+> `-DskipTests` es necesario: los tests de integración levantan un MySQL real con
+> Testcontainers y romperían el empaquetado. Para armar las imágenes no hacen falta.
+>
+> Y ojo: correr los 9 servicios como JVMs en Docker **come mucha RAM**. Si la máquina
+> sufre, levantá solo la infra (`docker compose up -d`) y los servicios con `java -jar`
+> (ver *Opción B* en el README).
+
 ---
 
 ## Mapa rápido del proyecto
