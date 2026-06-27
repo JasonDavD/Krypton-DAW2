@@ -25,6 +25,13 @@ frontend/.env.*
 .vscode/
 *.swp
 *.swo
+# Eclipse / Spring Tool Suite (metadata por-desarrollador, no va al repo)
+.project
+.classpath
+.factorypath
+.settings/
+.springBeans
+bin/
 
 # ===== Sistema operativo =====
 .DS_Store
