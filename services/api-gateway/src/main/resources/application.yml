@@ -59,6 +59,10 @@ spring:
           uri: lb://order-service
           predicates:
             - Path=/api/orders/**
+        - id: order-admin
+          uri: lb://order-service
+          predicates:
+            - Path=/api/admin/orders/**
         # --- review-service (reseñas de productos) ---
         - id: review-reviews
           uri: lb://review-service

@@ -6,6 +6,9 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.com.krypton.client.CatalogClient;
@@ -21,6 +24,7 @@ import pe.com.krypton.client.dto.StockMovementRequest;
 import pe.com.krypton.dto.request.CheckoutRequest;
 import pe.com.krypton.dto.request.PaymentRequest;
 import pe.com.krypton.dto.response.OrdenResponse;
+import pe.com.krypton.dto.response.PageResponse;
 import pe.com.krypton.entity.Carrito;
 import pe.com.krypton.entity.ItemCarrito;
 import pe.com.krypton.entity.ItemOrden;
@@ -42,6 +46,7 @@ import pe.com.krypton.repository.ItemCarritoRepository;
 import pe.com.krypton.repository.ItemOrdenRepository;
 import pe.com.krypton.repository.OrdenRepository;
 import pe.com.krypton.service.OrdenService;
+import pe.com.krypton.spec.OrdenSpecification;
 
 /**
  * Pedidos del usuario. Las lecturas (misOrdenes/miOrden) son históricas: NO llaman a catalog
@@ -202,12 +207,70 @@ public class OrdenServiceImpl implements OrdenService {
     public byte[] miComprobantePdf(String email, Long id) {
         Orden orden = ordenRepository.findByIdAndUserEmail(id, email)
                 .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada: " + id));
+        return generarComprobante(orden);
+    }
+
+    // ─── ADMIN (gestión de TODAS las órdenes) ─────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<OrdenResponse> listarOrdenes(EstadoOrden status, Instant from, Instant to, Pageable pageable) {
+        // Filtros opcionales (null = ausente, por el contrato de OrdenSpecification).
+        Specification<Orden> spec = Specification
+                .where(OrdenSpecification.hasStatus(status))
+                .and(OrdenSpecification.dateBetween(from, to));
+        Page<OrdenResponse> page = ordenRepository.findAll(spec, pageable)
+                .map(o -> ordenMapper.toResponse(o, itemOrdenRepository.findByOrder(o)));
+        return PageResponse.of(page);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrdenResponse obtenerOrden(Long id) {
+        Orden orden = ordenRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada: " + id));
+        return ordenMapper.toResponse(orden, itemOrdenRepository.findByOrder(orden));
+    }
+
+    @Override
+    @Transactional
+    public OrdenResponse actualizarEstado(Long id, EstadoOrden newStatus) {
+        Orden orden = ordenRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada: " + id));
+        estadoOrdenPolicy.assertCanTransition(orden.getStatus(), newStatus);
+        // Cancelar repone el stock descontado en el checkout (compensación vía Feign a catalog).
+        if (newStatus == EstadoOrden.CANCELADA) {
+            restaurarStock(orden);
+        }
+        orden.setStatus(newStatus);
+        ordenRepository.save(orden);
+        return ordenMapper.toResponse(orden, itemOrdenRepository.findByOrder(orden));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] comprobantePdf(Long id) {
+        Orden orden = ordenRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada: " + id));
+        return generarComprobante(orden);
+    }
+
+    /** Valida que la orden esté pagada y genera el PDF. Compartido por cliente y admin. */
+    private byte[] generarComprobante(Orden orden) {
         // El comprobante sólo existe para pedidos PAGADOS (no PENDIENTE ni CANCELADA).
         if (orden.getStatus() == EstadoOrden.PENDIENTE || orden.getStatus() == EstadoOrden.CANCELADA) {
             throw new ComprobanteNotAvailableException(
                     "El comprobante sólo está disponible para pedidos pagados");
         }
         return comprobanteExporter.export(orden, itemOrdenRepository.findByOrder(orden));
+    }
+
+    /** Repone en catalog (Feign) el stock de la orden — espejo del descuento del checkout. */
+    private void restaurarStock(Orden orden) {
+        List<StockItemRequest> stockItems = itemOrdenRepository.findByOrder(orden).stream()
+                .map(it -> new StockItemRequest(it.getProductId(), it.getQuantity()))
+                .toList();
+        catalogClient.restoreStock(new StockMovementRequest("ORDER-" + orden.getId(), null, stockItems));
     }
 
     @Override

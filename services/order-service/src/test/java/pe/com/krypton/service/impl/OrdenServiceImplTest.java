@@ -3,6 +3,8 @@ package pe.com.krypton.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -11,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import feign.FeignException;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -19,6 +22,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import pe.com.krypton.client.CatalogClient;
 import pe.com.krypton.client.PaymentClient;
 import pe.com.krypton.client.PromoClient;
@@ -30,6 +37,8 @@ import pe.com.krypton.client.dto.ProductoResponse;
 import pe.com.krypton.client.dto.StockMovementRequest;
 import pe.com.krypton.dto.request.CheckoutRequest;
 import pe.com.krypton.dto.request.PaymentRequest;
+import pe.com.krypton.dto.response.OrdenResponse;
+import pe.com.krypton.dto.response.PageResponse;
 import pe.com.krypton.entity.Carrito;
 import pe.com.krypton.entity.ItemCarrito;
 import pe.com.krypton.entity.ItemOrden;
@@ -304,5 +313,121 @@ class OrdenServiceImplTest {
 
         assertThatThrownBy(() -> ordenService.miComprobantePdf(EMAIL, 72L))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    // ---------------------------------------------------------------------
+    // Admin: listar / obtener / cambiar estado / comprobante
+    // ---------------------------------------------------------------------
+
+    private static OrdenResponse ordenResponseDummy(long id) {
+        return new OrdenResponse(id, EMAIL, Instant.EPOCH, "CONFIRMADA", "BOLETA",
+                "Juan Perez", "12345678", BigDecimal.ZERO, BigDecimal.ZERO,
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, List.of());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void should_list_all_orders_paged_for_admin() {
+        Orden orden = new Orden();
+        orden.setId(80L);
+        orden.setUserEmail(EMAIL);
+        orden.setStatus(EstadoOrden.CONFIRMADA);
+        OrdenResponse dto = ordenResponseDummy(80L);
+        Pageable pageable = PageRequest.of(0, 10);
+        when(ordenRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(orden), pageable, 1));
+        when(itemOrdenRepository.findByOrder(orden)).thenReturn(List.of());
+        when(ordenMapper.toResponse(eq(orden), anyList())).thenReturn(dto);
+
+        PageResponse<OrdenResponse> result = ordenService.listarOrdenes(null, null, null, pageable);
+
+        assertThat(result.content()).containsExactly(dto);
+        assertThat(result.totalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void should_get_any_order_by_id_for_admin() {
+        Orden orden = new Orden();
+        orden.setId(81L);
+        orden.setStatus(EstadoOrden.CONFIRMADA);
+        when(ordenRepository.findById(81L)).thenReturn(Optional.of(orden));
+        when(itemOrdenRepository.findByOrder(orden)).thenReturn(List.of());
+        when(ordenMapper.toResponse(eq(orden), anyList())).thenReturn(ordenResponseDummy(81L));
+
+        assertThat(ordenService.obtenerOrden(81L)).isNotNull();
+    }
+
+    @Test
+    void should_throw_not_found_when_admin_order_missing() {
+        when(ordenRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> ordenService.obtenerOrden(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void should_update_status_when_transition_is_valid() {
+        Orden orden = new Orden();
+        orden.setId(82L);
+        orden.setStatus(EstadoOrden.CONFIRMADA);
+        when(ordenRepository.findById(82L)).thenReturn(Optional.of(orden));
+        when(itemOrdenRepository.findByOrder(orden)).thenReturn(List.of());
+        when(ordenMapper.toResponse(eq(orden), anyList())).thenReturn(ordenResponseDummy(82L));
+
+        ordenService.actualizarEstado(82L, EstadoOrden.ENVIADO);
+
+        assertThat(orden.getStatus()).isEqualTo(EstadoOrden.ENVIADO);
+        verify(ordenRepository).save(orden);
+        verify(catalogClient, never()).restoreStock(any()); // no es cancelación
+    }
+
+    @Test
+    void should_restore_stock_when_admin_cancels_order() {
+        Orden orden = new Orden();
+        orden.setId(83L);
+        orden.setStatus(EstadoOrden.PENDIENTE);
+        ItemOrden item = new ItemOrden();
+        item.setProductId(1L);
+        item.setQuantity(2);
+        when(ordenRepository.findById(83L)).thenReturn(Optional.of(orden));
+        when(itemOrdenRepository.findByOrder(orden)).thenReturn(List.of(item));
+        when(ordenMapper.toResponse(eq(orden), anyList())).thenReturn(ordenResponseDummy(83L));
+
+        ordenService.actualizarEstado(83L, EstadoOrden.CANCELADA);
+
+        assertThat(orden.getStatus()).isEqualTo(EstadoOrden.CANCELADA);
+        ArgumentCaptor<StockMovementRequest> cap = ArgumentCaptor.forClass(StockMovementRequest.class);
+        verify(catalogClient).restoreStock(cap.capture());
+        assertThat(cap.getValue().reference()).isEqualTo("ORDER-83");
+    }
+
+    @Test
+    void should_reject_status_update_when_transition_is_invalid() {
+        Orden orden = new Orden();
+        orden.setId(84L);
+        orden.setStatus(EstadoOrden.ENTREGADO);
+        when(ordenRepository.findById(84L)).thenReturn(Optional.of(orden));
+        doThrow(new OrderStatusTransitionException("inválida"))
+                .when(estadoOrdenPolicy).assertCanTransition(EstadoOrden.ENTREGADO, EstadoOrden.ENVIADO);
+
+        assertThatThrownBy(() -> ordenService.actualizarEstado(84L, EstadoOrden.ENVIADO))
+                .isInstanceOf(OrderStatusTransitionException.class);
+
+        verify(ordenRepository, never()).save(any());
+        verify(catalogClient, never()).restoreStock(any());
+    }
+
+    @Test
+    void should_return_admin_comprobante_when_order_is_paid() {
+        Orden orden = new Orden();
+        orden.setId(85L);
+        orden.setStatus(EstadoOrden.ENTREGADO);
+        List<ItemOrden> items = List.of(new ItemOrden());
+        byte[] pdf = {9, 9};
+        when(ordenRepository.findById(85L)).thenReturn(Optional.of(orden));
+        when(itemOrdenRepository.findByOrder(orden)).thenReturn(items);
+        when(comprobanteExporter.export(orden, items)).thenReturn(pdf);
+
+        assertThat(ordenService.comprobantePdf(85L)).isEqualTo(pdf);
     }
 }
