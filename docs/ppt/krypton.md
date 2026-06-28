@@ -80,7 +80,6 @@ CIBERTEC · Desarrollo de Aplicaciones Web II — EFSRT VI
 - Monolito **Spring Boot 3 + Java 17**
 - Frontend **React 19** · **MySQL 8**
 - Catálogo, carrito, checkout, órdenes, admin
-- Ya funcionaba: **+400 tests verdes**
 
 <!--
 🎤 Curi: «Krypton es una tienda online de tecnología. Tiene catálogo, carrito, checkout, órdenes y panel de administración. Backend en Spring Boot y Java 17, frontend React 19, base MySQL. Importante: la app YA funcionaba como monolito, con más de 400 tests en verde. No reescribimos la lógica; la repartimos.»
