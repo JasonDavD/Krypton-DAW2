@@ -21,8 +21,8 @@ function decodeToken(token: string): JwtPayload | null {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(atob(base64)) as JwtPayload;
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/'); //payload viene en Base64Url y aqui pasa a Base64 normal
+    return JSON.parse(atob(base64)) as JwtPayload; //atob() trabaja con Base64 normal
   } catch {
     return null;
   }
