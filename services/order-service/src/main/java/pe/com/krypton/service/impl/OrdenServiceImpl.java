@@ -27,6 +27,7 @@ import pe.com.krypton.entity.ItemOrden;
 import pe.com.krypton.entity.Orden;
 import pe.com.krypton.entity.enums.EstadoOrden;
 import pe.com.krypton.entity.enums.TipoDocumento;
+import pe.com.krypton.exception.ComprobanteNotAvailableException;
 import pe.com.krypton.exception.EmptyCartException;
 import pe.com.krypton.exception.InsufficientStockException;
 import pe.com.krypton.exception.InvalidCouponException;
@@ -35,6 +36,7 @@ import pe.com.krypton.exception.PaymentDeclinedException;
 import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.mapper.OrdenMapper;
 import pe.com.krypton.policy.EstadoOrdenPolicy;
+import pe.com.krypton.report.ComprobanteExporter;
 import pe.com.krypton.repository.CarritoRepository;
 import pe.com.krypton.repository.ItemCarritoRepository;
 import pe.com.krypton.repository.ItemOrdenRepository;
@@ -67,6 +69,7 @@ public class OrdenServiceImpl implements OrdenService {
     private final PaymentClient paymentClient;
     private final PromoClient promoClient;
     private final EstadoOrdenPolicy estadoOrdenPolicy;
+    private final ComprobanteExporter comprobanteExporter;
 
     public OrdenServiceImpl(OrdenRepository ordenRepository,
                             ItemOrdenRepository itemOrdenRepository,
@@ -76,7 +79,8 @@ public class OrdenServiceImpl implements OrdenService {
                             CatalogClient catalogClient,
                             PaymentClient paymentClient,
                             PromoClient promoClient,
-                            EstadoOrdenPolicy estadoOrdenPolicy) {
+                            EstadoOrdenPolicy estadoOrdenPolicy,
+                            ComprobanteExporter comprobanteExporter) {
         this.ordenRepository = ordenRepository;
         this.itemOrdenRepository = itemOrdenRepository;
         this.carritoRepository = carritoRepository;
@@ -86,6 +90,7 @@ public class OrdenServiceImpl implements OrdenService {
         this.paymentClient = paymentClient;
         this.promoClient = promoClient;
         this.estadoOrdenPolicy = estadoOrdenPolicy;
+        this.comprobanteExporter = comprobanteExporter;
     }
 
     @Override
@@ -190,6 +195,19 @@ public class OrdenServiceImpl implements OrdenService {
         Orden orden = ordenRepository.findByIdAndUserEmail(id, email)
                 .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada: " + id));
         return ordenMapper.toResponse(orden, itemOrdenRepository.findByOrder(orden));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] miComprobantePdf(String email, Long id) {
+        Orden orden = ordenRepository.findByIdAndUserEmail(id, email)
+                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada: " + id));
+        // El comprobante sólo existe para pedidos PAGADOS (no PENDIENTE ni CANCELADA).
+        if (orden.getStatus() == EstadoOrden.PENDIENTE || orden.getStatus() == EstadoOrden.CANCELADA) {
+            throw new ComprobanteNotAvailableException(
+                    "El comprobante sólo está disponible para pedidos pagados");
+        }
+        return comprobanteExporter.export(orden, itemOrdenRepository.findByOrder(orden));
     }
 
     @Override

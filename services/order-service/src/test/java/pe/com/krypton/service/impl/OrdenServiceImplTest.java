@@ -32,14 +32,18 @@ import pe.com.krypton.dto.request.CheckoutRequest;
 import pe.com.krypton.dto.request.PaymentRequest;
 import pe.com.krypton.entity.Carrito;
 import pe.com.krypton.entity.ItemCarrito;
+import pe.com.krypton.entity.ItemOrden;
 import pe.com.krypton.entity.Orden;
 import pe.com.krypton.entity.enums.EstadoOrden;
 import pe.com.krypton.entity.enums.MetodoPago;
 import pe.com.krypton.entity.enums.TipoDocumento;
+import pe.com.krypton.exception.ComprobanteNotAvailableException;
 import pe.com.krypton.exception.InsufficientStockException;
 import pe.com.krypton.exception.OrderStatusTransitionException;
 import pe.com.krypton.exception.PaymentDeclinedException;
+import pe.com.krypton.exception.ResourceNotFoundException;
 import pe.com.krypton.mapper.OrdenMapper;
+import pe.com.krypton.report.ComprobanteExporter;
 import pe.com.krypton.policy.EstadoOrdenPolicy;
 import pe.com.krypton.repository.CarritoRepository;
 import pe.com.krypton.repository.ItemCarritoRepository;
@@ -65,6 +69,7 @@ class OrdenServiceImplTest {
     @Mock private PaymentClient paymentClient;
     @Mock private PromoClient promoClient;
     @Mock private EstadoOrdenPolicy estadoOrdenPolicy;
+    @Mock private ComprobanteExporter comprobanteExporter;
 
     @InjectMocks private OrdenServiceImpl ordenService;
 
@@ -255,5 +260,49 @@ class OrdenServiceImplTest {
         verify(promoClient).applyPromo(promoCap.capture());
         assertThat(promoCap.getValue().code()).isEqualTo("KR20");
         assertThat(promoCap.getValue().amount()).isEqualByComparingTo("200.00");
+    }
+
+    // ---------------------------------------------------------------------
+    // Comprobante PDF (boleta/factura) de un pedido propio pagado
+    // ---------------------------------------------------------------------
+
+    @Test
+    void should_return_comprobante_pdf_when_order_is_paid() {
+        Orden orden = new Orden();
+        orden.setId(70L);
+        orden.setUserEmail(EMAIL);
+        orden.setStatus(EstadoOrden.CONFIRMADA);
+        List<ItemOrden> items = List.of(new ItemOrden());
+        byte[] pdf = {1, 2, 3};
+        when(ordenRepository.findByIdAndUserEmail(70L, EMAIL)).thenReturn(Optional.of(orden));
+        when(itemOrdenRepository.findByOrder(orden)).thenReturn(items);
+        when(comprobanteExporter.export(orden, items)).thenReturn(pdf);
+
+        byte[] result = ordenService.miComprobantePdf(EMAIL, 70L);
+
+        assertThat(result).isEqualTo(pdf);
+        verify(comprobanteExporter).export(orden, items);
+    }
+
+    @Test
+    void should_throw_comprobante_not_available_when_order_is_pending() {
+        Orden orden = new Orden();
+        orden.setId(71L);
+        orden.setUserEmail(EMAIL);
+        orden.setStatus(EstadoOrden.PENDIENTE);
+        when(ordenRepository.findByIdAndUserEmail(71L, EMAIL)).thenReturn(Optional.of(orden));
+
+        assertThatThrownBy(() -> ordenService.miComprobantePdf(EMAIL, 71L))
+                .isInstanceOf(ComprobanteNotAvailableException.class);
+
+        verify(comprobanteExporter, never()).export(any(), any());
+    }
+
+    @Test
+    void should_throw_not_found_when_comprobante_order_not_owned() {
+        when(ordenRepository.findByIdAndUserEmail(72L, EMAIL)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> ordenService.miComprobantePdf(EMAIL, 72L))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }

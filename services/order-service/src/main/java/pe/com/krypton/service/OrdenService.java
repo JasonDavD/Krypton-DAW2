@@ -25,4 +25,10 @@ public interface OrdenService {
 
     /** Una orden propia por id (404 si no existe o no es del usuario). */
     OrdenResponse miOrden(String email, Long id);
+
+    /**
+     * PDF del comprobante (boleta/factura) de una orden propia PAGADA.
+     * 404 si no existe o no es del usuario; 409 si la orden no está pagada.
+     */
+    byte[] miComprobantePdf(String email, Long id);
 }

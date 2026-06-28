@@ -90,6 +90,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Exportacion PDF del comprobante (boleta/factura). -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+
         <!-- Lombok (opcional, solo compilacion). -->
         <dependency>
             <groupId>org.projectlombok</groupId>
