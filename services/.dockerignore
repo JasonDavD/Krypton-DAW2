@@ -1,0 +1,8 @@
+# El build context de los servicios es ./services (multi-stage compila adentro).
+# No copiar artefactos ni basura: el codigo fuente (src/, pom.xml) si se copia.
+**/target/
+uploads/
+**/*.iml
+.idea/
+.vscode/
+*.log

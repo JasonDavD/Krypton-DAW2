@@ -44,14 +44,18 @@ services:
 
   # --- Service discovery ---------------------------------------------------
   eureka-server:
-    build: ./services/eureka-server
+    build:
+      context: ./services
+      dockerfile: eureka-server/Dockerfile
     container_name: krypton-eureka
     ports:
       - "8761:8761"     # consola de Eureka (solo inspeccion)
 
   # --- Gateway (unica puerta publica) --------------------------------------
   api-gateway:
-    build: ./services/api-gateway
+    build:
+      context: ./services
+      dockerfile: api-gateway/Dockerfile
     container_name: krypton-gateway
     ports:
       - "8080:8080"     # aca apunta el frontend
@@ -64,7 +68,9 @@ services:
 
   # --- Servicios de negocio ------------------------------------------------
   users-service:
-    build: ./services/users-service
+    build:
+      context: ./services
+      dockerfile: users-service/Dockerfile
     container_name: krypton-usuarios
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
@@ -78,7 +84,9 @@ services:
         condition: service_started
 
   catalog-service:
-    build: ./services/catalog-service
+    build:
+      context: ./services
+      dockerfile: catalog-service/Dockerfile
     container_name: krypton-catalogo
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
@@ -92,7 +100,9 @@ services:
         condition: service_started
 
   order-service:
-    build: ./services/order-service
+    build:
+      context: ./services
+      dockerfile: order-service/Dockerfile
     container_name: krypton-pedidos
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
@@ -109,7 +119,9 @@ services:
         condition: service_started
 
   notification-service:
-    build: ./services/notification-service
+    build:
+      context: ./services
+      dockerfile: notification-service/Dockerfile
     container_name: krypton-notificaciones
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
@@ -122,7 +134,9 @@ services:
         condition: service_started
 
   payment-service:
-    build: ./services/payment-service
+    build:
+      context: ./services
+      dockerfile: payment-service/Dockerfile
     container_name: krypton-pagos
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
@@ -136,7 +150,9 @@ services:
         condition: service_started
 
   review-service:
-    build: ./services/review-service
+    build:
+      context: ./services
+      dockerfile: review-service/Dockerfile
     container_name: krypton-resenas
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
@@ -150,7 +166,9 @@ services:
         condition: service_started
 
   promo-service:
-    build: ./services/promo-service
+    build:
+      context: ./services
+      dockerfile: promo-service/Dockerfile
     container_name: krypton-promociones
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka

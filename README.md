@@ -61,21 +61,17 @@ con código línea por línea — está en
 
 ### Levantar los microservicios
 
-**Opción A — todo en Docker:**
-
-> ⚠️ **Construí los jars PRIMERO.** Los Dockerfiles de `services/` **no compilan**: solo
-> copian un jar ya construido (`COPY target/<svc>-1.0.0.jar`). Un clon o ZIP recién bajado
-> **no** trae los `target/` (van en `.gitignore`), así que sin este paso el build falla con
-> `"/target/<svc>-1.0.0.jar": not found` en los 9 servicios.
+**Opción A — todo en Docker (un comando, sin instalar nada):**
 
 ```bash
-cd services && mvn package -DskipTests     # genera los 9 jars (saltea tests: usan Testcontainers)
-cd ..
 docker compose -f docker-compose.full.yml up -d --build
 ```
 
-> Sin Maven instalado, usá el wrapper del monolito desde la raíz:
-> `backend\mvnw.cmd -f services\pom.xml package -DskipTests`.
+Los Dockerfiles son **multi-stage**: compilan cada jar DENTRO de Docker. **No necesitás
+Maven ni JDK instalados, ni construir nada antes** — clonás y levantás.
+
+> La **primera vez** el build es lento (compila los 9 servicios en Docker y baja sus
+> dependencias; quedan cacheadas para las siguientes).
 
 Levanta MySQL + RabbitMQ + los 9 servicios + el gateway. La **única puerta pública** es el
 gateway en `http://localhost:8080` (el front apunta ahí sin cambios). Consola de RabbitMQ en
