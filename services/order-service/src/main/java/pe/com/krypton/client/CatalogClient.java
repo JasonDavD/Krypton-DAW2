@@ -1,6 +1,5 @@
 package pe.com.krypton.client;
 
-import java.time.Instant;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,9 +32,12 @@ public interface CatalogClient {
     @PostMapping("/api/internal/stock/restore")
     void restoreStock(@RequestBody StockMovementRequest request);
 
-    /** Kardex de un producto (reporte admin). catalog es dueño de stock_movement; se pide por Feign. */
+    /**
+     * Kardex de un producto (reporte admin). catalog es dueño de stock_movement; se pide por Feign.
+     * start/end viajan como String ISO-8601 (robusto: no depende de converters de Instant en query).
+     */
     @GetMapping("/api/internal/reports/kardex")
     KardexReport kardex(@RequestParam("productId") Long productId,
-                        @RequestParam(value = "start", required = false) Instant start,
-                        @RequestParam(value = "end", required = false) Instant end);
+                        @RequestParam(value = "start", required = false) String start,
+                        @RequestParam(value = "end", required = false) String end);
 }

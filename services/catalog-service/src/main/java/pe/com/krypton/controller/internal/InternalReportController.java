@@ -1,7 +1,6 @@
 package pe.com.krypton.controller.internal;
 
 import java.time.Instant;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,12 +22,14 @@ public class InternalReportController {
         this.reportService = reportService;
     }
 
-    /** GET /api/internal/reports/kardex?productId&start&end (Instant ISO, opcionales). */
+    /** GET /api/internal/reports/kardex?productId&start&end (start/end = Instant ISO-8601 String, opcionales). */
     @GetMapping("/kardex")
     public KardexReport kardex(
             @RequestParam Long productId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant start,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant end) {
-        return reportService.kardex(productId, start, end);
+            @RequestParam(required = false) String start,
+            @RequestParam(required = false) String end) {
+        Instant startInst = (start == null || start.isBlank()) ? null : Instant.parse(start);
+        Instant endInst = (end == null || end.isBlank()) ? null : Instant.parse(end);
+        return reportService.kardex(productId, startInst, endInst);
     }
 }

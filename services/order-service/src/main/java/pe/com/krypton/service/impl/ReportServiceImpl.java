@@ -92,8 +92,9 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public KardexReport kardexProducto(Long productId, LocalDate desde, LocalDate hasta) {
         validatePartialDateRange(desde, hasta);
-        Instant start = desde == null ? null : toStartOfDay(desde);
-        Instant end = hasta == null ? null : toExclusiveEnd(hasta);
+        // Fechas como String ISO-8601 para el contrato Feign (robusto, sin converters de Instant).
+        String start = desde == null ? null : toStartOfDay(desde).toString();
+        String end = hasta == null ? null : toExclusiveEnd(hasta).toString();
         // El kardex vive en catalog-service (dueño de stock_movement): se pide por Feign.
         return catalogClient.kardex(productId, start, end);
     }
