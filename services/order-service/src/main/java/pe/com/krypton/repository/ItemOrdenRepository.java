@@ -24,7 +24,9 @@ public interface ItemOrdenRepository extends JpaRepository<ItemOrden, Long> {
                    SUM(oi.quantity), SUM(oi.quantity * oi.unitPrice)
             FROM ItemOrden oi
             JOIN oi.order o
-            WHERE o.status = pe.com.krypton.entity.enums.EstadoOrden.CONFIRMADA
+            WHERE o.status IN (pe.com.krypton.entity.enums.EstadoOrden.CONFIRMADA,
+                               pe.com.krypton.entity.enums.EstadoOrden.ENVIADO,
+                               pe.com.krypton.entity.enums.EstadoOrden.ENTREGADO)
               AND o.orderDate >= :start
               AND o.orderDate < :end
             GROUP BY oi.productId, oi.productName
@@ -41,7 +43,9 @@ public interface ItemOrdenRepository extends JpaRepository<ItemOrden, Long> {
                    SUM(oi.quantity), SUM(oi.quantity * oi.unitPrice)
             FROM ItemOrden oi
             JOIN oi.order o
-            WHERE o.status = pe.com.krypton.entity.enums.EstadoOrden.CONFIRMADA
+            WHERE o.status IN (pe.com.krypton.entity.enums.EstadoOrden.CONFIRMADA,
+                               pe.com.krypton.entity.enums.EstadoOrden.ENVIADO,
+                               pe.com.krypton.entity.enums.EstadoOrden.ENTREGADO)
             GROUP BY oi.productId, oi.productName
             ORDER BY SUM(oi.quantity) DESC
             """)

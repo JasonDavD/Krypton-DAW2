@@ -33,7 +33,7 @@ public interface OrdenRepository extends JpaRepository<Orden, Long>, JpaSpecific
                    COUNT(o.id)                AS ordenes,
                    COALESCE(SUM(o.total), 0)  AS monto
             FROM orders o
-            WHERE o.status = 'CONFIRMADA'
+            WHERE o.status IN ('CONFIRMADA', 'ENVIADO', 'ENTREGADO')
               AND o.order_date >= :start
               AND o.order_date < :end
             GROUP BY periodo
@@ -51,7 +51,7 @@ public interface OrdenRepository extends JpaRepository<Orden, Long>, JpaSpecific
                    COALESCE(SUM(total), 0)   AS totalFacturado,
                    COALESCE(AVG(total), 0)   AS ticketPromedio
             FROM orders
-            WHERE status = 'CONFIRMADA'
+            WHERE status IN ('CONFIRMADA', 'ENVIADO', 'ENTREGADO')
               AND order_date >= :start
               AND order_date < :end
             """,
